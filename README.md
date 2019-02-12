@@ -15,5 +15,14 @@ Installation
 
   Make the folder /usr/Firmware.
 
+sqlite3 needs to be Installed
 
+apt-get install sqlite3
 
+make sure that php is enabled for the web server
+
+create the database
+
+http://localhost/cgi-bin/Dashboard/DB_Setup.php
+
+Once you have done that it is a g
