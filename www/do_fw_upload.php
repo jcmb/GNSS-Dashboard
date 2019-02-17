@@ -93,8 +93,8 @@ if ($Version=="") {
     }
 
 $TitianVersion=$_REQUEST["Titianversion"];
-$TitianVersion=clean($Titianversion,strlen($Titianversion));
-if ($Titianversion=="") {
+$TitianVersion=clean($TitianVersion,strlen($TitianVersion));
+if ($TitianVersion=="") {
     echo "Titan Firmware Version must not be blank";
     quit(100);
     }
