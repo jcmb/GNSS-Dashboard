@@ -15,14 +15,23 @@ Installation
 
   Make the folder /usr/Firmware.
 
-sqlite3 needs to be Installed
+sqlite3 and the php version of it needs to be installed
 
-apt-get install sqlite3
+apt-get install sqlite3 php-sqlite3
 
 make sure that php is enabled for the web server
 
 create the database
 
-http://localhost/cgi-bin/Dashboard/DB_Setup.php
+cgi-bin/Dashboard/DB_Setup.php from the command line
+
+change the owner of all of the files
+sudo chown www-data *
+
+You probably have to change the ownership of the cc directory as well.
+
+You need to create /usr/lib/cgi-bin/Dashboard/User directory.
+change the owner of all of the User folder. This will be used by Nagios
+
 
 Once you have done that it is a g
