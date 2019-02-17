@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>GNSS Receivers</title>
-<link rel="stylesheet" type="text/css" href="/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
 <link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="/jquery.tablesorter.min.js"></script>
