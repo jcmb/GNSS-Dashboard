@@ -619,7 +619,7 @@ if Enabled:
         Nagios_File.write("   check_command http_active\n")
         Nagios_File.write("   max_check_attempts 4\n")
         Nagios_File.write("   parents "+Loc_Group+"\n")
-        Nagios_Parent.write("   contacts " + User_Name +"\n")
+        Nagios_File.write("   contacts " + User_Name +"\n")
 
         Nagios_File.write("    }"+"\n")
         Nagios_File.write("\n");
