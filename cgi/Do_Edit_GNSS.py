@@ -19,7 +19,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',level=log
 handler = logging.handlers.SysLogHandler(address='/dev/log')
 logger.addHandler(handler)
 
-logger.info("started");
+logger.info("Do_Edit_GNSS started");
 
 execfile("db.inc.py")
 #from db.inc import databaseFile
@@ -440,7 +440,7 @@ if Update:
         Ref_Code,
         Ref_Lat,
         Ref_Long,
-        Ref_Height, 
+        Ref_Height,
         Email_Enabled,
         Email_To,
         Auth,
@@ -454,12 +454,12 @@ if Update:
         IBSS_Test_Password,
         IBSS_1_Mount,       IBSS_1_Type,
         Frequencies,
-        GPS, 
+        GPS,
         GLN,
         GAL,
         BDS,
         QZSS,
-        SBAS, 
+        SBAS,
         NAGIOS,
         GNSS_ID))
     print "Record Updated"
@@ -559,149 +559,16 @@ else:
         IBSS_1_Mount,
         IBSS_1_Type,
         Frequencies,
-        GPS, 
+        GPS,
         GLN,
         GAL,
         BDS,
         QZSS,
-        SBAS, 
+        SBAS,
         NAGIOS))
     print "Record added"
     conn.commit()
     GNSS_ID=str(cursor.lastrowid)
-
-GNSS_FileName="User/Single_Dashboard_"+str(GNSS_ID)
-
-
-print '<a href="/Dashboard/Receiver_List.php?User_ID='+User_ID+'">Back</a>'
-
-Dashboard_File=open(GNSS_FileName+".sh","w")
-Dashboard_File.write("#! /bin/bash\n")
-Dashboard_File.write("#http_proxy=wpad.am.trimblecorp.net:3128\n")
-Dashboard_File.write("#export http_proxy\n")
-Dashboard_File.write("PATH=..:$PATH\n")
-Dashboard_File.write("\n")
-
-Dashboard_File.write("curl -f -m 15 --retry 2 -s http://admin:"+Password+"@"+ Address + ":" + Port +"/prog/show?firmwareVersion  > /dev/null\n")
-Dashboard_File.write("if [ $? -ne 0 ]\n")
-Dashboard_File.write("then\n")
-Dashboard_File.write('    echo "<tr><td>'+ Name+'</td><td>UNREACHABLE</td><td><a target=\"_window\" href=\"http://'+ Address + ":" + Port + '">'+Address+ ":" + Port+'</a></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"')
-Dashboard_File.write("\n")
-Dashboard_File.write("    exit\n")
-Dashboard_File.write("fi\n")
-
-Dashboard_File.write("\n")
-
-Dashboard_File.write("version=`SPS_Dashboard_Version.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-Dashboard_File.write("serial=`SPS_Dashboard_Serial.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-Dashboard_File.write("type=`SPS_Dashboard_Type.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -type " + Receiver_Type + "`\n")
-Dashboard_File.write("pos=`SPS_Dashboard_Position.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -position " + Pos_Type + "`\n")
-
-if Static:
-   Dashboard_File.write("motion=`SPS_Dashboard_Motion.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -static" + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + "`\n")
-else:
-   Dashboard_File.write("motion=`SPS_Dashboard_Motion.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -roving" + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + "`\n")
-
-if Measurement_Method == "ARP" :
-   Dashboard_File.write("antenna=`SPS_Dashboard_Antenna.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -type " + Antenna + " -height " + Ant_Height + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + " -ARP`\n")
-else :
-   Dashboard_File.write("antenna=`SPS_Dashboard_Antenna.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -type " + Antenna + " -height " + Ant_Height + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + " -APC`\n")
-
-if Logging_Enabled :
-   Dashboard_File.write("logging=`SPS_Dashboard_Logging.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -yes -cont -duration " + Logging_Duration +  " -meas " + Logging_Measurement_Interval + " -pos " + Logging_Position_Interval  + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + " -smooth_phase no -smooth_range no`\n")
-else:
-   Dashboard_File.write("logging=`SPS_Dashboard_Logging.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + " -no`\n")
-
-if Email_Enabled :
-   Dashboard_File.write("email=`SPS_Dashboard_Email.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password +  " -email " + Email_To + " -yes`\n")
-else:
-   Dashboard_File.write("email=`SPS_Dashboard_Email.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -no`\n")
-
-Dashboard_File.write("clock=`SPS_Dashboard_Clock.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password +  ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + " -yes`\n")
-
-Dashboard_File.write("elev=`SPS_Dashboard_Elev.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -Elev " + Elev_Mask + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + "`\n")
-Dashboard_File.write("PDOP=`SPS_Dashboard_PDOP.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -PDOP " + PDOP + ' -User ' + str(User_ID) + ' -GNSS ' + str(GNSS_ID) + "`\n")
-
-if FTP_Enabled :
-   Dashboard_File.write("FTP=`SPS_Dashboard_FTP.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password +  " -dir " + FTP_To + " -yes`\n")
-else:
-   Dashboard_File.write("FTP=`SPS_Dashboard_FTP.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -no`\n")
-
-Dashboard_File.write("power=`SPS_Dashboard_Power.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + " -AC`\n")
-Dashboard_File.write("temp=`SPS_Dashboard_Temp.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-Dashboard_File.write("uptime=`SPS_Dashboard_Uptime.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-Dashboard_File.write("warranty=`SPS_Dashboard_Warranty.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-Dashboard_File.write("name=`SPS_Dashboard_Name.pl -host "+ Address + ' -port ' + Port + ' -password ' + Password + "`\n")
-
-Dashboard_File.write('echo "<tr><td>'+ Name+'</td><td>$name</td><td><a target=\"_window\" href=\"http://'+Address+":"+ Port+'\">'+Address +":" + Port +'</a></td><td>$type</td><td>$serial</td><td>$version</td><td>$motion</td><td>$elev</td><td>$PDOP</td><td>$clock</td><td>$temp</td><td>$power</td><td>$uptime</td><td>$logging</td><td>$FTP</td><td>$email</td><td>$pos</td><td>$antenna</td><td>$warranty</td></tr>"\n')
-
-Dashboard_File.close();
-
-st = os.stat(GNSS_FileName+".sh")
-os.chmod(GNSS_FileName+".sh", st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-
-# Make the User File
-
-cursor.execute("SELECT ID, Enabled, name, Loc_Group, Address FROM GNSS WHERE User_ID="+User_ID+" ORDER BY Loc_Group");
-rows = cursor.fetchall()
-#pprint (rows)
-
-User_FileName="User/User_Dashboard_"+str(User_ID)+".sh"
-
-User_File=open(User_FileName,"w")
-
-User_File.write("#! /bin/bash\n")
-User_File.write("""
-PATH=.:$PATH
-echo "Content-type: text/html"
-echo ""
-echo "<html><title>GNSS Dashboard</title>"
-echo "<meta http-equiv=\"refresh\" content=\"300\"><head>"
-echo "<style>"
-echo "h1 {text-align:center}"
-echo "h2 {text-align:center}"
-echo "h3 {text-align:right}"
-echo "</style>"
-echo "<body>"
-""");
-
-
-for row in rows:
-   if row[1]:
-       User_File.write('Single_Dashboard_' + str(row[0])+'.sh > /tmp/GNSS_'+str(row[0])+'&\n');
-   else :
-      User_File.write('Single_Down.sh "'+row[2]+" " +row[4]+'"> /tmp/GNSS_'+str(row[0])+'&\n');
-
-User_File.write("\n")
-
-User_File.write("""
-wait
-echo "<h1>GNSS Status</h1><h2> "
-date
-echo "</h2>"
-echo "<table border=\"1\">"
-echo "<tr><th>Receiver</th><th>Name</th><th>IP</th><th>Type</th><th>Serial</th><th>Version</th><th>Motion</th><th>Elev</th><th>PDOP</th><th>Clock</th><th>Temp</th><th>Power</th><th>Uptime</th><th>logging</th><th>FTP Push</th><th>Email</th><th>Position</th><th>Antenna</th><th>Warranty</th></tr>"
-
-""");
-
-
-Current_Loc_Group=""
-
-for row in rows:
-   if (Current_Loc_Group != row[3]) :
-      User_File.write('echo "<tr><th colspan=\"19\">'+ row[3] + '</th></tr>"\n');
-      Current_Loc_Group = row[3]
-
-   User_File.write("cat /tmp/GNSS_"+str(row[0])+"\n");
-   User_File.write("\n")
-
-User_File.write("""
-echo "</table>"
-echo "</body></html>"
-""")
-
-
-User_File.close();
 
 st = os.stat(User_FileName)
 os.chmod(User_FileName, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
@@ -728,7 +595,7 @@ if Enabled:
         Nagios_Parent.write("   parents gateway\n")
         Nagios_Parent.write("    }"+"\n")
         Nagios_Parent.write("\n");
-        
+
         Nagios_Parent.close()
 
         Nagios_File.write("\n");
@@ -751,83 +618,6 @@ if Enabled:
         Nagios_File.write("       check_command  sps_check_Status!"+GNSS_ID+"\n")
         Nagios_File.write("    }\n");
 
-        """
-        Nagios_File.write("\n");
-        Nagios_File.write("define service {\n");
-        Nagios_File.write("       use     generic-service\n");
-        Nagios_File.write("       host_name "+ Name+"\n");
-        Nagios_File.write("       service_description Battery\n");
-        Nagios_File.write("       check_command  sps_check_Battery!admin:"+Password+"!yes\n")
-        Nagios_File.write("    }\n");
-
-        Nagios_File.write("\n")
-        Nagios_File.write("define service {\n")
-        Nagios_File.write("       use     generic-service\n")
-        Nagios_File.write("       host_name "+ Name+"\n")
-        Nagios_File.write("       service_description Everest\n")
-        Nagios_File.write("       check_command  sps_check_Everest!admin:"+Password+"!yes\n")
-        Nagios_File.write("    }\n")
-
-        Nagios_File.write("\n");
-        Nagios_File.write("define service {\n")
-        Nagios_File.write("       use     generic-service\n")
-        Nagios_File.write("       host_name "+ Name+"\n")
-        Nagios_File.write("       service_description Clock Steering\n")
-        Nagios_File.write("       check_command  sps_check_Clock!admin:"+Password+"!yes\n")
-        Nagios_File.write("    }\n");
-
-
-        Nagios_File.write("\n");
-        Nagios_File.write("define service {\n");
-        Nagios_File.write("       use     generic-service\n");
-        Nagios_File.write("       host_name "+ Name+"\n");
-        Nagios_File.write("       service_description SVs\n");
-        Nagios_File.write("       check_command  sps_check_test_SVs!admin:"+Password+"\n")
-        Nagios_File.write("    }\n");
-
-
-        Nagios_File.write("\n")
-        Nagios_File.write("define service {\n")
-        Nagios_File.write("       use     generic-service\n")
-        Nagios_File.write("       host_name "+ Name+"\n")
-        Nagios_File.write("       service_description PDOP Elevation Mask\n");
-        Nagios_File.write("       check_command   sps_check_PDOP_ELEV!admin:"+Password+"!"+PDOP+"!"+Elev_Mask+"\n")
-        Nagios_File.write("    }\n");
-
-        Nagios_File.write("\n")
-        Nagios_File.write("define service {\n")
-        Nagios_File.write("       use     generic-service\n")
-        Nagios_File.write("       host_name "+ Name+"\n")
-        Nagios_File.write("       service_description Pos Type\n");
-        Nagios_File.write("       check_command            sps_check_Position!admin:"+Password+"!"+Pos_Type+"\n")
-        Nagios_File.write("    }\n");
-
-        Nagios_File.write("\n");
-        Nagios_File.write("define service {\n")
-        Nagios_File.write("       use     generic-service\n")
-        Nagios_File.write("       host_name "+ Name+"\n");
-        Nagios_File.write("       service_description Auth\n");
-        Nagios_File.write("       check_command  sps_check_Auth!"+Auth+"\n")
-        Nagios_File.write("    }\n");
-
-
-        if Static:
-           Nagios_File.write("\n");
-           Nagios_File.write("define service {\n");
-           Nagios_File.write("       use     generic-service\n");
-           Nagios_File.write("       host_name "+ Name+"\n");
-           Nagios_File.write("       service_description Static\n");
-           Nagios_File.write("       check_command  sps_check_Motion!admin:"+Password+"!static\n")
-           Nagios_File.write("    }\n");
-        else:
-           Nagios_File.write("\n");
-           Nagios_File.write("define service {\n");
-           Nagios_File.write("       use     generic-service\n");
-           Nagios_File.write("       host_name "+ Name+"\n");
-           Nagios_File.write("       service_description Static\n");
-           Nagios_File.write("       check_command sps_check_Motion!admin:"+Password+"!kinematic\n")
-           Nagios_File.write("    }\n");
-"""
         if NTRIP_Enabled:
            Nagios_File.write("# NTRIP Enabled\n")
            Nagios_File.write("\n")
