@@ -570,9 +570,6 @@ else:
     conn.commit()
     GNSS_ID=str(cursor.lastrowid)
 
-st = os.stat(User_FileName)
-os.chmod(User_FileName, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-
 
 Nagios_FileName="User/GNSS_"+str(GNSS_ID)
 
