@@ -36,6 +36,23 @@ form = cgi.FieldStorage()
 
 
 print "<html><head>"
+print """<title>GNSS receiver signin</title>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">"""
+
 print "</head><body>"
 
 
@@ -104,5 +121,5 @@ else:
    print '<li><a href="/Dashboard/Receiver_Upgrade.php?User_ID='+User_ID+'">Update Reciever Firmware</a>'
    print '<li><a href="/Dashboard/fw_upload.php?User_ID='+User_ID+'">Upload firmware</a>'
    print '<li><a href="/Dashboard/Edit_User.php?User_ID='+User_ID+'">Edit your user details</a>'
-print '</body>'
+print '</div></div></div></body>'
 print '</html>'
