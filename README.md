@@ -27,6 +27,13 @@ cgi-bin/Dashboard/DB_Setup.php from the command line
 
 change the owner of all of the files
 sudo chown www-data *
+sudo chgrp nagios GNSS.db
+sudo chmod g+w GNSS.db
+
+sudo chgrp nagios db.inc.*
+sudo chmod g+x  db.inc.*
+sudo chgrp nagios Dashboard/
+sudo chmod g+w Dashboard/
 
 You probably have to change the ownership of the cc directory as well.
 
