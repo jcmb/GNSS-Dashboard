@@ -13,7 +13,7 @@ Installation
   Clearly need a nice installer, today just copy the www folder into a folder in a location in your web server pages location.
   cgi goes to the Dashboard subfolder in the cgi-bin folder for that site.
 
-  Make the folder /usr/Firmware.
+  Make the folder /usr/Firmware. Change the owner to be www-data
 
 sqlite3 and the php version of it needs to be installed
 
@@ -40,5 +40,8 @@ You probably have to change the ownership of the cc directory as well.
 You need to create /usr/lib/cgi-bin/Dashboard/User directory.
 change the owner of all of the User folder. This will be used by Nagios
 
+To be able to support the loading of firmware the default PHP settings need to be changed to allow a post_max_size of 20m
 
-Once you have done that it is a g
+/etc/php/7.0/apache2/php.ini
+upload_max_filesize = 20M
+post_max_size = 100M
