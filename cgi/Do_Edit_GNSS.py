@@ -58,6 +58,19 @@ if "User_ID" not in form:
 else:
     User_ID=form["User_ID"].value
 
+cursor.execute('SELECT * from Users WHERE User_ID=? COLLATE NOCASE',(User_ID,));
+user_details=cursor.fetchone()
+if user_details == None:
+   print "User ID invalid"
+   quit(90)
+
+
+#pprint (user_details)
+
+User_Name=str(user_details[1])
+User_Email=str(user_details[4])
+
+
 Enabled="Enabled" in form
 
 if "GNSS_ID" not in form:
@@ -590,6 +603,8 @@ if Enabled:
         Nagios_Parent.write("   use  generic-host"+"\n")
         Nagios_Parent.write("   check_command SUCCESS\n")
         Nagios_Parent.write("   parents gateway\n")
+        Nagios_Parent.write("   contacts " + User_Name +"\n")
+
         Nagios_Parent.write("    }"+"\n")
         Nagios_Parent.write("\n");
 
@@ -604,6 +619,8 @@ if Enabled:
         Nagios_File.write("   check_command http_active\n")
         Nagios_File.write("   max_check_attempts 4\n")
         Nagios_File.write("   parents "+Loc_Group+"\n")
+        Nagios_Parent.write("   contacts " + User_Name +"\n")
+
         Nagios_File.write("    }"+"\n")
         Nagios_File.write("\n");
 
