@@ -58,7 +58,7 @@ if "User_ID" not in form:
 else:
     User_ID=form["User_ID"].value
 
-cursor.execute('SELECT * from Users WHERE User_ID=? COLLATE NOCASE',(User_ID,));
+cursor.execute('SELECT * from Users WHERE ID=? COLLATE NOCASE',(User_ID,));
 user_details=cursor.fetchone()
 if user_details == None:
    print "User ID invalid"
