@@ -2,8 +2,22 @@
 <html>
 <head>
 <title>Sign into the Receiver Dashboard</title>
-</head>
-<body>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
+
 <h1>Sign into the Receiver Dashboard</h1>
 
 <form action="/cgi-bin/Dashboard/signin.py" method="POST">
@@ -27,6 +41,10 @@ Password:
 </table>
 <input value="Login" type="submit" name="Login">
 </form>
+
+</div>
+</div>
+</div>
 
 </body>
 </html>
