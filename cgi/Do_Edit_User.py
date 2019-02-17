@@ -121,7 +121,7 @@ else:
     conn.commit()
     User_ID=str(cursor.lastrowid)
 
-Nagios_FileName="User/"+Name+".cfg"
+Nagios_FileName="User/User-"+Name
 
 Nagios_File=open(Nagios_FileName+".cfg","w")
 
