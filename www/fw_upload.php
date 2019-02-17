@@ -1,7 +1,22 @@
 <html>
 <head>
-</head>
-<body>
+<title>GNSS Firmware Upload</title>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
+
 <h1>Upload Firmware Files</h1>
 
 
@@ -18,15 +33,15 @@ function check_file(file_control,name) {
       }
    return true
    }
-   
-          
+
+
 
   function check_files() {
-  return check_file("GamelUpload","SPS855") && 
-         check_file("RockyUpload","SPS985") && 
-         check_file("TennisBallUpload","SPS585") && 
-         check_file("MetallicaUpload","SPS356") && 
-         check_file("ZeppelinUpload","BD935"); 
+  return check_file("GamelUpload","SPS855") &&
+         check_file("RockyUpload","SPS985") &&
+         check_file("TennisBallUpload","SPS585") &&
+         check_file("MetallicaUpload","SPS356") &&
+         check_file("ZeppelinUpload","BD935");
   }
 </script>
 
@@ -88,13 +103,20 @@ SPS356: (Metallica)
 </td>
 </tr>
 <tr>
-<tr>
 <td>
 SPS985: (Rockhopper)
 </td><td>
 <input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
 </td>
 </tr>
+<tr>
+<td>
+SPS986: (Chinstrap)
+</td><td>
+<input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
+</td>
+</tr>
+<tr>
 <td>
 SPS585: (TennisBall)
 </td><td>
@@ -112,6 +134,9 @@ BD935: (Zeppelin)
 
 <input type="submit">
 </form>
+</div>
+</div>
+</div>
 
 
 </body>
