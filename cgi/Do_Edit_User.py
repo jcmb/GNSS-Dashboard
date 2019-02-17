@@ -121,6 +121,21 @@ else:
     conn.commit()
     User_ID=str(cursor.lastrowid)
 
+Nagios_FileName="User/"+Name+".cfg"
+
+Nagios_File=open(Nagios_FileName+".cfg","w")
+
+Nagios_File.write("# a user definition for the GNSS Receiver, Auto Generated\n")
+
+Nagios_File.write("define contact {\n")
+Nagios_File.write("    contact_name                    " + Name +"\n")
+Nagios_File.write("    use                             generic-contact          ; Inherit default values from generic-contact template (defined above)\n")
+Nagios_File.write("    service_notification_commands   notify-service-by-email\n")
+Nagios_File.write("    host_notification_commands      notify-host-by-email\n")
+Nagios_File.write("    email                           " + Email + " ; Contacts email address\n")
+Nagios_File.write("}\n")
+
+
 print '<a href="/Dashboard/Receiver_List.php?User_ID='+User_ID+'">Back</a>'
 print '</body>'
 print '</html>'
