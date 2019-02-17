@@ -602,6 +602,7 @@ if Enabled:
 #        Nagios_Parent.write("   address "+Address+"\n")
         Nagios_Parent.write("   use  generic-host"+"\n")
         Nagios_Parent.write("   check_command SUCCESS\n")
+        Nagios_Parent.write("   max_check_attempts 2\n")
         Nagios_Parent.write("   parents gateway\n")
         Nagios_Parent.write("   contacts " + User_Name +"\n")
 
@@ -617,7 +618,7 @@ if Enabled:
         Nagios_File.write("   address "+Address+"\n")
         Nagios_File.write("   _port "+Port+"\n")
         Nagios_File.write("   check_command http_active\n")
-        Nagios_File.write("   max_check_attempts 4\n")
+        Nagios_File.write("   max_check_attempts 2\n")
         Nagios_File.write("   parents "+Loc_Group+"\n")
         Nagios_File.write("   contacts " + User_Name +"\n")
 
