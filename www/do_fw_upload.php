@@ -6,7 +6,7 @@
 <?php
 error_reporting(E_ALL);
 include 'error.php.inc';
-include 'db.inc.php';   
+include 'db.inc.php';
 
 echo "Firmware Uploading:<br/>";
 
@@ -45,8 +45,8 @@ case 'K':
   $filemax *= 1024;
 }
 
-if (10000000 > $filemax) {
-   echo "The firmware files are to large to upload. It must be possible to upload at least 10Mb files";
+if (20000000 > $filemax) {
+   echo "The firmware files are to large to upload. It must be possible to upload at least 20Mb files";
    echo "<br/>Contact your admin";
    phpinfo();
    exit(100);
@@ -92,6 +92,14 @@ if ($Version=="") {
     quit(100);
     }
 
+$TitianVersion=$_REQUEST["Titianversion"];
+$TitianVersion=clean($Titianversion,strlen($Titianversion));
+if ($Titianversion=="") {
+    echo "Titan Firmware Version must not be blank";
+    quit(100);
+    }
+
+
 
 if ($_FILES['GamelUpload'] ) {
    echo "SPS855 File: " , $_FILES['GamelUpload']['name'] , ", ";
@@ -133,6 +141,27 @@ else {
    }
 
 echo "<br/>";
+
+if ($_FILES['ChinstrapUpload'] ) {
+   echo "SPS986 File: " , $_FILES['ChinstrapUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No SPS986 File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["ChinstrapUpload"]["tmp_name"];
+   $ChinstrapName = $_FILES["ChinstrapUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$ChinstrapName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br/>";
+
 
 if ($_FILES['MetallicaUpload'] ) {
    echo "SPS356 File: " , $_FILES['MetallicaUpload']['name'] , ", ";
@@ -192,16 +221,37 @@ else {
    quit(101);
    }
 
+if ($_FILES['BarracudaUpload'] ) {
+   echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No Barra File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["BarracudaUpload"]["tmp_name"];
+   $BCudaName = $_FILES["BarracudaUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+
 echo "<br/>";
 
-$db = new SQLite3($databaseFile);   
+$db = new SQLite3($databaseFile);
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
 #echo "UPDATE Firmware SET Version=\"$Version\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\", BrewsterFile=\"$BrewsterName\", TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
 
 
 
-$db->exec("UPDATE Firmware SET Version=\"$Version\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\", BrewsterFile=\"$BrewsterName\", TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"");
+$db->exec("UPDATE Firmware SET Version=\"$Version\", BCudaFile=\"$BCudaName\", MetallicaFile=\"$MetallicaName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\", BrewsterFile=\"$BrewsterName\", TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"");
+
+
 
 print "<p/>You can now:<ul>";
 echo '<li><a href="/Dashboard/Receiver_List.php?User_ID=',$User_ID,'">View and edit receivers</a>';

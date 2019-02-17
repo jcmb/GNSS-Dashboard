@@ -67,11 +67,20 @@ Firmware Level:
 </select>
 </td>
 </tr>
+
 <tr>
 <td>
 Firmware Version:
 </td><td>
 <input name="version" type="text"><br/>
+</td>
+</tr>
+
+<tr>
+<td>
+New RTK Version:
+</td><td>
+<input name="Titianversion" type="text"><br/>
 </td>
 </tr>
 </table>
