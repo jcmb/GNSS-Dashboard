@@ -88,18 +88,25 @@ if ($User_ID=="") {
 
 <table width="100%">
 <tr>
+<td>
+SPS356: (Metallica)
+</td><td>
+<input size="50" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
+</td>
+</tr>
+<tr>
+<td>
+SPS585: (TennisBall)
+</td><td>
+<input size="50" type="file" name="TennisBallUpload" id="TennisBallUpload" accept=".timg" required/></br>
+</td>
+</tr>
+<tr>
 <td width="33%">
 SPS852/SPS855: (Gamel)
 </td>
 <td width="67%">
 <input size="50" type="file" name="GamelUpload" id="GamelUpload" accept=".timg" required/></br>
-</td>
-</tr>
-<tr>
-<td>
-SPS356: (Metallica)
-</td><td>
-<input size="50" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
 </td>
 </tr>
 <tr>
@@ -113,14 +120,7 @@ SPS985: (Rockhopper)
 <td>
 SPS986: (Chinstrap)
 </td><td>
-<input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
-</td>
-</tr>
-<tr>
-<td>
-SPS585: (TennisBall)
-</td><td>
-<input size="50" type="file" name="TennisBallUpload" id="TennisBallUpload" accept=".timg" required/></br>
+<input size="50" type="file" name="ChinstrapUpload" id="ChinstrapUpload" accept=".timg"  required/></br>
 </td>
 </tr>
 <tr>
@@ -128,6 +128,13 @@ SPS585: (TennisBall)
 BD935: (Zeppelin)
 </td><td>
 <input size="50" type="file" name="ZeppelinUpload" id="ZeppelinUpload" accept=".timg" required/></br>
+</td>
+</tr>
+<tr>
+<td>
+(Barra)
+</td><td>
+<input size="50" type="file" name="BarracudaUpload" id="BarracudaUpload" accept=".timg" required/></br>
 </td>
 </tr>
 </table>

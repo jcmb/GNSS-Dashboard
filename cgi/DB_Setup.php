@@ -118,9 +118,14 @@
   $db->exec('CREATE TABLE IF NOT EXISTS Firmware (
       Type TEXT,
       Version TEXT,
+      Titian_Version TEXT,
       GamelFile TEXT,
       RockyFile TEXT,
-      BrewsterFile TEXT
+      BrewsterFile TEXT,
+      MetallicaFile TEXT,
+      TennisBallFile TEXT,
+      ChinstrapFile TEXT,
+      BCudaFile  TEXT
       )');
 
   $db->exec('INSERT INTO Firmware VALUES("Released","0.0","","","")');
