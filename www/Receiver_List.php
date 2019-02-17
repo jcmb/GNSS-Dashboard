@@ -1,15 +1,28 @@
 <html>
 <head>
 <title>GNSS Receivers</title>
-<link rel="stylesheet" type="text/css" href="/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
+
 
 <style>
 
 table.tablesorter tbody td.Issue {
     color: red;
-} 
+}
 </style>
 <script>
 $(document).ready(function()
@@ -206,3 +219,9 @@ if ($_REQUEST["User_ID"]) {
     }
 ?>
 </form>
+</div>
+</div>
+</div>
+
+</html>
+
