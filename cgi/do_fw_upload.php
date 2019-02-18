@@ -160,7 +160,7 @@ else {
    quit(101);
    }
 
-echo "<br/>";
+echo "<br/>\n";
 
 
 if ($_FILES['MetallicaUpload'] ) {
@@ -181,7 +181,7 @@ else {
    quit(101);
    }
 
-echo "<br/>";
+echo "<br/>\n";
 
 if ($_FILES['TennisBallUpload'] ) {
    echo "SPS585 File: " , $_FILES['TennisBallUpload']['name'] , ", ";
@@ -201,7 +201,7 @@ else {
    quit(101);
    }
 
-echo "<br/>";
+echo "<br/>\n";
 
 if ($_FILES['ZeppelinUpload'] ) {
    echo "BD935 File: " , $_FILES['ZeppelinUpload']['name'] , ", ";
@@ -221,7 +221,7 @@ else {
    quit(101);
    }
 
-echo "<br/>";
+echo "<br/>\n";
 
 if ($_FILES['BarracudaUpload'] ) {
    echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
@@ -233,8 +233,10 @@ else {
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name =  $_FILES["BarracudaUpload"]["tmp_name"];
    $BCudaName = $_FILES["BarracudaUpload"]["name"];
+   echo "tmp_name:";
    echo "$tmp_name";
    echo "<br/>";
+   echo "BCudaName:";
    echo "$BCudaName";
    echo "<br/>";
 
@@ -246,7 +248,7 @@ else {
    quit(101);
    }
 
-echo "<br/>";
+echo "<br/>\n";
 
 $db = new SQLite3($databaseFile);
 #echo "Datbase file " , $databaseFile, " opened<br/>";
