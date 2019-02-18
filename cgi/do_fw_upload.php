@@ -45,8 +45,8 @@ case 'K':
   $filemax *= 1024;
 }
 
-if (20000000 > $filemax) {
-   echo "The firmware files are to large to upload. It must be possible to upload at least 20Mb files";
+if (25000000 > $filemax) {
+   echo "The firmware files are to large to upload. It must be possible to upload at least 25Mb files";
    echo "<br/>Contact your admin";
    phpinfo();
    exit(100);
@@ -213,12 +213,12 @@ else {
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name = $_FILES["ZeppelinUpload"]["tmp_name"];
    $ZeppelinName = $_FILES["ZeppelinUpload"]["name"];
-   echo "tmp_name:";
-   echo "$tmp_name";
-   echo "<br/>\n";
-   echo "ZeppenName:";
-   echo "$ZeppelinName";
-   echo "<br/>\n";
+#   echo "tmp_name:";
+#   echo "$tmp_name";
+#   echo "<br/>\n";
+#   echo "ZeppenName:";
+#   echo "$ZeppelinName";
+#   echo "<br/>\n";
 
    move_uploaded_file($tmp_name, "$firmwareLocation/$ZeppelinName");
    echo "uploaded";
@@ -238,16 +238,16 @@ else {
     }
 
 if ($error == UPLOAD_ERR_OK) {
-   var_dump ($_FILES);
-   echo "<br/>";
+#   var_dump ($_FILES);
+#   echo "<br/>";
    $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
    $BCudaName = $_FILES['BarracudaUpload']["name"];
-   echo "tmp_name:";
-   echo "$tmp_name";
-   echo "<br/>";
-   echo "BCudaName:";
-   echo "$BCudaName";
-   echo "<br/>";
+#   echo "tmp_name:";
+#   echo "$tmp_name";
+#   echo "<br/>";
+#   echo "BCudaName:";
+#   echo "$BCudaName";
+#   echo "<br/>";
 
    move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
    echo "uploaded";

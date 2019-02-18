@@ -43,5 +43,5 @@ change the owner of all of the User folder. This will be used by Nagios
 To be able to support the loading of firmware the default PHP settings need to be changed to allow a post_max_size of 20m
 
 /etc/php/7.0/apache2/php.ini
-upload_max_filesize = 20M
+upload_max_filesize = 25M
 post_max_size = 100M
