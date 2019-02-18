@@ -1,11 +1,25 @@
 <html>
 <head>
 <title>GNSS Receivers for Upgrading</title>
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
 <style>
 .td_header{text-align:center;font-weight:bold;}
 </style>
-<script src="http://code.jquery.com/jquery-2.1.1.min.js">
-</script>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
 
 <script>
 function AdjustSelections(val) {
@@ -179,5 +193,8 @@ $( document).ready(function() {
    });
 
 </script>
+</div>
+</div>
+</div>
 </body>
 </html>
