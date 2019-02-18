@@ -82,7 +82,8 @@ for row in rows:
    if "Upgrade_" + str(row["id"]) in form:
 #      print (row["name"]+", ")
       firmware_file=""
-      print row["name"]+ " (" + str(row["id"]) + ") Type: ",
+      GNSS_ID=row["id"]
+      print row["name"]+ " (" + str(GNSS_ID) + ") Type: ",
       Reciever_Type = int(row["Reciever_Type"])
       if Reciever_Type == 107 :
          print "SPS852 ",
@@ -111,7 +112,7 @@ for row in rows:
          print "Unknown Receiver Type: {}".format(Reciever_Type)
 
       cursor.execute("UPDATE GNSS SET FIRMWARE_Version=? where id=?",(Firmware,GNSS_ID))
-      cursor.conn.commit()
+      conn.commit()
 
       if firmware_file=="" :
          print "Not Upgrading"
@@ -126,5 +127,5 @@ for row in rows:
             ]
 #         print cmd
 #         Popen(cmd,stdout=None)
-##         call(cmd,stdout=None)
+         call(cmd,stdout=None)
 #      print ("</pre><br/>")
