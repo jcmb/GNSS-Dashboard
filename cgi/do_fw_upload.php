@@ -262,7 +262,7 @@ echo "<br/>\n";
 $db = new SQLite3($databaseFile);
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
-echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", MetallicaFile=\"$MetallicaName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\", BrewsterFile=\"$BrewsterName\", TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
+echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\", BrewsterFile=\"$BrewsterName\", TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
 
 
 
@@ -270,7 +270,7 @@ $db->exec("UPDATE Firmware SET
    Version=\"$Version\",
    Titian_Version=\"$TitianVersion\",
    BCudaFile=\"$BCudaName\",
-   MetallicaFile=\"$MetallicaName\",
+   BrewsterFile=\"$BrewsterName\",
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",
    RockyFile=\"$RockyName\",
