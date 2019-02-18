@@ -180,7 +180,7 @@ if (!($db->close()))
 
 <button type="button" onclick="AllOff()">Unselect all</button>
 <button type="button" onclick="AllOn()">Select all</button>
-
+<br/>
 <input type="submit" value="Upgrade GNSS Receivers" />
 <p/>
 </form>

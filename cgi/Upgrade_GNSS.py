@@ -23,12 +23,12 @@ cgitb.enable()
 
 try:
    conn = sqlite3.connect(databaseFile())
-#   print databaseFile()+ " Open\n" 
+#   print databaseFile()+ " Open\n"
 except sqlite3.Error:
    print "Error opening db. " + databaseFile() +"\n"
    quit()
-   
-conn.row_factory = sqlite3.Row      
+
+conn.row_factory = sqlite3.Row
 cursor = conn.cursor()
 
 form = cgi.FieldStorage()
@@ -56,9 +56,9 @@ else:
     Firmware_ID=form["Firmware"].value
 
 
-query = 'SELECT Version, GamelFile, RockyFile, BrewsterFile, TennisBallFile, ZeppelinFile FROM Firmware where type="' + Firmware_ID + '"';
-
+query = 'SELECT Version, GamelFile, RockyFile, BrewsterFile, TennisBallFile, ZeppelinFile, ChinstrapFile, BCudaFile FROM Firmware where type="' + Firmware_ID + '"';
 cursor.execute(query);
+
 rows = cursor.fetchone()
 #print rows
 Firmware=(rows[0])
@@ -67,6 +67,8 @@ RockyFile=rows[2]
 BrewsterFile=rows[3]
 TennisBallFile=rows[4]
 ZeppelinFile=rows[5]
+ChinstrapFile=rows[6]
+BCudaFile=rows[7]
 
 print "Upgrading to firmware V" + Firmware + "<br/>"
 #print os.getcwd()
@@ -93,6 +95,9 @@ for row in rows:
       elif Reciever_Type == 101 :
          print "SPS985 ",
          firmware_file=RockyFile
+      elif Reciever_Type == 169 :
+         print "SPS986 ",
+         firmware_file=ChinstrapFile
       elif Reciever_Type == 250 :
          print "SPS585 ",
          firmware_file=TennisBallFile
@@ -105,12 +110,15 @@ for row in rows:
       else :
          print "Unknown Receiver Type: {}".format(Reciever_Type)
 
+      cursor.execute("UPDATE GNSS SET FIRMWARE_Version=? where id=?",(Firmware,GNSS_ID))
+      cursor.conn.commit()
+
       if firmware_file=="" :
          print "Not Upgrading"
       else :
          print "Upgrading"
          cmd=[
-            "./upgrade_with_clone.py", 
+            "./upgrade_with_clone.py",
             "-padmin:" + row["Password"],
             "-cGPS_"+ str(row["id"]),
             "-i" + row["Address"]+":"+str(row["Port"]) ,
@@ -118,5 +126,5 @@ for row in rows:
             ]
 #         print cmd
 #         Popen(cmd,stdout=None)
-         call(cmd,stdout=None)
+##         call(cmd,stdout=None)
 #      print ("</pre><br/>")
