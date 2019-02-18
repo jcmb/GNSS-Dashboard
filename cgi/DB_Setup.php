@@ -51,7 +51,8 @@
       GAL BOOLEAN,
       BDS BOOLEAN,
       QZSS BOOLEAN,
-      NAGIOS BOOLEAN
+      NAGIOS BOOLEAN,
+      FIRMWARE_Version TEXT
       )');
 
   $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
@@ -112,7 +113,9 @@
       BDS BOOLEAN,
       BDS_Valid BOOLEAN,
       QZSS BOOLEAN,
-      QZSS_Valid BOOLEAN
+      QZSS_Valid BOOLEAN,
+      FIRMWARE_Valid BOOLEAN
+
       )');
 
   $db->exec('CREATE TABLE IF NOT EXISTS Firmware (
