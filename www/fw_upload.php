@@ -126,18 +126,17 @@ SPS852/SPS855: (Gamel)
 
 <tr>
 <td>
-SPS985: (Rockhopper)
-</td><td>
-<input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
-</td>
-</tr>
-
-
-<tr>
-<td>
 SPS356: (Metallica)
 </td><td>
 <input size="50" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
+</td>
+</tr>
+<tr>
+
+<td>
+SPS985: (Rockhopper)
+</td><td>
+<input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
 </td>
 </tr>
 

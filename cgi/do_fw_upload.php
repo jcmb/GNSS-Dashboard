@@ -213,6 +213,13 @@ else {
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name = $_FILES["ZeppelinUpload"]["tmp_name"];
    $ZeppelinName = $_FILES["ZeppelinUpload"]["name"];
+   echo "tmp_name:";
+   echo "$tmp_name";
+   echo "<br/>\n";
+   echo "ZeppenName:";
+   echo "$ZeppelinName";
+   echo "<br/>\n";
+
    move_uploaded_file($tmp_name, "$firmwareLocation/$ZeppelinName");
    echo "uploaded";
    }
@@ -231,6 +238,8 @@ else {
     }
 
 if ($error == UPLOAD_ERR_OK) {
+   echo '$_FILES["BarracudaUpload"]';
+   echo "<br/>";
    $tmp_name =  $_FILES["BarracudaUpload"]["tmp_name"];
    $BCudaName = $_FILES["BarracudaUpload"]["name"];
    echo "tmp_name:";
