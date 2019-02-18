@@ -221,6 +221,8 @@ else {
    quit(101);
    }
 
+echo "<br/>";
+
 if ($_FILES['BarracudaUpload'] ) {
    echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
    }
@@ -238,7 +240,6 @@ else {
    echo "Upload Error";
    quit(101);
    }
-
 
 echo "<br/>";
 
