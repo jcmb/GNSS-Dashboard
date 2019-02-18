@@ -41,11 +41,13 @@ function check_file(file_control,name) {
          check_file("RockyUpload","SPS985") &&
          check_file("TennisBallUpload","SPS585") &&
          check_file("MetallicaUpload","SPS356") &&
+         check_file("ChinstrapUpload","BD986") &&
+         check_file("BarracudaUpload","Barra") &&
          check_file("ZeppelinUpload","BD935");
   }
 </script>
 
-<form method="post" action="do_fw_upload.php" enctype="multipart/form-data" onsubmit="return check_files()">
+<form method="post" action="/cgi-bin/do_fw_upload.php" enctype="multipart/form-data" onsubmit="return check_files()">
 <p><strong>Firmware Information:</strong> <br>
 
 <?php

@@ -233,9 +233,9 @@ else {
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name =  $_FILES["BarracudaUpload"]["tmp_name"];
    $BCudaName = $_FILES["BarracudaUpload"]["name"];
-   echo "$tmp_name"
+   echo "$tmp_name";
    echo "<br/>";
-   echo "$BCudaName"
+   echo "$BCudaName";
    echo "<br/>";
 
    move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
