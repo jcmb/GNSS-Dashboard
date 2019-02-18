@@ -21,9 +21,22 @@ else {
 
 ?>
 </title>
-</head>
-<body>
-<H1>
+
+<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/jquery.tablesorter.min.js"></script>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area -->
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
 
 <?php
 #   error_reporting(E_ALL);
@@ -258,7 +271,7 @@ Type:
   <option value="250" <?php echo ($row["Antenna"]=="250"?"selected":""); ?>>GA530</option>
   <option value="470" <?php echo ($row["Antenna"]=="470"?"selected":""); ?>>GA830</option>
   <option value="379" <?php echo ($row["Antenna"]=="379"?"selected":""); ?>>SPS585</option>
-  <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option> 
+  <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
   <option value="184" <?php echo ($row["Antenna"]=="184"?"selected":""); ?>>Zephyr 2</option>
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":"");  echo ($Editing?"":"selected") ?>>Zephyr Geodetic 2</option>
@@ -270,7 +283,7 @@ Type:
 <tr><td>
 Antenna Height:
 </td><td>
-<input name="Ant_Height" type="number" min="-.1" max="3" step="0.001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
+<input name="Ant_Height" type="number" min="-.1" max="4" step="0.001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
 </td></tr>
 
 <tr><td>
@@ -541,5 +554,8 @@ if ($Editing) {
 ?>
 
 </form>
+</div>
+</div>
+</div>
 </body>
 </html>
