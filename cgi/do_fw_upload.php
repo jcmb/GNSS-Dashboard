@@ -238,7 +238,7 @@ else {
     }
 
 if ($error == UPLOAD_ERR_OK) {
-   echo "$_FILES";
+   var_dump ($_FILES);
    echo "<br/>";
    $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
    $BCudaName = $_FILES['BarracudaUpload']["name"];
