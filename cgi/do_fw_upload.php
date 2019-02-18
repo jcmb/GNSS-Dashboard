@@ -238,10 +238,10 @@ else {
     }
 
 if ($error == UPLOAD_ERR_OK) {
-   echo '$_FILES["BarracudaUpload"]';
+   echo "$_FILES['BarracudaUpload']";
    echo "<br/>";
-   $tmp_name =  $_FILES["BarracudaUpload"]["tmp_name"];
-   $BCudaName = $_FILES["BarracudaUpload"]["name"];
+   $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
+   $BCudaName = $_FILES['BarracudaUpload']["name"];
    echo "tmp_name:";
    echo "$tmp_name";
    echo "<br/>";
