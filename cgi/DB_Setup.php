@@ -130,8 +130,8 @@
 
   $db->exec('INSERT INTO Firmware VALUES("Released","0.0","","","","","","","","")');
   $db->exec('INSERT INTO Firmware VALUES("Beta","0.1","","","","","","","","")');
-  $db->exec('INSERT INTO Firmware VALUES("Alpha","0.2","","","","","","","","")');
-  $db->exec('INSERT INTO Firmware VALUES("Test","0.3","","","","","","","","")');
+  $db->exec('INSERT INTO Firmware VALUES("Branch","0.2","","","","","","","","")');
+  $db->exec('INSERT INTO Firmware VALUES("Trunk","0.3","","","","","","","","")');
 
   $db->exec('CREATE TABLE IF NOT EXISTS Users (
       ID INTEGER PRIMARY KEY AUTOINCREMENT  ,
