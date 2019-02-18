@@ -47,7 +47,7 @@ function check_file(file_control,name) {
   }
 </script>
 
-<form method="post" action="/cgi-bin/do_fw_upload.php" enctype="multipart/form-data" onsubmit="return check_files()">
+<form method="post" action="/cgi-bin/Dashboard/do_fw_upload.php" enctype="multipart/form-data" onsubmit="return check_files()">
 <p><strong>Firmware Information:</strong> <br>
 
 <?php
