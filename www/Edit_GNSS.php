@@ -154,6 +154,7 @@ Receiver:
   <option value="38" <?php echo ($row["Reciever_Type"]=="38")?"selected":"" ?> >SPS850</option>
   <option value="59" <?php echo ($row["Reciever_Type"]=="59")?"selected":"" ?> >SPS851</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?> >BD935</option>
+  <option value="100" <?php echo ($row["Reciever_Type"]=="210")?"selected":"" ?> >R10</option>
 </select>
 </td></tr>
 
@@ -277,6 +278,7 @@ Type:
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":"");  echo ($Editing?"":"selected") ?>>Zephyr Geodetic 2</option>
   <option value="512" <?php echo ($row["Antenna"]=="512"?"selected":""); ?>>Zephyr 3 Rover</option>
   <option value="570" <?php echo ($row["Antenna"]=="570"?"selected":"");  ?>>Zephyr 3 Base</option>
+  <option value="146" <?php echo ($row["Antenna"]=="146"?"selected":"");  ?>>R10</option>
 </select>
 </td></tr>
 
