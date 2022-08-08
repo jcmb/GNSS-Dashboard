@@ -10,7 +10,7 @@ Also inclused is a system for upgrading firmware for the receivers.
 
 Installation
 
-  Clearly need a nice installer, today just copy the www folder into a folder in a location in your web server pages location.
+  Clearly need a nice installer, today just copy the www folder into a folder in a Dashboard directory in your web server pages root.
   cgi goes to the Dashboard subfolder in the cgi-bin folder for that site.
 
   Make the folder /usr/Firmware. Change the owner to be www-data
@@ -24,35 +24,36 @@ make sure that php is enabled for the web server
 create the database
 
     cd /usr/lib/cgi-bin/Dashboard
-
-
     sudo php ./DB_Setup.php
-cgi-bin/Dashboard/DB_Setup.php from the command line
+
 
 change the owner of all of the files
     sudo chown www-data /usr/lib/cgi-bin/Dashboard
-    sudo chown www-data /usr/lib/cgi-bin/Dashboard/**
-    sudo chgrp nagios GNSS.db
+    cd /usr/lib/cgi-bin/Dashboard/
+    sudo chown www-data *
+    sudo chgrp www-data GNSS.db
     sudo chmod g+w GNSS.db
+    sudo chgrp www-data db.inc.*
+    sudo chmod g+x  db.inc.*
+    sudo chmod +x *.php *.sh *.pl *.py
 
-change the rights on the files
+Note that if the cgi files are not installed in /usr/lib/cgi-bin/ you have to edit the db.inc files
 
-sudo chgrp nagios db.inc.*
-sudo chmod g+x  db.inc.*
-sudo chgrp nagios Dashboard/
-sudo chmod g+w Dashboard/
+change the rights on the HTML files.
 
-Change to the cgi-bin/Dashboard directory.
-make everything
- chmod +x *.php *.sh *.pl *.py
+    cd /var/www/
+    sudo chgrp www-data Dashboard/
+    sudo chmod g+w Dashboard/
 
-You probably have to change the ownership of the cc directory as well.
 
-You need to create /usr/lib/cgi-bin/Dashboard/User directory.
-change the owner of all of the User folder. This will be used by Nagios
+You need to create /usr/lib/cgi-bin/Dashboard/User directory. This will be used by Nagios
+
+    sudo mkdir /usr/lib/cgi-bin/Dashboard/User
+    sudo chown www-data /usr/lib/cgi-bin/Dashboard/User
+
 
 To be able to support the loading of firmware the default PHP settings need to be changed to allow a post_max_size of 20m
 
-/etc/php/7.0/apache2/php.ini
-upload_max_filesize = 25M
-post_max_size = 100M
+    sudo nano /etc/php/7.4/apache2/php.ini
+    upload_max_filesize = 25M
+    post_max_size = 100M
