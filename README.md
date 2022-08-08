@@ -17,18 +17,23 @@ Installation
 
 sqlite3 and the php version of it needs to be installed
 
-apt-get install sqlite3 php-sqlite3
+  apt-get install sqlite3 php-sqlite3
 
 make sure that php is enabled for the web server
 
 create the database
 
+    cd /usr/lib/cgi-bin/Dashboard
+
+
+    sudo php ./DB_Setup.php
 cgi-bin/Dashboard/DB_Setup.php from the command line
 
 change the owner of all of the files
-sudo chown www-data *
-sudo chgrp nagios GNSS.db
-sudo chmod g+w GNSS.db
+    sudo chown www-data /usr/lib/cgi-bin/Dashboard
+    sudo chown www-data /usr/lib/cgi-bin/Dashboard/**
+    sudo chgrp nagios GNSS.db
+    sudo chmod g+w GNSS.db
 
 change the rights on the files
 
@@ -38,7 +43,7 @@ sudo chgrp nagios Dashboard/
 sudo chmod g+w Dashboard/
 
 Change to the cgi-bin/Dashboard directory.
-make everything 
+make everything
  chmod +x *.php *.sh *.pl *.py
 
 You probably have to change the ownership of the cc directory as well.
