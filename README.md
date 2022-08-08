@@ -1,5 +1,5 @@
 # GNSS-Dashboard
-##GNSS Dashboard and upgrade system
+## GNSS Dashboard and upgrade system
 
 The GNSS-Dashboard system is desgined for users who have a large number of Trimble GNSS receivers that you
 want to make sure that the settings are configured correctly and will get an alert if they are not configured correctly.
@@ -30,10 +30,16 @@ sudo chown www-data *
 sudo chgrp nagios GNSS.db
 sudo chmod g+w GNSS.db
 
+change the rights on the files
+
 sudo chgrp nagios db.inc.*
 sudo chmod g+x  db.inc.*
 sudo chgrp nagios Dashboard/
 sudo chmod g+w Dashboard/
+
+Change to the cgi-bin/Dashboard directory.
+make everything 
+ chmod +x *.php *.sh *.pl *.py
 
 You probably have to change the ownership of the cc directory as well.
 
