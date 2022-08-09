@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+
 # Rewrite of the SPS Dashboard tools into python and instead of writing the HTML it writes to the database
 import cgitb
 #cgitb.enable(display=0, logdir="/var/www/Crashes")
@@ -51,7 +56,10 @@ class DB_Class:
     def open (self):
 
         try:
-           self.conn = sqlite3.connect(databaseFile())
+           fd = os.open(databaseFile(), os.O_RDONLY)
+           self.conn = sqlite3.connect('/dev/fd/%d' % fd)
+           os.close(fd)
+#           self.conn = sqlite3.connect(databaseFile())
         #   print databaseFile()+ " Open\n"
         except sqlite3.Error:
            print "Error opening db. " + databaseFile() +"\n"
@@ -60,11 +68,28 @@ class DB_Class:
         self.conn.row_factory = sqlite3.Row
         self.GNSS   = self.conn.cursor()
         self.STATUS = self.conn.cursor()
+        self.FIRMWARE = self.conn.cursor()
+
+    def read_Firmware_configuration (self):
+        query = 'SELECT * FROM Firmware'
+        self.FIRMWARE.execute(query);
+        row = self.FIRMWARE.fetchone()
+        vers={}
+        while (row != None):
+#           pprint(row)
+#           pprint(tuple(row))
+           vers[row["Type"]]=(row["Version"],row["Titian_Version"])
+           row = self.FIRMWARE.fetchone()
+#        pprint(vers)
+        return(vers)
+
 
     def read_GNSS_configuration (self,GNSS_ID):
         query = 'SELECT * FROM GNSS where id="' + str(GNSS_ID) + '"'
         self.GNSS.execute(query);
+
         row = self.GNSS.fetchone()
+#        pprint(row.keys())
 
         self.User_Name="admin"
         self.Enabled=row["Enabled"]
@@ -128,6 +153,10 @@ class DB_Class:
 
         if self.Ref_Code:
             self.Ref_Code=self.Ref_Code.upper()
+
+        self.Timed_Active=row["TIMED_ACTIVE"]==1
+        self.Timed_Delta_Min=row["TIMED_MIN_DELTA"]
+        self.Timed_Delta_Max=row["TIMED_MAX_DELTA"]
 
 
 class HTTP_Class:
@@ -224,6 +253,57 @@ def check_firmware_and_password(GNSS_ID,DB,HTTP):
         DB.conn.commit()
         return False
 
+def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
+
+    Firmware_Version_Base=0.0
+    (reply,result)=HTTP.get("/prog/show?firmwareVersion")
+
+    if reply:
+        version=""
+        m=re.search(" pendingVersion=(\d*\.\d*) ",reply)
+        if m:
+            Firmware_Version=m.group(1)+"-"
+            m=re.search(" version=\d*\.(\d*) ",reply)
+            if m:
+                Firmware_Version+=m.group(1)
+        else:
+            m=re.search(" version=(\d*\.\d*) ",reply)
+            if m:
+                Firmware_Version=m.group(1)
+
+    firmwareValid=True
+    Message=""
+    firmwareType=0
+
+    if (DB.Reciever_Type == "162"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "169"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "188"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "189"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "507"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "509"):
+        firmwareType=1
+
+
+#    print (DB.Reciever_Type)
+#    print (firmwareType)
+    if (DB.Firmware in FirmwareVersions) :
+#        pprint(FirmwareVersions[DB.Firmware])
+        firmwareValid= Firmware_Version == FirmwareVersions[DB.Firmware][firmwareType]
+        Message="Receiver Firmware is " + Firmware_Version + " Should be " + FirmwareVersions[DB.Firmware][firmwareType] + " Ring " + DB.Firmware + "\n";
+
+    return(firmwareValid,Message)
+
+
 def check_serial_and_type(GNSS_ID,DB,HTTP):
     SerialNumber="N/A"
     rxType="N/A"
@@ -234,13 +314,14 @@ def check_serial_and_type(GNSS_ID,DB,HTTP):
 
 #    print reply
     if reply:
-        m=re.search('SerialNumber sn=(.*) *rxType="(.*),.*,.*"',reply)
+        m=re.search("SerialNumber sn=(.*) *rxType='(.*),.*,(.*)'",reply)
         if m:
             SerialNumber=m.group(1)
             rxType=m.group(2)
+            rxTypeName=m.group(3)
             rxValid=(DB.Reciever_Type==rxType);
             if not rxValid:
-                Message="Receiver Type is " + rxType + " Should be " +DB.Reciever_Type +"\n";
+                Message="Receiver Type is " + rxType + " ("+ rxTypeName + ") Should be " +DB.Reciever_Type +"\n";
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Receiver Type: " + DB.Reciever_Type + " Current: " + rxType + " Rx Type Valid: " + str(rxValid))
         else :
             m=re.search("SerialNumber sn=(.*)",reply)
@@ -352,7 +433,9 @@ def check_antenna(GNSS_ID,DB,HTTP):
 
 #    print reply
     if reply:
-        m=re.search('Antenna type=(.*) name="(.*)" height=(.*) measMethod=(.*) serial="(.*)"',reply)
+        m=re.search("Antenna type=(.*) name='(.*)' height=(.*) measMethod=(.*) serial='(.*)'",reply)
+        if not m:
+            m=re.search('Antenna type=(.*) name="(.*)" height=(.*) measMethod=(.*) serial="(.*)"',reply)
         if m:
             Antenna_Valid = True
             Message=""
@@ -397,6 +480,9 @@ def check_antenna(GNSS_ID,DB,HTTP):
 
 
 def check_logging(GNSS_ID,DB,HTTP):
+
+    if not DB.Logging_Enabled:
+       return(True,"Logging not checked")
 
     current_pos="N/A"
     Logging_Valid=False
@@ -596,6 +682,41 @@ def check_email(GNSS_ID,DB,HTTP):
 
     return(Email_Valid,Message)
 
+
+def check_errors(GNSS_ID,DB,HTTP):
+
+
+    (reply,result)=HTTP.get("/xml/dynamic/errLog.xml")
+
+#    print reply
+    if result !=  200:
+        Errors_Valid = False
+        Message="Could not determine errors\n"
+        return(Errors_Valid,Message)
+
+    root=ET.fromstring(reply)
+
+
+    Message=""
+
+    Num_Entries=int(root.find("numEntries").text)
+    Num_Errors=0
+
+    for entry in root.findall("entry"):
+#        ET.dump(entry)
+        flags_node=entry.find("flags")
+#        ET.dump(flags_node)
+        error = (int(flags_node.text) & 0x3 ) == 0
+        if error :
+            Num_Errors+=1
+
+    Errors_Valid = Num_Errors==0
+
+    if Errors_Valid == False:
+        Message="There are {} Errors and {}  Warnings\n".format(Num_Errors, Num_Entries-Num_Errors)
+
+    return(Errors_Valid,Message)
+
 def check_FTP(GNSS_ID,DB,HTTP):
 
     FTP_Valid=True
@@ -619,11 +740,14 @@ def check_FTP(GNSS_ID,DB,HTTP):
         FTP_Enabled = session.find('ftpPushServer').text=="1"
     except:
         session=root.find("session")
-        FTP_Enabled_Node = session.find('ftpPush')
-        if FTP_Enabled_Node == None:
-            FTP_Enabled = True
-        else:     
-            FTP_Enabled = FTP_Enabled_Node.text=="1"
+        if session == None:
+            FTP_Enabled = False
+        else:
+            FTP_Enabled_Node = session.find('ftpPush')
+            if FTP_Enabled_Node == None:
+                FTP_Enabled = False
+            else:
+                FTP_Enabled = FTP_Enabled_Node.text=="1"
 
 #    print logging_active`<
 #    print ftppush_active
@@ -759,7 +883,7 @@ def check_UPS(GNSS_ID,DB,HTTP):
             else:
                 Message="UPS is not enabled\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " UPS:: Current: " + str(UPS) + ", UPS Valid: " + str(UPS_Valid))
-        else:     
+        else:
             logger.debug(DB.Address+":"+str(DB.Port)+ " UPS:: Not supported")
             Message=""
             UPS_Valid=True
@@ -798,7 +922,7 @@ def check_Elev(GNSS_ID,DB,HTTP):
             Elev_Mask = int(m.group(1),10)
             Elev_Mask_Valid=Elev_Mask==DB.Elev_Mask
             if not Elev_Mask_Valid:
-                Message+="Elev mask is " + str(Elev_Mask) +  " Expected: " + str(DB.Elev_Mask) + "\n"
+                Message="Elev mask is " + str(Elev_Mask) +  " Expected: " + str(DB.Elev_Mask) + "\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Elev:: Current: " + str(Elev_Mask) +  ", Expected: " + str(DB.Elev_Mask) + ", PDOP Valid: " + str(Elev_Mask_Valid))
 
             DB.STATUS.execute("UPDATE STATUS SET Elev_Mask=?, Elev_Mask_Valid=? where id=?",(Elev_Mask,Elev_Mask_Valid,GNSS_ID))
@@ -938,7 +1062,7 @@ def check_Auth(GNSS_ID,DB,HTTP):
 
     return(Auth_Valid,Message)
 
-    
+
 def decdeg2dms(dd):
     negative = dd < 0
     dd = abs (dd)
@@ -1052,7 +1176,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
                 m=re.search("GpsL2=on",reply)
                 if not m:
                     m=re.search("GpsL2=L2CSfallback",reply)
-                    
+
                 if  m :
                     Frequencies=max(Frequencies,2)
                     GPS=2
@@ -1170,6 +1294,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
 
 
         if DB.GAL:
+            '''
             if DB.Frequencies> 2:
                 m=re.search("GalileoE5A=",reply)
                 if m :
@@ -1207,8 +1332,9 @@ def check_Tracking(GNSS_ID,DB,HTTP):
                     logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: GAL GalileoE5B N/A")
                     Message+="GAL E5B Not avaialble\n"
 
+            '''
 
-            if DB.Frequencies> 1:
+            if DB.Frequencies> 2:
                 m=re.search("GalileoE5AltBoc=",reply)
                 if m :
                     m=re.search("GalileoE5AltBoc=off",reply)
@@ -1294,7 +1420,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
         if not QZSS_Valid:
             if DB.QZSS:
                 Message+="QZSS Not Enabled\n"
-            else: 
+            else:
                 Message+="QZSS Enabled when shouldn't be\n"
 
 
@@ -1335,7 +1461,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
                     logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: QZSS L5 not available")
                     Message+="QZSS L5 N/A\n"
 
-        if not QZSS_Valid: 
+        if not QZSS_Valid:
             logger.debug(DB.Address+":"+str(DB.Port) + " QZSS:: QZSS Enabled: " + str(DB.QZSS) + " Frequencies: " + str(DB.Frequencies) +" Current QZSS: " + str(QZSS) +  " Valid: " + str(QZSS_Valid) + " Current Freq: " + str(Frequencies))
 
         DB.STATUS.execute("UPDATE STATUS SET QZSS=?, QZSS_Valid=? where id=?",(QZSS,QZSS_Valid,GNSS_ID))
@@ -1374,13 +1500,117 @@ def check_Tracking(GNSS_ID,DB,HTTP):
         OK=GPS_Valid and GLN_Valid and GAL_Valid and BDS_Valid and SBAS_Valid and QZSS_Valid and Frequencies_Valid
         return (OK,Message)
     else:
-        return (False,"Could not determine Tracking")
+        return (False,"Could not determine Tracking\n")
+
+def check_timed(GNSS_ID,DB,HTTP):
+
+    def check_receiver_timed_installed(termLicense,installed,message):
+        if termLicense == None:
+            if installed:
+                result=False
+                message+="License check FAILED: No Timed License XML when expected\n"
+                logging.warning("termLicense_installed check FAILED: No Timed License XML when expected".format())
+                return(result,message)
+            else:
+                result=True
+                logging.info("termLicense_installed check PASSED: No Timed License XML when not expected".format())
+                return(result,message)
+
+        termLicense_installed=termLicense.find("./installed")
+    #    XML.dump(termLicense_installed)
+        if termLicense_installed == None:
+            if installed:
+                result=False
+                message+="License check FAILED: No Timed License when expected\n"
+                logging.warning("termLicense_installed check FAILED: No Timed License when expected".format())
+            else:
+                result=True
+                logging.info("termLicense_installed check PASSED: No Timed License when not expected".format())
+        else:
+            logging.debug("termLicense_installed: {}".format(termLicense_installed.text))
+            if installed:
+                result=termLicense_installed.text=="1"
+                if not result :
+                    message+="Termed check FAILED: Expected 1 Got {}\n".format(termLicense_installed.text)
+            else:
+                result=termLicense_installed.text=="0"
+                if not result :
+                    message+="Termed check FAILED: Expected 0 Got {}\n".format(termLicense_installed.text)
+
+            if result :
+                logging.info("termLicense_installed check: {}".format(result))
+            else:
+                logging.warning("termLicense_installed check  FAILED: {}".format(result))
+
+        return(result,message)
+
+
+    def check_receiver_timed_active(termLicense,End_Time_Min,End_Time_Max,message):
+        termLicense_active_str=termLicense.find("./extra").text
+
+        if datetime.datetime.utcnow() < End_Time + time_delta:
+            result = termLicense_active_str == "Active"
+            if result:
+                logging.info("termLicense_expired active check: {}".format(termLicense_active_str))
+            else:
+                message+="Term License active check FAILED: {}\n".format(termLicense_active_str)
+                logging.warning("termLicense_expired active check  FAILED: {}".format(termLicense_active_str))
+        else:
+            result = termLicense_active_str != "Active"
+            if result:
+                    logging.info("termLicense_expired expired check: {}".format(termLicense_active_str))
+            else:
+                    logging.warning("termLicense_expired expired check  FAILED: {}".format(termLicense_active_str))
+
+        return(result)
+
+    def check_receiver_timed_range(termLicense,Min_Delta,Max_Delta,message):
+        current_time=datetime.datetime.utcnow()
+        date_min = current_time + datetime.timedelta(minutes = Min_Delta)
+        date_max = current_time + datetime.timedelta(minutes = Max_Delta)
+
+        termLicense_end_date_str=termLicense.find("./status").text
+#        print(termLicense_end_date_str)
+        try:
+            termLicense_end_date=datetime.datetime.strptime(termLicense_end_date_str,"%Y-%m-%d %H:%M")
+        except:
+            termLicense_end_date=datetime.datetime.strptime(termLicense_end_date_str,"%Y-%m-%d")
+
+        result=True
+        if termLicense_end_date < date_min :
+            message+="Timed_range min FAILED: Got {} Expected less than {}\n".format(termLicense_end_date, date_min)
+            logging.warning("check_receiver_timed_range min FAILED: Got {} Expected more than {}".format(termLicense_end_date, date_min))
+            result=False
+
+        if termLicense_end_date > date_max :
+            message+="Timed_range max FAILED: Got {} Expected more than {}\n".format(termLicense_end_date, date_max)
+            logging.warning("check_receiver_timed_range max FAILED: Got {} Expected less than {}".format(termLicense_end_date, date_min))
+            result=False
+
+        return(result,message)
+
+    timed_message=""
+    (reply,result)=HTTP.get("/xml/dynamic/merge.xml?config=")
+    config = ET.fromstring(reply)
+    timed_xml=config.find("./config/termLicense")
+
+#    pprint(timed_xml)
+#    pprint(DB.Timed_Active)
+#    pprint(timed_message)
+
+    (result,timed_message)=check_receiver_timed_installed(timed_xml,DB.Timed_Active,timed_message)
+
+    if DB.Timed_Active and result:
+        (result, timed_message)=check_receiver_timed_range(timed_xml,DB.Timed_Delta_Min,DB.Timed_Delta_Max,timed_message)
+
+    return(result,timed_message)
 
 
 
 
 DB=DB_Class()
 DB.open()
+firmware_Versions=DB.read_Firmware_configuration()
 DB.read_GNSS_configuration(args.GNSS_ID)
 
 
@@ -1390,8 +1620,8 @@ STATUS_Update_Check (DB,args.GNSS_ID,DB.Enabled)
 
 
 if not DB.Enabled:
-    print "INFO: Host Disabled"
-    quit(3)
+    print "OK: Host Disabled"
+    quit(0)
 
 HTTP=HTTP_Class(DB.Address,DB.Port,DB.User_Name,DB.Password,10)
 #DB.Password
@@ -1406,6 +1636,12 @@ else:
 
 OK=True
 Result_String=""
+
+(Success,Message)=check_firmware(args.GNSS_ID,firmware_Versions,DB,HTTP)
+if not Success:
+    Result_String+=Message
+OK=OK and Success
+
 
 (Success,Message)=check_Auth(args.GNSS_ID,DB,HTTP)
 
@@ -1541,10 +1777,33 @@ OK=OK and Success
 if not Success:
     Result_String+=Message
 
+logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
 
 OK=OK and Success
 
-logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
+
+(Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
+
+if not Success:
+    Result_String+=Message
+
+logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
+
+OK=OK and Success
+
+
+(Success,Message)=check_timed(args.GNSS_ID,DB,HTTP)
+
+if not Success:
+    Result_String+=Message
+
+logger.debug(DB.Address+":"+str(DB.Port)+ " After Timed: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
+
+OK=OK and Success
+
+
+
+logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
 
 if OK:
     (Success,Message)=check_Uptime(args.GNSS_ID,DB,HTTP)
