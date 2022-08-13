@@ -172,7 +172,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       RockyFile TEXT,
       BrewsterFile TEXT,
       TennisBallFile TEXT,
-      ZeppelinFile TEXT
+      KryptonFile TEXT
       )');
 
   $db->exec('INSERT INTO Firmware VALUES("Released","0.0","","","","","","")');

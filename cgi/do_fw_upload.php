@@ -203,16 +203,16 @@ else {
 
 echo "<br/>\n";
 
-if ($_FILES['ZeppelinUpload'] ) {
-   echo "BD935 File: " , $_FILES['ZeppelinUpload']['name'] , ", ";
+if ($_FILES['KryptonUpload'] ) {
+   echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
    }
 else {
     exit ("Internal Error: No BD935 File");
     }
 
 if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["ZeppelinUpload"]["tmp_name"];
-   $ZeppelinName = $_FILES["ZeppelinUpload"]["name"];
+   $tmp_name = $_FILES["KryptonUpload"]["tmp_name"];
+   $ZeppelinName = $_FILES["KryptonUpload"]["name"];
 #   echo "tmp_name:";
 #   echo "$tmp_name";
 #   echo "<br/>\n";
@@ -220,7 +220,7 @@ if ($error == UPLOAD_ERR_OK) {
 #   echo "$ZeppelinName";
 #   echo "<br/>\n";
 
-   move_uploaded_file($tmp_name, "$firmwareLocation/$ZeppelinName");
+   move_uploaded_file($tmp_name, "$firmwareLocation/$KryptonName");
    echo "uploaded";
    }
 else {
@@ -275,7 +275,7 @@ $db->exec("UPDATE Firmware SET
    GamelFile=\"$GamelName\",
    RockyFile=\"$RockyName\",
    TennisBallFile=\"$TennisBallName\",
-   ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"");
+   KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
 
 
