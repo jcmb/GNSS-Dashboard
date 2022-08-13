@@ -143,7 +143,7 @@ SPS985: (Rockhopper)
 <td>
 BD992: (Krypton)
 </td><td>
-<input size="60" type="file" name="ZeppelinUpload" id="KryptonUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="KryptonUpload" id="KryptonUpload" accept=".timg" required/></br>
 </td>
 </tr>
 

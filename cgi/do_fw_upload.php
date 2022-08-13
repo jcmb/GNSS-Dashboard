@@ -166,7 +166,7 @@ if ($_FILES['KryptonUpload'] ) {
    echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
    }
 else {
-    exit ("Internal Error: No BD935 File");
+    exit ("Internal Error: No BD992 File");
     }
 
 if ($error == UPLOAD_ERR_OK) {
