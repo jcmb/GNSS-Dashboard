@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 WWW=/var/www/html/Dashboard
-CGI=/use/lib/cgi-bin/Dashboard
+CGI=/usr/lib/cgi-bin/Dashboard
 WWW_USER=www-data
 
 
