@@ -168,10 +168,11 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Type TEXT,
       Version TEXT,
       Titian_Version TEXT,
+      BarracudaFile TEXT,
+      ChinstrapFile TEXT,
       GamelFile TEXT,
+      MetallicaFile TEXT,
       RockyFile TEXT,
-      BrewsterFile TEXT,
-      TennisBallFile TEXT,
       KryptonFile TEXT
       )');
 

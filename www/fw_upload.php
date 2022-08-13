@@ -39,7 +39,6 @@ function check_file(file_control,name) {
   function check_files() {
   return check_file("GamelUpload","SPS855") &&
          check_file("RockyUpload","SPS985") &&
-         check_file("TennisBallUpload","SPS585") &&
          check_file("MetallicaUpload","SPS356") &&
          check_file("ChinstrapUpload","BD986") &&
          check_file("BarracudaUpload","R750") &&
@@ -103,7 +102,7 @@ if ($User_ID=="") {
 <td>
 R750 (Barracuda)
 </td><td>
-<input size="50" type="file" name="BarracudaUpload" id="BarracudaUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="BarracudaUpload" id="BarracudaUpload" accept=".timg" required/></br>
 </td>
 </tr>
 
@@ -111,7 +110,7 @@ R750 (Barracuda)
 <td>
 SPS986: (Chinstrap)
 </td><td>
-<input size="50" type="file" name="ChinstrapUpload" id="ChinstrapUpload" accept=".timg"  required/></br>
+<input size="60" type="file" name="ChinstrapUpload" id="ChinstrapUpload" accept=".timg"  required/></br>
 </td>
 </tr>
 
@@ -120,7 +119,7 @@ SPS986: (Chinstrap)
 SPS852/SPS855: (Gamel)
 </td>
 <td width="67%">
-<input size="50" type="file" name="GamelUpload" id="GamelUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="GamelUpload" id="GamelUpload" accept=".timg" required/></br>
 </td>
 </tr>
 
@@ -128,7 +127,7 @@ SPS852/SPS855: (Gamel)
 <td>
 SPS356: (Metallica)
 </td><td>
-<input size="50" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
 </td>
 </tr>
 <tr>
@@ -136,15 +135,7 @@ SPS356: (Metallica)
 <td>
 SPS985: (Rockhopper)
 </td><td>
-<input size="50" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
-</td>
-</tr>
-
-<tr>
-<td>
-SPS585: (TennisBall)
-</td><td>
-<input size="50" type="file" name="TennisBallUpload" id="TennisBallUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
 </td>
 </tr>
 
@@ -152,7 +143,7 @@ SPS585: (TennisBall)
 <td>
 BD992: (Krypton)
 </td><td>
-<input size="50" type="file" name="ZeppelinUpload" id="KryptonUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="ZeppelinUpload" id="KryptonUpload" accept=".timg" required/></br>
 </td>
 </tr>
 

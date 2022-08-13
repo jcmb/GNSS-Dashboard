@@ -274,7 +274,6 @@ $db->exec("UPDATE Firmware SET
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",
    RockyFile=\"$RockyName\",
-   TennisBallFile=\"$TennisBallName\",
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
 
