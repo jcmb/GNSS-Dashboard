@@ -78,7 +78,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Serial_Number STRING,
       Firmware_Version STRING,
       Firmware_Date STRING,
-      FIRMWARE_Valid BOOLEAN
+      Firmware_Valid BOOLEAN,
       Password_Valid BOOLEAN,
       Alive BOOLEAN,
       Reciever_Type TEXT,
