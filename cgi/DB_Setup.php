@@ -77,7 +77,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Last_Check DATETIME,
       Serial_Number STRING,
       Firmware_Version STRING,
-      Firmware_Date SRING,
+      Firmware_Date STRING,
+      FIRMWARE_Valid BOOLEAN
       Password_Valid BOOLEAN,
       Alive BOOLEAN,
       Reciever_Type TEXT,
@@ -138,7 +139,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       QZSS_Valid BOOLEAN,
       SBAS BOOLEAN,
       SBAS_Valid BOOLEAN,
-      FIRMWARE_Valid BOOLEAN
+      UPS STRING,
+      UPS_Valid BOOLEAN
       )');
 
 
