@@ -75,6 +75,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       id INTEGER PRIMARY KEY,
       Checked BOOLEAN,
       Last_Check DATETIME,
+      Serial_Number STRING,
       Firmware_Version STRING,
       Firmware_Date SRING,
       Password_Valid BOOLEAN,
