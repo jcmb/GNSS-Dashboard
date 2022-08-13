@@ -13,7 +13,6 @@
       User_ID INTEGER,
       name TEXT,
       Firmware TEXT,
-      Titian_Version TEXT,
       Loc_Group TEXT,
       Address TEXT,
       Port INTEGER,
@@ -76,6 +75,7 @@
   $db->exec('CREATE TABLE IF NOT EXISTS Firmware (
       Type TEXT,
       Version TEXT,
+      Titian_Version TEXT,
       GamelFile TEXT,
       RockyFile TEXT,
       BrewsterFile TEXT,

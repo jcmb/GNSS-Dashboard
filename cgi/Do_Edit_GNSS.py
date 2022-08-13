@@ -475,7 +475,7 @@ if Update:
         SBAS,
         NAGIOS,
         GNSS_ID))
-    print "Record Updated"
+    print "Record Updated.<br>"
     conn.commit()
 else:
     cursor.execute('''INSERT INTO GNSS (
@@ -579,7 +579,7 @@ else:
         QZSS,
         SBAS,
         NAGIOS))
-    print "Record added"
+    print "Record added<br>"
     conn.commit()
     GNSS_ID=str(cursor.lastrowid)
 
@@ -728,7 +728,7 @@ else:
 
 Nagios_File.close();
 
-print "<a ref=\"/Dashboard/Receiver_List.php?User_ID=" + str(User_ID) + "\">Receiver List</a>"
+print "<a href=\"/Dashboard/Receiver_List.php?User_ID=" + str(User_ID) + "\">Receiver List</a>"
 
 print "<br/><pre>"
 logger.info("/usr/lib/cgi-bin/Dashboard/Status_Update.py "+ str(GNSS_ID))
