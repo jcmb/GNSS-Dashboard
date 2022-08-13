@@ -162,27 +162,6 @@ else {
 
 echo "<br/>\n";
 
-
-if ($_FILES['MetallicaUpload'] ) {
-   echo "SPS356 File: " , $_FILES['MetallicaUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS356 File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["MetallicaUpload"]["tmp_name"];
-   $BrewsterName = $_FILES["MetallicaUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$BrewsterName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
 if ($_FILES['KryptonUpload'] ) {
    echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
    }
