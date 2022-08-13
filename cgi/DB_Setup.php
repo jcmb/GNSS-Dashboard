@@ -99,7 +99,6 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Logging_Duration NUMERIC,
       Logging_Measurement_Interval NUMERIC,
       Logging_Position_Interval NUMERIC,
-      Logging_Valid BOOLEAN,
       Logging_Volt_Temp_Interval NUMERIC,
       Logging_Valid BOOLEAN,
       FTP_Enabled BOOLEAN,
