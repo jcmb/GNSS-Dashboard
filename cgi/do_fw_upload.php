@@ -183,26 +183,6 @@ else {
 
 echo "<br/>\n";
 
-if ($_FILES['TennisBallUpload'] ) {
-   echo "SPS585 File: " , $_FILES['TennisBallUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS585 File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["TennisBallUpload"]["tmp_name"];
-   $TennisBallName = $_FILES["TennisBallUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$TennisBallName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
 if ($_FILES['KryptonUpload'] ) {
    echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
    }
