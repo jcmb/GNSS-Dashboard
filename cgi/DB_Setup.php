@@ -87,6 +87,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Pos_Type_Valid BOOLEAN,
       Static BOOLEAN,
       Static_Valid BOOLEAN,
+      LowLatency BOOLEAN,
+      LowLatency_Valid BOOLEAN,
       Elev_Mask NUMERIC,
       Elev_Mask_Valid BOOLEAN,
       Frequencies NUMBERIC,
