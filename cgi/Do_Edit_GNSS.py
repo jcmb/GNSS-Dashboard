@@ -728,7 +728,7 @@ else:
 
 Nagios_File.close();
 
-print "<a ref=\"/Dashboard/Receiver_List.php?User_ID=" . str(User_ID) . "\">Receiver List</a>";
+print "<a ref=\"/Dashboard/Receiver_List.php?User_ID=" . str(User_ID) . "\">Receiver List</a>"
 
 print "<br/><pre>"
 logger.info("/usr/lib/cgi-bin/Dashboard/Status_Update.py "+ str(GNSS_ID))
