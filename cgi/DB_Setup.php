@@ -5,7 +5,7 @@
   // open the db file (test.db) if it exists, or create it if it doesn't
 
   $db = new SQLite3($databaseFile);
-  echo "Datbase file " , $databaseFile, " opened<br/>";
+  echo "Database file " , $databaseFile, " opened\n";
   // create a new table in the file
   $db->exec('CREATE TABLE IF NOT EXISTS  GNSS (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,7 +165,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
 
 
   $db->exec('CREATE TABLE IF NOT EXISTS Firmware (
-      Type TEXT,
+      Type TEXT PRIMARY KEY,
       Version TEXT,
       Titian_Version TEXT,
       BarracudaFile TEXT,
@@ -176,6 +176,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       KryptonFile TEXT
       )');
 
+  print("Warnings expected if not working on a new DB\n");
   $db->exec('INSERT INTO Firmware VALUES("Released","0.0","","","","","","","")');
   $db->exec('INSERT INTO Firmware VALUES("Beta","0.1","","","","","","","")');
   $db->exec('INSERT INTO Firmware VALUES("Branch","0.2","","","","","","","")');
