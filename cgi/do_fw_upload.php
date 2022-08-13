@@ -120,47 +120,6 @@ else {
 echo "<br/>\n";
 
 
-if ($_FILES['GamelUpload'] ) {
-   echo "SPS855 File: " , $_FILES['GamelUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS855 File");
-    }
-
-$error=$_FILES["GamelUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["GamelUpload"]["tmp_name"];
-   $GamelName = $_FILES["GamelUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$GamelName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>";
-
-if ($_FILES['RockyUpload'] ) {
-   echo "SPS985 File: " , $_FILES['RockyUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS985 File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["RockyUpload"]["tmp_name"];
-   $RockyName = $_FILES["RockyUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$RockyName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>";
-
 if ($_FILES['ChinstrapUpload'] ) {
    echo "SPS986 File: " , $_FILES['ChinstrapUpload']['name'] , ", ";
    }
@@ -181,6 +140,71 @@ else {
 
 echo "<br/>\n";
 
+if ($_FILES['GamelUpload'] ) {
+   echo "SPS855 File: " , $_FILES['GamelUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No SPS855 File");
+    }
+
+$error=$_FILES["GamelUpload"]["error"];
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["GamelUpload"]["tmp_name"];
+   $GamelName = $_FILES["GamelUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$GamelName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br>";
+
+
+if ($_FILES['MetallicaUpload'] ) {
+   echo "SPS356 File: " , $_FILES['MetallicaUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No SPS356 File");
+    }
+
+$error=$_FILES["MetallicaUpload"]["error"];
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["MetallicaUpload"]["tmp_name"];
+   $GamelName = $_FILES["MetallicaUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$MetallicaName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br>";
+
+
+if ($_FILES['RockyUpload'] ) {
+   echo "SPS985 File: " , $_FILES['RockyUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No SPS985 File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["RockyUpload"]["tmp_name"];
+   $RockyName = $_FILES["RockyUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$RockyName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+
+echo "<br/>\n";
+
 if ($_FILES['KryptonUpload'] ) {
    echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
    }
@@ -192,26 +216,6 @@ if ($error == UPLOAD_ERR_OK) {
    $tmp_name = $_FILES["KryptonUpload"]["tmp_name"];
    $KryptonName = $_FILES["KryptonUpload"]["name"];
    move_uploaded_file($tmp_name, "$firmwareLocation/$KryptonName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
-if ($_FILES['BarracudaUpload'] ) {
-   echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No Barra File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
-   $BCudaName = $_FILES['BarracudaUpload']["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
    echo "uploaded";
    }
 else {
