@@ -231,10 +231,10 @@ $db = new SQLite3($databaseFile);
 $db->exec("UPDATE Firmware SET
    Version=\"$Version\",
    Titian_Version=\"$TitianVersion\",
-   BCudaFile=\"$BCudaName\",
-   BrewsterFile=\"$BrewsterName\",
+   BarracudaFile=\"$BCudaName\",
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",
+   MetallicaFile=\"$MetallicaName\",
    RockyFile=\"$RockyName\",
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
