@@ -1,14 +1,14 @@
 <html>
 <head>
 <title>GNSS Firmware Upload</title>
-<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
-<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<link rel="stylesheet" type="text/css" href="/Dashboard/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/Dashboard/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="/jquery.tablesorter.min.js"></script>
+<script src="/Dashboard/jquery.tablesorter.min.js"></script>
 <body class="page">
 <div class="container clearfix">
   <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
-        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+        <img src="/Dashboard/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
       </div>
   <!-- end #logo-area -->
 </div>
@@ -42,8 +42,8 @@ function check_file(file_control,name) {
          check_file("TennisBallUpload","SPS585") &&
          check_file("MetallicaUpload","SPS356") &&
          check_file("ChinstrapUpload","BD986") &&
-         check_file("BarracudaUpload","Barra") &&
-         check_file("ZeppelinUpload","BD935");
+         check_file("BarracudaUpload","R750") &&
+         check_file("KryptonUpload","BD992");
   }
 </script>
 
@@ -80,7 +80,7 @@ Firmware Version:
 
 <tr>
 <td>
-New RTK Version:
+ProPoint Version:
 </td><td>
 <input name="Titianversion" type="text"><br/>
 </td>
@@ -101,7 +101,7 @@ if ($User_ID=="") {
 
 <tr>
 <td>
-(Barra)
+R750 (Barracuda)
 </td><td>
 <input size="50" type="file" name="BarracudaUpload" id="BarracudaUpload" accept=".timg" required/></br>
 </td>
@@ -150,9 +150,9 @@ SPS585: (TennisBall)
 
 <tr>
 <td>
-BD935: (Zeppelin)
+BD992: (Krypton)
 </td><td>
-<input size="50" type="file" name="ZeppelinUpload" id="ZeppelinUpload" accept=".timg" required/></br>
+<input size="50" type="file" name="ZeppelinUpload" id="KryptonUpload" accept=".timg" required/></br>
 </td>
 </tr>
 

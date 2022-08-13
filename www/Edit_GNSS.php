@@ -374,7 +374,7 @@ Enabled:
 <tr><td>
 FTP To:
 </td><td>
-<input name="FTP_To" type="text" size="40" value="<?php echo $row["FTP_To"] ?>"/>
+<input name="FTP_To" type="text" size="40" value=" <?php echo ($Editing?$row["FTP_To"]:'/TCC/BTN/gnsstransfer' ?>"/>
 </td></tr>
 </table>
 
@@ -391,7 +391,8 @@ Enabled:
 <tr><td>
 Email To:
 </td><td>
-<input name="Email_To" type="text" size="40" value="<?php echo $row["Email_To"] ?>"/>
+<input name="Email_To" type="text" size="40" value="<?php echo ($Editing?$row["Email_To"]:'Geoffrey_Kirk@Trimble.com)' ?>"/>
+
 </td></tr>
 </table>
 
