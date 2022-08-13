@@ -155,7 +155,9 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Power_Valid BOOLEAN,
       Temperature NUMERIC,
       Warranty TEXT,
-      SystemName TEXT
+      SystemName TEXT,
+      MultipathReject TEXT,
+      MultipathReject_Valid BOOLEAN
       )');
 
 
