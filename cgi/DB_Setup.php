@@ -20,6 +20,7 @@
       Password TEXT,
       Pos_Type TEXT,
       Static BOOLEAN,
+      LowLatency BOOLEAN,
       Elev_Mask NUMERIC,
       PDOP NUMERIC,
       Logging_Enabled BOOLEAN,
