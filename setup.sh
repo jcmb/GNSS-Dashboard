@@ -28,7 +28,7 @@ cd $CGI
 
 sudo php ./DB_Setup.php
 
-if [ =f gnss.db ]
+if [ -f gnss.db ]
 then
     echo "Error: gnss.db not created. PHP installed?"
 fi
