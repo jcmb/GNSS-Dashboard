@@ -13,6 +13,7 @@
       User_ID INTEGER,
       name TEXT,
       Firmware TEXT,
+      Titian_Version TEXT,
       Loc_Group TEXT,
       Address TEXT,
       Port INTEGER,
