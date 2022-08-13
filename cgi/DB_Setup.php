@@ -157,7 +157,9 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Warranty TEXT,
       SystemName TEXT,
       MultipathReject TEXT,
-      MultipathReject_Valid BOOLEAN
+      MultipathReject_Valid BOOLEAN,
+      testMode TEXT,
+      testMode_Valid BOOLEAN
       )');
 
 
