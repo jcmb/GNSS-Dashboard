@@ -1,6 +1,6 @@
 <?php
    $databaseFile = "/usr/lib/cgi-bin/Dashboard/GNSS.db";
-   $firmwareLocation = "/usr/Firmware";
+   $firmwareLocation = "/var/www/html/Dashboard/Firmware";
 
    function clean($input, $maxlength)
    {
