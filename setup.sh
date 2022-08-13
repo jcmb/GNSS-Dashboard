@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 WWW=/var/www/html/Dashboard
 CGI=/use/lib/cgi-bin/Dashboard
@@ -28,10 +28,11 @@ cd $CGI
 
 sudo php ./DB_Setup.php
 
-if [ -f gnss.db ]
+if [ -f GNSS.db ]
 then
-    echo "Error: gnss.db not created. PHP installed?"
+    echo "Error: GNSS.db not created. PHP installed?"
+    exit 1
 fi
 
-chown $WWW_USER gnss.db
+chown $WWW_USER GNSS.db
 
