@@ -152,7 +152,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       SBAS_Valid BOOLEAN,
       UPS STRING,
       UPS_Valid BOOLEAN,
-      Power_Valid BOOLEAN
+      Power_Valid BOOLEAN.
+      Temperature NUMERIC
       )');
 
 
