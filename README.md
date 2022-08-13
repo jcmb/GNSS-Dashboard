@@ -17,7 +17,10 @@ Installation
 
 sqlite3 and the php version of it needs to be installed
 
-  apt-get install sqlite3 php-sqlite3
+    apt-get install sqlite3 php-sqlite3
+
+python 2 needs to be installed, currently.
+    apt-get install python2
 
 make sure that php is enabled for the web server
 
