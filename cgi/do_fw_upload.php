@@ -99,6 +99,25 @@ if ($TitianVersion=="") {
     quit(100);
     }
 
+if ($_FILES['BarracudaUpload'] ) {
+   echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No Barra File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
+   $BCudaName = $_FILES['BarracudaUpload']["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br/>\n";
 
 
 if ($_FILES['GamelUpload'] ) {
@@ -171,14 +190,7 @@ else {
 
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name = $_FILES["KryptonUpload"]["tmp_name"];
-   $ZeppelinName = $_FILES["KryptonUpload"]["name"];
-#   echo "tmp_name:";
-#   echo "$tmp_name";
-#   echo "<br/>\n";
-#   echo "ZeppenName:";
-#   echo "$ZeppelinName";
-#   echo "<br/>\n";
-
+   $KryptonName = $_FILES["KryptonUpload"]["name"];
    move_uploaded_file($tmp_name, "$firmwareLocation/$KryptonName");
    echo "uploaded";
    }
@@ -197,17 +209,8 @@ else {
     }
 
 if ($error == UPLOAD_ERR_OK) {
-#   var_dump ($_FILES);
-#   echo "<br/>";
    $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
    $BCudaName = $_FILES['BarracudaUpload']["name"];
-#   echo "tmp_name:";
-#   echo "$tmp_name";
-#   echo "<br/>";
-#   echo "BCudaName:";
-#   echo "$BCudaName";
-#   echo "<br/>";
-
    move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
    echo "uploaded";
    }
