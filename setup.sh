@@ -28,7 +28,7 @@ cd $CGI
 
 sudo php ./DB_Setup.php
 
-if [ -f GNSS.db ]
+if [ ! -f GNSS.db ]
 then
     echo "Error: GNSS.db not created. PHP installed?"
     exit 1
