@@ -53,7 +53,7 @@
       IBSS_Test_Password TEXT,
       IBSS_1_Mount TEXT,
       IBSS_1_Type TEXT,
-      Frequencies=?,
+      Frequencies NUMERIC,
       GPS BOOLEAN,
       GLN BOOLEAN,
       GAL BOOLEAN,
