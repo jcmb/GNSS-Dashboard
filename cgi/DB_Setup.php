@@ -123,6 +123,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       IBSS_1_Mount TEXT,
       IBSS_1_Type TEXT,
       IBSS_Valid BOOLEAN,
+      GPS BOOLEAN,
+      GPS_Valid BOOLEAN,
       GLN BOOLEAN,
       GLN_Valid BOOLEAN,
       GAL BOOLEAN,
@@ -131,6 +133,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       BDS_Valid BOOLEAN,
       QZSS BOOLEAN,
       QZSS_Valid BOOLEAN,
+      SBAS BOOLEAN,
+      SBAS_Valid BOOLEAN,
       FIRMWARE_Valid BOOLEAN
       )');
 
