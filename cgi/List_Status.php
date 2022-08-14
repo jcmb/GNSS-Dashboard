@@ -1,14 +1,14 @@
 <html>
 <head>
 <title>GNSS Receivers</title>
-<link rel="stylesheet" type="text/css" href="/css/style.css"></link>
-<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<link rel="stylesheet" type="text/css" href="/Dashboard/style.css"></link>
+<link rel="stylesheet" type="text/css" href="/Dashboard/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="/jquery.tablesorter.min.js"></script>
+<script src="/Dashboard/jquery.tablesorter.min.js"></script>
 <body class="page">
 <div class="container clearfix">
   <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
-        <img src="/images/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+        <img src="/Dashboard    /trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
       </div>
   <!-- end #logo-area -->
 </div>
@@ -157,6 +157,12 @@ else {
 
        echo "\n<td ". ($row["Reciever_Type_Valid"]?"":"class=\"Issue\"")." > ";
        switch ($row["Reciever_Type"]) {
+          case "38":
+            echo "SPS850";
+            break;
+          case "59":
+            echo "SPS851";
+            break;
           case "118":
             echo "SPS855";
             break;
@@ -166,11 +172,14 @@ else {
           case "101":
             echo "SPS985";
             break;
+          case "138":
+            echo "SPS356";
+            break;
           case "169":
             echo "SPS986";
             break;
-          case "138":
-            echo "SPS356";
+          case "188":
+            echo "R750";
             break;
           case "240":
             echo "BD935";
@@ -181,13 +190,6 @@ else {
           case "249":
             echo "Brewster Heading";
             break;
-          case "38":
-            echo "SPS850";
-            break;
-          case "59":
-            echo "SPS851";
-            break;
-
           default:
             echo "Unknown ID ". $row["Reciever_Type"];
        }
