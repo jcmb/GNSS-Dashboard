@@ -8,7 +8,7 @@
 <body class="page">
 <div class="container clearfix">
   <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
-        <img src="/Dashboard    /trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
+        <img src="/Dashboard/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
       </div>
   <!-- end #logo-area -->
 </div>
