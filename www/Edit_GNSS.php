@@ -137,6 +137,7 @@ Firmware to install:
   <option value="Beta" <?php echo ($row["Firmware"]=="Beta")?"selected":"" ?>>Beta</option>
   <option value="Branch" <?php echo ($row["Firmware"]=="Branch")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?> >Branch</option>
   <option value="Trunk" <?php echo ($row["Firmware"]=="Trunk")?"selected":"" ?>>Trunk</option>
+  <option value="Unmanaged" <?php echo ($row["Firmware"]=="Unmanaged")?"selected":"" ?>>Unmanaged</option>
 </select>
 </td></tr>
 

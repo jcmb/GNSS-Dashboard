@@ -13,6 +13,7 @@
       User_ID INTEGER,
       name TEXT,
       Firmware TEXT,
+      Firmware_Version STRING,
       Loc_Group TEXT,
       Address TEXT,
       Port INTEGER,

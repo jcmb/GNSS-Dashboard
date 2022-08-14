@@ -105,7 +105,7 @@ Upgrade To:
 <select required name="Firmware" onchange="AdjustSelections(this.value)">
   <option value="Released">Released (<?php echo $versions["Released"]?>)</option>
   <option value="Beta">Beta (<?php echo $versions["Beta"]?>)</option>
-  <option value="Branch">Branch (<?php echo $versions["Branch"]?>)</option>
+  <option value="Branch" selected>Branch (<?php echo $versions["Branch"]?>)</option>
   <option selected value="Trunk">Trunk (<?php echo $versions["Trunk"]?>)</option>
 </select>
 <p/>

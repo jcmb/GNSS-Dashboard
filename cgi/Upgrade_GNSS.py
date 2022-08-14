@@ -103,13 +103,10 @@ for row in rows:
          firmware_file=BarracudaFile
       elif Reciever_Type == 250 :
          print "SPS585 ",
-         firmware_file=TennisBallFile
+         firmware_file=""
       elif Reciever_Type == 138 :
          print "SPS356 ",
-         firmware_file=BrewsterFile
-      elif Reciever_Type == 240 :
-         print "BD935 ",
-         firmware_file=ZeppelinFile
+         firmware_file=""
       else :
          print "Unknown Receiver Type: {}".format(Reciever_Type)
 
@@ -127,7 +124,7 @@ for row in rows:
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             "-f" + firmwareLocation() + '/' + firmware_file
             ]
-#         print cmd
+         print cmd
 #         Popen(cmd,stdout=None)
          call(cmd,stdout=None)
 #      print ("</pre><br/>")
