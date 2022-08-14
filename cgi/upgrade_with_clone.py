@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 
 import sys
 import time
@@ -14,8 +14,8 @@ from pprint import pprint
 
 import logging
 logging.basicConfig(level=logging.WARNING)
-# Replacement for the upgrade with Clone script. 
-# 
+# Replacement for the upgrade with Clone script.
+#
 # Better understandability, logging, status and error reporting are the primary goals of the rewrite
 """
 Usage () {
@@ -64,24 +64,24 @@ def process_arguments ():
     options = parser.parse_args()
 #    print options
     IP=options.IP
-    USER=options.user      
+    USER=options.user
     VERBOSE=options.verbose
     CLONE_FILE=options.clone.upper()
 # Must be in upper case, yes really
-# Technically it can be in any case to create, will be in upper to download  
+# Technically it can be in any case to create, will be in upper to download
     CLONE_DATE=options.clonedate
     CLONE_DIR=options.clonedir
 
     FIRMWARE_FILE=options.firmware
     NO_UPGRADE=options.no_upgrade
     UPGRADE_ONLY=options.upgrade_only
-    
+
     if FIRMWARE_FILE==None and not NO_UPGRADE:
       sys.exit("Firmware file not provided when upgrading, aborting")
-      
+
     if UPGRADE_ONLY and NO_UPGRADE:
       sys.exit("Can not have No Upgrade and Upgrade only at the same time")
-      
+
 
     if options.tell:
         print "Server: " + IP
@@ -93,7 +93,7 @@ def process_arguments ():
         print "Upgrade Only: %r" % UPGRADE_ONLY
         print "Verbose: %r" % VERBOSE
         print
-    
+
     return (IP,USER,VERBOSE,CLONE_FILE,CLONE_DIR,CLONE_DATE,FIRMWARE_FILE,NO_UPGRADE,UPGRADE_ONLY)
 
 
@@ -105,7 +105,7 @@ def Get_Version (IP,USER):
       r = requests.get('http://{}@{}/xml/dynamic/merge.xml?sysData='.format(USER,IP))
    except:
       pass
-      
+
    if r == None:
       logging.warning("Could not connect to receiver at {}".format(IP))
       sys.exit("Could not connect to receiver at {}".format(IP))
@@ -139,7 +139,7 @@ def Get_Version (IP,USER):
        logging.debug("Antenna.ini Version: {}".format( xml_reply.find("sysData/antennaINI").text))
 
    logging.info("Option Key: {}".format( xml_reply.find("sysData/FullOptionKey").text))
-   
+
    return (Version)
 
 def Create_Clone(IP,USER,Version,Clone_Short_Name):
@@ -147,12 +147,12 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
    try:
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=WCO.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=Test&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on&cloneAllAppfilesEnable=on
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=TEST3.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=TEST4&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on
-#  GET              /CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&csibFileName=17021203.T0B&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=WEB_TEST&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on HTTP/1.1   
+#  GET              /CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&csibFileName=17021203.T0B&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=WEB_TEST&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on HTTP/1.1
       r = requests.get('http://{0}@{1}/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=1&cloneFileName={2}.xml&Year=2010&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName={2}&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneMiscellaneousEnable=on'.
          format(USER,IP,Clone_Short_Name))
    except:
       pass
-      
+
    if r == None:
       logging.warning("Could not connect to receiver at {} to make clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to make clone".format(IP))
@@ -164,13 +164,13 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
 
    Clone_In_Process=True
    Count=0
-   
+
    while Clone_In_Process:
       r = requests.get('http://{}@{}/xml/dynamic/cloneFileStatus.xml'.
             format(USER,IP))
-   
+
       if (r.status_code == 200) :
-#        print r.text 
+#        print r.text
         xml_reply = fromstring(r.text)
 #        dump(xml_reply)
         State=xml_reply.find("cloneOperationStatus").text
@@ -180,11 +180,11 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
         else:
          Count+=1
          if Count <= 60:
-            time.sleep(2) 
+            time.sleep(2)
          else:
             logging.error("Clone was not Created in 2 minutes on receiver {}".format(IP))
             sys.exit("Clone was not Created in 2 minutes on receiver {}".format(IP))
-         
+
       else:
          logging.warning("Error checking clone stations {} Error Code: {} making clone ".format(IP,r.status_code))
          sys.exit("Error checking clone stations {} Error Code: {} making clone".format(IP,r.status_code))
@@ -197,7 +197,7 @@ def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
          format(USER,IP,Clone_Short_Name))
    except:
       pass
-      
+
    if r == None:
       logging.error("Could not connect to receiver at {} to get clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to get clone".format(IP))
@@ -209,7 +209,7 @@ def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
    if r.text =="<FAIL>1</FAIL>":
       logging.error("Failed to download clone from receiver at {}, Check password".format(IP))
       sys.exit("Failed to download clone from receiver at {}, Check password".format(IP))
-   
+
    xml_reply=None
    try:
       xml_reply = fromstring(r.text)
@@ -224,7 +224,7 @@ def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
          clone_file.close()
    except:
       pass
-      
+
    return (r.text)
 
 
@@ -236,10 +236,10 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
    try:
       files = {'myfile': open(FIRMWARE_FILE, 'rb')}
       r = requests.post("http://{0}@{1}/prog/Upload?FirmwareFile&failsafe=yes".format(USER,IP), files=files)
-      
+
    except:
       pass
-      
+
    if r == None:
       logging.error("Could not connect to receiver at {} to upload firmware. Wrong Firmware Image or password?".format(IP))
       sys.exit("Could not connect to receiver at {}  to upload firmware. Wrong Firmware Image or password?".format(IP))
@@ -248,17 +248,17 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
       logging.error("Error Connecting to receiver at {} Error Code: {} uploading firmware {}".format(IP,r.status_code,Clone_Short_Name))
       sys.exit("Error Connecting to receiver at {} Error Code: {} uploading firmware {} ".format(IP,r.status_code,Clone_Short_Name))
 
-   
-   
+
+
    Upgrade_In_Process=True
    Count=0
    Last_State=None
    while Upgrade_In_Process:
       r = requests.get("http://{0}@{1}/xml/dynamic/merge.xml?firmware_status=".
             format(USER,IP))
-   
+
       if (r.status_code == 200) :
-#        print r.text 
+#        print r.text
         xml_reply = fromstring(r.text)
 #        dump(xml_reply)
         State=xml_reply.find("fw_status/status/mode").text
@@ -273,11 +273,11 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
         if State=="FIRMWARE_DONE" or State=="FIRMWARE_INTERRUPTED":
            Upgrade_In_Process=False
            continue
-            
+
         if State=="FIRMWARE_IDLE" and Count>5:
           logging.error("Firmware Upgrade did not start for: {}".format(IP))
           sys.exit("Firmware Upgrade did not start for: {}".format(IP))
-            
+
         if Count<=120:
           time.sleep(2)
         else:
@@ -288,13 +288,13 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
 def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
    r=None
    files = {'myfile': (Clone_Short_Name+'.xml', Clone_Data)}
-   
+
    r = requests.post("http://{0}@{1}/cgi-bin/clone_fileUpload.html?cloneUploadName=&installCloneFile=true&installStaticIpAddr=false&clearBeforeInstallCloneFile=true".format(USER,IP), files=files)
    try:
-      pass      
+      pass
    except:
       pass
-      
+
    if r == None:
       logging.error("Could not connect to receiver at {} to send clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to send clone".format(IP))
