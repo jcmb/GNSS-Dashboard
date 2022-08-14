@@ -150,8 +150,8 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=WCO.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=Test&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on&cloneAllAppfilesEnable=on
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=TEST3.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=TEST4&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on
 #  GET              /CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&csibFileName=17021203.T0B&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=WEB_TEST&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on HTTP/1.1
-      r = requests.get('http://{0}@{1}/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=1&cloneFileName={2}.xml&Year=2010&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName={2}&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneMiscellaneousEnable=on'.
-         format(USER,IP,Clone_Short_Name))
+      r = requests.get('http://{0}@{1}/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=1&cloneFileName={2}.xml&Year=2010&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName={2}&cloneSecurityEnable=on&cloneWiFiEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneMiscellaneousEnable=on&missingPasswordDefault='.
+          format(USER,IP,Clone_Short_Name))
    except:
       pass
 
@@ -291,7 +291,7 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
    r=None
    files = {'myfile': (Clone_Short_Name+'.xml', Clone_Data)}
 
-   r = requests.post("http://{0}@{1}/cgi-bin/clone_fileUpload.html?cloneUploadName=&installCloneFile=true&installStaticIpAddr=false&clearBeforeInstallCloneFile=true".format(USER,IP), files=files)
+   r = requests.post("http://{0}@{1}/cgi-bin/clone_fileUpload.html?cloneUploadName=&installCloneFile=true&installStaticIpAddr=true&clearBeforeInstallCloneFile=true&installSecurityRecords=true&missingPasswordDefault=Bad_Passw&installWiFiSpecific=true".format(USER,IP), files=files)
    try:
       pass
    except:
