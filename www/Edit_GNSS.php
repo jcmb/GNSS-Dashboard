@@ -391,7 +391,7 @@ Enabled:
 <tr><td>
 Email To:
 </td><td>
-<input name="Email_To" type="text" size="40" value="<?php echo ($Editing?$row["Email_To"]:'Geoffrey_Kirk@Trimble.com)' ?>"/>
+<input name="Email_To" type="text" size="50" value="<?php echo ($Editing?$row["Email_To"]:"Geoffrey_Kirk@Trimble.com") ?>"/>
 
 </td></tr>
 </table>
