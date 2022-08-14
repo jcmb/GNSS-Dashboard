@@ -374,7 +374,7 @@ Enabled:
 <tr><td>
 FTP To:
 </td><td>
-<input name="FTP_To" type="text" size="40" value=" <?php echo ($Editing?$row["FTP_To"]:"/TCC/BTN/gnsstransfer" ?>"/>
+<input name="FTP_To" type="text" size="40" value=" <?php echo ($Editing?$row["FTP_To"]:"/TCC/BTN/gnsstransfer") ?>"/>
 </td></tr>
 </table>
 
