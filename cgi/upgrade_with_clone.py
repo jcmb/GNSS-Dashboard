@@ -74,7 +74,7 @@ def process_arguments ():
     CLONE_DATE=options.clonedate
     CLONE_DIR=options.clonedir
 
-    if CLONE_DIR=None:
+    if CLONE_DIR==None:
         CLONE_DIR="."
 
     FIRMWARE_FILE=options.firmware
