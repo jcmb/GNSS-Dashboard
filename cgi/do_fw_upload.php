@@ -172,7 +172,7 @@ else {
 $error=$_FILES["MetallicaUpload"]["error"];
 if ($error == UPLOAD_ERR_OK) {
    $tmp_name = $_FILES["MetallicaUpload"]["tmp_name"];
-   $GamelName = $_FILES["MetallicaUpload"]["name"];
+   $MetallicaName = $_FILES["MetallicaUpload"]["name"];
    move_uploaded_file($tmp_name, "$firmwareLocation/$MetallicaName");
    echo "uploaded";
    }
