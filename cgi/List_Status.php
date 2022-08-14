@@ -246,7 +246,7 @@ else {
        echo "\n<td " . ($row["LowLatency_Valid"]?"":"class=\"Issue\"") . " > ".($row["LowLatency"] ? 'True' : 'False')." </td>";
        echo "\n<td " . ($row["Static_Valid"]?"":"class=\"Issue\"") . " > ".($row["Static"] ? 'True' : 'False')." </td>";
        echo "\n<td " . ($row["Elev_Mask_Valid"]?"":"class=\"Issue\"") . " > ".$row["Elev_Mask"]." </td>";
-       echo "\n<td " . ($row["Pos_Type_Valid"]?"":"class=\"Issue\"") . " > ".$row["PDOP"]." </td>";
+       echo "\n<td " . ($row["PDOP_Valid"]?"":"class=\"Issue\"") . " > ".$row["PDOP"]." </td>";
        if ($row["Logging_Enabled"] == 0 ) {
            echo "\n<td " . ($row["Logging_Valid"]?"":"class=\"Issue\"") . " > Disabled </td>";
            }
