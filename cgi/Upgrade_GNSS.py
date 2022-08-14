@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 print "Content-Type: text/html"     # HTML is following
 print                               # blank line, end of headers
@@ -56,19 +56,18 @@ else:
     Firmware_ID=form["Firmware"].value
 
 
-query = 'SELECT Version, GamelFile, RockyFile, BrewsterFile, TennisBallFile, ZeppelinFile, ChinstrapFile, BCudaFile FROM Firmware where type="' + Firmware_ID + '"';
+query = 'SELECT Version, BarracudaFile, ChinstrapFile, GamelFile, MetallicaFile, RockyFile, KryptonFile FROM Firmware where type="' + Firmware_ID + '"';
 cursor.execute(query);
 
 rows = cursor.fetchone()
 #print rows
 Firmware=(rows[0])
-GamelFile=rows[1]
-RockyFile=rows[2]
-BrewsterFile=rows[3]
-TennisBallFile=rows[4]
-ZeppelinFile=rows[5]
-ChinstrapFile=rows[6]
-BCudaFile=rows[7]
+BarracudaFile=rows[1]
+ChinstrapFile=rows[2]
+GamelFile=rows[3]
+MetallicaFile=rows[4]
+RockyFile=rows[5]
+KryptonFile=rows[6]
 
 print "Upgrading to firmware V" + Firmware + "<br/>"
 #print os.getcwd()
@@ -99,6 +98,9 @@ for row in rows:
       elif Reciever_Type == 169 :
          print "SPS986 ",
          firmware_file=ChinstrapFile
+      elif Reciever_Type == 188 :
+         print "R750 ",
+         firmware_file=BarracudaFile
       elif Reciever_Type == 250 :
          print "SPS585 ",
          firmware_file=TennisBallFile
