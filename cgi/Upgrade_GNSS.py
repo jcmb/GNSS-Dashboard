@@ -12,7 +12,7 @@ import os.path
 import stat
 import sys
 
-import db_inc
+from db_inc import *
 
 sys.stdout.flush()
 from subprocess import Popen, call
