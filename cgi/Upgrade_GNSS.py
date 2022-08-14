@@ -12,11 +12,11 @@ import os.path
 import stat
 import sys
 
+import db_inc
+
 sys.stdout.flush()
 from subprocess import Popen, call
 
-execfile("db.inc.py")
-#from db.inc import databaseFile
 
 from pprint import pprint
 cgitb.enable()
@@ -121,6 +121,7 @@ for row in rows:
             "./upgrade_with_clone.py",
             "-padmin:" + row["Password"],
             "-cGPS_"+ str(row["id"]),
+            "-d/var/www/html/Dashboard/Clones",
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             "-f" + firmwareLocation() + '/' + firmware_file
             ]

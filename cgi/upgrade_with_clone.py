@@ -74,6 +74,9 @@ def process_arguments ():
     CLONE_DATE=options.clonedate
     CLONE_DIR=options.clonedir
 
+    if CLONE_DIR=None:
+        CLONE_DIR="."
+
     FIRMWARE_FILE=options.firmware
     NO_UPGRADE=options.no_upgrade
     UPGRADE_ONLY=options.upgrade_only
@@ -215,15 +218,14 @@ def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
    xml_reply=None
    try:
       xml_reply = fromstring(r.text)
-      if Clone_Dir!=None:
-         if Clone_Date:
-            Clone_Filename=Clone_Dir+'/'+Clone_Short_Name+"-"+datetime.datetime.now().strftime("%Y-%m-%d")+".xml"
-         else:
-            Clone_Filename=Clone_Dir+'/'+Clone_Short_Name+".xml"
-         logging.info("Creating clone file: " + Clone_Filename)
-         clone_file=open(Clone_Filename,"w")
-         clone_file.write(r.text)
-         clone_file.close()
+      if Clone_Date:
+         Clone_Filename=Clone_Dir+'/'+Clone_Short_Name+"-"+datetime.datetime.now().strftime("%Y-%m-%d")+".xml"
+      else:
+         Clone_Filename=Clone_Dir+'/'+Clone_Short_Name+".xml"
+      logging.info("Creating clone file: " + Clone_Filename)
+      clone_file=open(Clone_Filename,"w")
+      clone_file.write(r.text)
+      clone_file.close()
    except:
       pass
 
