@@ -125,7 +125,7 @@ for row in rows:
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             "-f" + firmwareLocation() + '/' + firmware_file
             ]
-         print cmd
+#         print cmd
 #         Popen(cmd,stdout=None)
          call(cmd,stdout=None)
 #      print ("</pre><br/>")
