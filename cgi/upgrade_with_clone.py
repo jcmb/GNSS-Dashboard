@@ -7,6 +7,8 @@ import os
 import requests
 import time
 import datetime
+import httplib
+
 
 
 from xml.etree.ElementTree import parse, dump, fromstring
@@ -310,6 +312,7 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
 
 if VERBOSE:
    logging.basicConfig(level=logging.DEBUG)
+   httplib.HTTPConnection.debuglevel = 1
 
 if not NO_UPGRADE:
    if not os.path.isfile(FIRMWARE_FILE):
