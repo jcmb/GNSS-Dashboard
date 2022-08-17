@@ -160,7 +160,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       MultipathReject TEXT,
       MultipathReject_Valid BOOLEAN,
       testMode TEXT,
-      testMode_Valid BOOLEAN
+      testMode_Valid BOOLEAN,
       TIMED_Valid BOOLEAN,
       Radio TEXT,
       Radio_Valid BOOLEAN
