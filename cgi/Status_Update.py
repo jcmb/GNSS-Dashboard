@@ -1072,7 +1072,7 @@ def check_Password(GNSS_ID,DB,HTTP):
         (reply,result)=HTTP.get("/prog/show?pdopMask")
     except:
         pass
-    print reply
+#    print reply
     if reply:
         m=re.search('PdopMask mask=(.*)',reply)
         if m:
@@ -1082,9 +1082,9 @@ def check_Password(GNSS_ID,DB,HTTP):
                 (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP))
             except:
                 pass
-            print reply
+#            print reply
             m=re.search('^ERROR',reply)
-            pprint (m)
+#            pprint (m)
             if m:
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Password:: Incorrect")
                 Password_Valid=False
