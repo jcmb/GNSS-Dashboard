@@ -62,10 +62,10 @@
       QZSS BOOLEAN,
       SBAS BOOLEAN,
       NAGIOS BOOLEAN,
+      TRACKING_MASK NUMERIC,
       TIMED_ACTIVE BOOLEAN,
       TIMED_MIN_DELTA NUMERIC,
       TIMED_MAX_DELTA NUMERIC,
-      TRACKING_MASK NUMERIC,
       RadioEnabled BOOLEAN,
       RadioOnOffState BOOLEAN,
       RadioMode TEXT
@@ -161,6 +161,9 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       MultipathReject_Valid BOOLEAN,
       testMode TEXT,
       testMode_Valid BOOLEAN
+      TIMED_Valid BOOLEAN,
+      Radio TEXT,
+      Radio_Valid BOOLEAN
       )');
 
 

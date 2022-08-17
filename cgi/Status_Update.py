@@ -1603,6 +1603,9 @@ def check_timed(GNSS_ID,DB,HTTP):
     if DB.Timed_Active and result:
         (result, timed_message)=check_receiver_timed_range(timed_xml,DB.Timed_Delta_Min,DB.Timed_Delta_Max,timed_message)
 
+    DB.STATUS.execute("UPDATE STATUS SET TIMED_Valid=? where id=?",(result,GNSS_ID))
+    DB.conn.commit()
+
     return(result,timed_message)
 
 

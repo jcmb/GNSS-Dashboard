@@ -257,6 +257,49 @@ else :
   Email_To=form["Email_To"].value
 
 
+Timed_Enabled =  "Timed_Enabled" in form
+
+if "Timed_Minimum" not in form:
+   if Timed_Enabled:
+      print "Timed_Minimum must be entered when email enabled"
+      quit(100)
+   else:
+      Timed_Minimum=30
+else :
+  Timed_Minimum=form["Timed_Minimum"].value
+
+if "Timed_Maximum" not in form:
+   if Timed_Enabled:
+      print "Timed_Maximum must be entered when email enabled"
+      quit(100)
+   else:
+      Timed_Maximum=120
+else :
+  Timed_Maximum=form["Timed_Maximum"].value
+
+
+Radio_Enabled =  "Radio_Enabled" in form
+
+if "RadioOnOffState" not in form:
+   if Radio_Enabled:
+      print "TRadioOnOffState must be entered when email enabled"
+      quit(100)
+   else:
+      Radio_OnOffState=""
+else :
+  Radio_OnOffState=form["RadioOnOffState"].value
+
+if "RadioMode" not in form:
+   if Radio_Enabled:
+      print "RadioMode must be entered when email enabled"
+      quit(100)
+   else:
+      Radio_Mode=120
+else :
+  Radio_Mode=form["TRadioMode"].value
+
+
+
 
 NTRIP_Enabled =  "NTRIP_Enabled" in form
 
@@ -424,7 +467,13 @@ if Update:
       BDS=?,
       QZSS=?,
       SBAS=?,
-      NAGIOS=?
+      NAGIOS=?,
+      TIMED_ACTIVE=?,
+      TIMED_MIN_DELTA=?,
+      TIMED_MAX_DELTA=?,
+      RadioEnabled=?,
+      RadioOnOffState=?,
+      RadioMode=?
       WHERE id=?''',(
         User_ID,
         Enabled,
@@ -474,6 +523,12 @@ if Update:
         QZSS,
         SBAS,
         NAGIOS,
+        Timed_Enabled,
+        Timed_Minimum,
+        Timed_Maximum,
+        Radio_Enabled,
+        Radio_OnOffState,
+        Radio_Mode,
         GNSS_ID))
     print "Record Updated.<br>"
     conn.commit()
@@ -525,7 +580,14 @@ else:
       BDS,
       QZSS,
       SBAS,
-      NAGIOS )
+      NAGIOS,
+      TIMED_ACTIVE BOOLEAN,
+      TIMED_MIN_DELTA NUMERIC,
+      TIMED_MAX_DELTA NUMERIC,
+      RadioEnabled BOOLEAN,
+      RadioOnOffState,
+      RadioMode
+      )
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
         User_ID,
         Enabled,
@@ -578,7 +640,14 @@ else:
         BDS,
         QZSS,
         SBAS,
-        NAGIOS))
+        NAGIOS,
+        Timed_Enabled,
+        Timed_Minimum,
+        Timed_Maximum,
+        Radio_Enabled,
+        Radio_OnOffState,
+        Radio_Mode
+        ))
     print "Record added<br>"
     conn.commit()
     GNSS_ID=str(cursor.lastrowid)
