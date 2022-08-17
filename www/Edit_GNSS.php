@@ -428,14 +428,15 @@ Maximum:
 <tr><td>
 Check:
 </td><td>
-<input name="Radio_Enabled" type="checkbox" <?php echo ($row["Radio_Enabled"]==1?"checked":"") ?>/>
+<input name="Radio_Enabled" type="checkbox" <?php echo ($row["RadioEnabled"]==1?"checked":""); echo ($Editing?"":"checked") ?>/>
 </td></tr>
 
+<?php echo ($row["Logging_Enabled"]==1?"checked":""); echo ($Editing?"":"checked")?>
 
 <tr><td>
 On:
 </td><td>
-<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo ($Editing?$row["RadioOnOffState"]:"30") ?>"/>
+<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo ($row["RadioOnOffState"]==1?"checked":""); echo ($Editing?"":"checked") ?>"/>
 </td></tr>
 
 <tr><td>
