@@ -435,7 +435,7 @@ Check:
 <tr><td>
 On:
 </td><td>
-<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo "chekcked" echo ($row["RadioOnOffState"]==1?"checked":""); echo ($Editing?"":"checked") ?>"/>
+<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo "chekcked"; echo ($row["RadioOnOffState"]==1?"checked":""); echo ($Editing?"":"checked") ?>"/>
 </td></tr>
 
 <tr><td>
