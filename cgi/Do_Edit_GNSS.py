@@ -279,15 +279,7 @@ else :
 
 
 Radio_Enabled =  "Radio_Enabled" in form
-
-if "RadioOnOffState" not in form:
-   if Radio_Enabled:
-      print "TRadioOnOffState must be entered when Radio enabled"
-      quit(100)
-   else:
-      Radio_OnOffState=""
-else :
-  Radio_OnOffState=form["RadioOnOffState"].value
+Radio_OnOffState=form["RadioOnOffState"].value
 
 if "RadioMode" not in form:
    if Radio_Enabled:
