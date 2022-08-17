@@ -4,7 +4,7 @@
 <link rel="stylesheet" type="text/css" href="/Dashboard/style.css"></link>
 <link rel="stylesheet" type="text/css" href="/Dashboard/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="/jquery.tablesorter.min.js"></script>
+<script src="/Dashboard/jquery.tablesorter.min.js"></script>
 <body class="page">
 <div class="container clearfix">
   <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
