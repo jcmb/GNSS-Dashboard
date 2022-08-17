@@ -1007,7 +1007,7 @@ def check_testMode(GNSS_ID,DB,HTTP):
             else:
                 Message="Test mode is enabled and auth is not yes. Turning off\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " testMode :: Current: " + str(testMode))
-                (reply,result)=HTTP.get("/prog/set?TestMode&&enable=no")
+                (reply,result)=HTTP.get("/prog/set?TestMode&enable=no")
 
             DB.STATUS.execute("UPDATE STATUS SET testMode=?,testMode_Valid=? where id=?",(testMode,testMode_Valid,GNSS_ID))
             DB.conn.commit()
