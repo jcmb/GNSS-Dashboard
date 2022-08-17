@@ -82,6 +82,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Firmware_Valid BOOLEAN,
       Password_Valid BOOLEAN,
       Alive BOOLEAN,
+      Uptime NUMERIC,
       Reciever_Type TEXT,
       Reciever_Type_Valid BOOLEAN,
       Pos_Type TEXT,
