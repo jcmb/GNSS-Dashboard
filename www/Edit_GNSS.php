@@ -431,12 +431,11 @@ Check:
 <input name="Radio_Enabled" type="checkbox" <?php echo ($row["RadioEnabled"]==1?"checked":""); echo ($Editing?"":"checked") ?>/>
 </td></tr>
 
-<?php echo ($row["Logging_Enabled"]==1?"checked":""); echo ($Editing?"":"checked")?>
 
 <tr><td>
 On:
 </td><td>
-<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo ($row["RadioOnOffState"]==1?"checked":""); echo ($Editing?"":"checked") ?>"/>
+<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo "chekcked" echo ($row["RadioOnOffState"]==1?"checked":""); echo ($Editing?"":"checked") ?>"/>
 </td></tr>
 
 <tr><td>
