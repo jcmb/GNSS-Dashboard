@@ -1077,9 +1077,9 @@ def check_Password(GNSS_ID,DB,HTTP):
         m=re.search('PdopMask mask=(.*)',reply)
         if m:
             PDOP = int(m.group(1),10)
-            (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
+#            (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP))
             try:
-                (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
+                (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP))
             except:
                 pass
             print reply
