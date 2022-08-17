@@ -417,33 +417,33 @@ Minimum:
 <tr><td>
 Maximum:
 </td><td>
-<input name="Timed_Maximum" type="number" size="10" value="<?php echo ($Editing?$row["Timed_Minimum"]:"120") ?>"/>
+<input name="Timed_Maximum" type="number" size="10" value="<?php echo ($Editing?$row["Timed_Maximum"]:"120") ?>"/>
 </td></tr>
 </table>
 <p/>
 
 
 <table>
-<tr><caption>Radio </caption>
+<tr><caption>Radio</caption>
 <tr><td>
 Check:
 </td><td>
-<input name="Radio_Enabled" type="checkbox" <?php echo ($row["Timed_Enabled"]==1?"checked":"") ?>/>
+<input name="Radio_Enabled" type="checkbox" <?php echo ($row["Radio_Enabled"]==1?"checked":"") ?>/>
 </td></tr>
 
 
 <tr><td>
 On:
 </td><td>
-<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo ($Editing?$row["Timed_Minimum"]:"30") ?>"/>
+<input name="RadioOnOffState" type="checkbox" size="10" value="<?php echo ($Editing?$row["RadioOnOffState"]:"30") ?>"/>
 </td></tr>
 
 <tr><td>
 Operation Mode:
 </td><td>
 <select required name="RadioMode">
-  <option value="Base" <?php echo ($row["RadioMode"]=="Base"?"selected":""); ) ?>>Base</option>
-  <option value="Rover" <?php echo ($row["RadioMode"]=="Rover"?"selected":""); <?php echo ($Editing?"":"selected") ?>>Rover</option>
+  <option value="Base" <?php echo ($row["RadioMode"]=="Base"?"selected":""); ?>>Base</option>
+  <option value="Rover" <?php echo ($row["RadioMode"]=="Rover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
   <option value="Repeater" <?php echo ($row["RadioMode"]=="Repeater"?"selected":""); ?>>Repeater</option>
 </select>
 

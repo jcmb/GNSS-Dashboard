@@ -261,7 +261,7 @@ Timed_Enabled =  "Timed_Enabled" in form
 
 if "Timed_Minimum" not in form:
    if Timed_Enabled:
-      print "Timed_Minimum must be entered when email enabled"
+      print "Timed_Minimum must be entered when Timered enabled"
       quit(100)
    else:
       Timed_Minimum=30
@@ -270,7 +270,7 @@ else :
 
 if "Timed_Maximum" not in form:
    if Timed_Enabled:
-      print "Timed_Maximum must be entered when email enabled"
+      print "Timed_Maximum must be entered when Timed enabled"
       quit(100)
    else:
       Timed_Maximum=120
@@ -282,7 +282,7 @@ Radio_Enabled =  "Radio_Enabled" in form
 
 if "RadioOnOffState" not in form:
    if Radio_Enabled:
-      print "TRadioOnOffState must be entered when email enabled"
+      print "TRadioOnOffState must be entered when Radio enabled"
       quit(100)
    else:
       Radio_OnOffState=""
@@ -291,12 +291,12 @@ else :
 
 if "RadioMode" not in form:
    if Radio_Enabled:
-      print "RadioMode must be entered when email enabled"
+      print "RadioMode must be entered when Radio enabled"
       quit(100)
    else:
-      Radio_Mode=120
+      Radio_Mode="Base"
 else :
-  Radio_Mode=form["TRadioMode"].value
+  Radio_Mode=form["RadioMode"].value
 
 
 
