@@ -405,19 +405,19 @@ Email To:
 <tr><td>
 Enabled:
 </td><td>
-<input name="Timed_Enabled" type="checkbox" <?php echo ($row["Timed_Enabled"]==1?"checked":"") ?>/>
+<input name="Timed_Enabled" type="checkbox" <?php echo ($row["TIMED_ACTIVE"]==1?"checked":"") ?>/>
 </td></tr>
 
 <tr><td>
 Minimum:
 </td><td>
-<input name="Timed_Minimum" type="number" size="10" value="<?php echo ($Editing?$row["Timed_Minimum"]:"30") ?>"/>
+<input name="Timed_Minimum" type="number" size="10" value="<?php echo ($Editing?$row["TIMED_MIN_DELTA"]:"30") ?>"/>
 </td></tr>
 
 <tr><td>
 Maximum:
 </td><td>
-<input name="Timed_Maximum" type="number" size="10" value="<?php echo ($Editing?$row["Timed_Maximum"]:"120") ?>"/>
+<input name="Timed_Maximum" type="number" size="10" value="<?php echo ($Editing?$row["TIMED_MAX_DELTA"]:"120") ?>"/>
 </td></tr>
 </table>
 <p/>
