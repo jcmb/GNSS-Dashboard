@@ -234,7 +234,6 @@ def check_firmware_and_password(GNSS_ID,DB,HTTP):
 
 #        print Firmware_Version,Firmware_Date
         DB.STATUS.execute("UPDATE STATUS SET Firmware_Version=?, Firmware_Date=?, Password_Valid=? where id=?",(Firmware_Version,Firmware_Date,True,GNSS_ID))
-        DB.STATUS.execute("UPDATE STATUS SET Password_Valid=? where id=?",(True,GNSS_ID))
         DB.STATUS.execute("UPDATE STATUS SET Alive=? where id=?",(True,GNSS_ID))
         DB.conn.commit()
 
@@ -1008,7 +1007,6 @@ def check_testMode(GNSS_ID,DB,HTTP):
                 Message="Test mode is enabled and auth is not yes. Turning off\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " testMode :: Current: " + str(testMode))
                 (reply,result)=HTTP.get("/prog/set?testmode&enable=no")
-                pprint(reply)
 
             DB.STATUS.execute("UPDATE STATUS SET testMode=?,testMode_Valid=? where id=?",(testMode,testMode_Valid,GNSS_ID))
             DB.conn.commit()
@@ -1064,6 +1062,41 @@ def check_Auth(GNSS_ID,DB,HTTP):
     DB.conn.commit()
 
     return(Auth_Valid,Message)
+
+def check_Password(GNSS_ID,DB,HTTP):
+
+    Password_Valid=False
+    Message=""
+
+    try:
+        (reply,result)=HTTP.get("/prog/show?pdopMask")
+    except:
+        pass
+#    print reply
+    if reply:
+        m=re.search('PdopMask mask=(.*)',Response.text)
+        if m:
+            PDOP = int(m.group(1),10)
+            try:
+                (reply,result)=HTTP.get("/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
+            except:
+                pass
+            m=re.search('^ERROR',Response.text)
+            if m:
+                logger.debug(DB.Address+":"+str(DB.Port)+ " Password:: Incorrect")
+                Password_Valid=False
+            else:
+                logger.debug(DB.Address+":"+str(DB.Port)+ " Password: Correct")
+                Password_Valid=True
+
+    if not Password_Valid :
+        Message="Password is not correct \n"
+
+    DB.STATUS.execute("UPDATE STATUS SET Password_Valid=? where id=?",(Password_Valid,GNSS_ID))
+    DB.conn.commit()
+
+    return(Password_Valid,Message)
+
 
 
 def decdeg2dms(dd):
@@ -1655,6 +1688,14 @@ if not Success:
     Result_String+=Message
 
 OK=OK and Success
+
+(Success,Message)=check_Password(args.GNSS_ID,DB,HTTP)
+
+if not Success:
+    Result_String+=Message
+
+OK=OK and Success
+
 
 
 (Success,Message)=check_Tracking(args.GNSS_ID,DB,HTTP)
