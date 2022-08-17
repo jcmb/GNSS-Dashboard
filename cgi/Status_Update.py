@@ -1784,15 +1784,15 @@ logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + "
 
 OK=OK and Success
 
+if DB.Firmware != "Unmanaged" :
+    (Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
 
-(Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
+    if not Success:
+        Result_String+=Message
 
-if not Success:
-    Result_String+=Message
+    logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
 
-logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
-
-OK=OK and Success
+    OK=OK and Success
 
 
 (Success,Message)=check_timed(args.GNSS_ID,DB,HTTP)
