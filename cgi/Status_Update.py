@@ -1083,6 +1083,7 @@ def check_Password(GNSS_ID,DB,HTTP):
                 pass
             print reply
             m=re.search('^ERROR',reply)
+            pprint (m)
             if m:
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Password:: Incorrect")
                 Password_Valid=False
