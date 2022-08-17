@@ -574,10 +574,10 @@ else:
       QZSS,
       SBAS,
       NAGIOS,
-      TIMED_ACTIVE BOOLEAN,
-      TIMED_MIN_DELTA NUMERIC,
-      TIMED_MAX_DELTA NUMERIC,
-      RadioEnabled BOOLEAN,
+      TIMED_ACTIVE,
+      TIMED_MIN_DELTA,
+      TIMED_MAX_DELTA,
+      RadioEnabled,
       RadioOnOffState,
       RadioMode
       )
