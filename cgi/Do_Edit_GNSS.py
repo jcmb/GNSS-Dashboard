@@ -280,7 +280,7 @@ else :
 
 Radio_Enabled =  "Radio_Enabled" in form
 
-Radio_OnOffState = "RadioOnOffState" not in form:
+Radio_OnOffState = "RadioOnOffState" in form
 
 if "RadioMode" not in form:
    if Radio_Enabled:
