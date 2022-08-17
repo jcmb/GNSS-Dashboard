@@ -80,7 +80,7 @@ else {
 <form name="input" action="/cgi-bin/Dashboard/Do_Edit_GNSS.py" method="get">
 
 <?php
-var_dump($row);
+//var_dump($row);
 
 echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
 
