@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 
 import sys
 import time
@@ -7,7 +7,7 @@ import os
 import requests
 import time
 import datetime
-import httplib
+import http.client
 
 
 
@@ -39,7 +39,7 @@ Usage () {
 """
 
 def create_arg_parser():
-    usage="Check_Total_Connections.py [options] [server] [port] "
+    usage="upgrade_with_clone.py [options] [server] [port] "
     parser=argparse.ArgumentParser()
 
 
@@ -89,15 +89,15 @@ def process_arguments ():
 
 
     if options.tell:
-        print "Server: " + IP
-        print "User: " + USER
-        print "Clone: %r" % CLONE_FILE
-        print "Clone Directory: %r" % CLONE_DIR
-        print "Firmware: %r" % FIRMWARE_FILE
-        print "No upgrade: %r" % NO_UPGRADE
-        print "Upgrade Only: %r" % UPGRADE_ONLY
-        print "Verbose: %r" % VERBOSE
-        print
+        print("Server: " + IP)
+        print("User: " + USER)
+        print("Clone: %r" % CLONE_FILE)
+        print("Clone Directory: %r" % CLONE_DIR)
+        print("Firmware: %r" % FIRMWARE_FILE)
+        print("No upgrade: %r" % NO_UPGRADE)
+        print("Upgrade Only: %r" % UPGRADE_ONLY)
+        print("Verbose: %r" % VERBOSE)
+        print()
 
     return (IP,USER,VERBOSE,CLONE_FILE,CLONE_DIR,CLONE_DATE,FIRMWARE_FILE,NO_UPGRADE,UPGRADE_ONLY)
 
@@ -115,7 +115,7 @@ def Get_Version (IP,USER):
       logging.warning("Could not connect to receiver at {}".format(IP))
       sys.exit("Could not connect to receiver at {}".format(IP))
 
-   if r.status_code <> 200:
+   if r.status_code != 200:
       logging.warning("Error Connecting to receiver at {} Error Code: {}".format(IP,r.status_code))
       sys.exit("Error Connecting to receiver at {} Error Code: {}".format(IP,r.status_code))
 
@@ -135,7 +135,8 @@ def Get_Version (IP,USER):
    logging.debug("Hardware Build Type: {}".format( xml_reply.find("sysData/build").text))
    logging.debug("Monitor Verision: {}".format( xml_reply.find("sysData/MonVersion").text))
    logging.debug("Receiver Name: {}".format( xml_reply.find("sysData/RXName").text))
-   logging.debug("RTK Version: {}".format( xml_reply.find("sysData/RTKversion").text))
+   if xml_reply.find("sysData/RTKversion") is not None:
+       logging.debug("RTK Version: {}".format( xml_reply.find("sysData/RTKversion").text))
    if xml_reply.find("sysData/RTXversion") is not None:
        logging.debug("RTX Version: {}".format( xml_reply.find("sysData/RTXversion").text))
    if xml_reply.find("sysData/T01Ver") is not None:
@@ -162,7 +163,7 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
       logging.warning("Could not connect to receiver at {} to make clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to make clone".format(IP))
 
-   if r.status_code <> 200:
+   if r.status_code != 200:
       logging.warning("Error Connecting to receiver at {} Error Code: {} making clone ".format(IP,r.status_code))
       sys.exit("Error Connecting to receiver at {} Error Code: {} making clone".format(IP,r.status_code))
 
@@ -207,7 +208,7 @@ def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
       logging.error("Could not connect to receiver at {} to get clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to get clone".format(IP))
 
-   if r.status_code <> 200:
+   if r.status_code != 200:
       logging.error("Error Connecting to receiver at {} Error Code: {} getting clone {}".format(IP,r.status_code,Clone_Short_Name))
       sys.exit("Error Connecting to receiver at {} Error Code: {} getting clone {} ".format(IP,r.status_code,Clone_Short_Name))
 
@@ -248,7 +249,7 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
       logging.error("Could not connect to receiver at {} to upload firmware. Wrong Firmware Image or password?".format(IP))
       sys.exit("Could not connect to receiver at {}  to upload firmware. Wrong Firmware Image or password?".format(IP))
 
-   if r.status_code <> 200:
+   if r.status_code != 200:
       logging.error("Error Connecting to receiver at {} Error Code: {} uploading firmware {}".format(IP,r.status_code,Clone_Short_Name))
       sys.exit("Error Connecting to receiver at {} Error Code: {} uploading firmware {} ".format(IP,r.status_code,Clone_Short_Name))
 
@@ -303,7 +304,7 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
       logging.error("Could not connect to receiver at {} to send clone".format(IP))
       sys.exit("Could not connect to receiver at {}  to send clone".format(IP))
 
-   if r.status_code <> 200:
+   if r.status_code != 200:
       logging.error("Error Connecting to receiver at {} Error Code: {} sending clone {}".format(IP,r.status_code,Clone_Short_Name))
       sys.exit("Error Connecting to receiver at {} Error Code: {} sending clone {} ".format(IP,r.status_code,Clone_Short_Name))
 
@@ -314,7 +315,7 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
 
 if VERBOSE:
    logging.basicConfig(level=logging.DEBUG)
-   httplib.HTTPConnection.debuglevel = 1
+   http.client.HTTPConnection.debuglevel = 1
 
 if not NO_UPGRADE:
    if not os.path.isfile(FIRMWARE_FILE):
@@ -334,7 +335,7 @@ if Create_Clone(IP,USER,Version,CLONE_FILE):
 
 
 if NO_UPGRADE:
-    print CLONE_FILE + " Created"
+    print(CLONE_FILE + " Created")
 else:
    if Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
       if not UPGRADE_ONLY:

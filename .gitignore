@@ -1,3 +1,5 @@
 
 .DS_Store
 *.bak
+cgi/db_inc.py
+cgi/Programmatic_Backup.py

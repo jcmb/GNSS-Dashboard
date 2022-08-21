@@ -1,9 +1,10 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 
 import sqlite3
 import os
 import os.path
 import stat
+import datetime
 
 from subprocess import Popen
 
@@ -16,9 +17,9 @@ from pprint import pprint
 
 try:
    conn = sqlite3.connect(databaseFile())
-#   print databaseFile()+ " Open\n"
+#   print (databaseFile()+ " Open\n")
 except sqlite3.Error:
-   print "Error opening db. " + databaseFile() +"\n"
+   print("Error opening db. " + databaseFile() +"\n")
    quit()
 
 conn.row_factory = sqlite3.Row
@@ -52,33 +53,41 @@ for row in rows:
 
 
 for row in rows:
-         print row
+         try:
+            os.mkdir(wwwDir()+ "Clones/"+str(row["name"]))
+         except:
+            pass
+
+         try:
+             os.mkdir(wwwDir()+ "PI/"+str(row["name"]))
+         except:
+            pass
+
          cmd=[
-            "/usr/lib/cgi-bin/Dashboard/upgrade_with_clone.py",
+            cgiDir() + "upgrade_with_clone.py",
             "--no_upgrade",
             "--clonedate",
-            "--clonedir", "/var/www/Dashboard/Clones",
+            "--clonedir", wwwDir()+ "Clones/"+str(row["name"]),
             "-padmin:" + row["Password"],
             "-c" + "GPS_"+ str(row["id"]),
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             ]
 #         print ("<br/>")
-#         print cmd
+         print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
 
          cmd=[
-            "/usr/lib/cgi-bin/Dashboard/Programmatic_Backup.py",
-            "--no_upgrade",
-            "--clonedate",
-            "--clonedir", "/var/www/Dashboard/PI",
-            "-padmin:" + row["Password"],
-            "--Host" + row["Address"],
-            "--Port", row["Port"],
+            cgiDir() + "Programmatic_Backup.py",
+            "--Output", wwwDir()+ "PI/"+str(row["name"]+"/"+datetime.datetime.now().strftime("%Y-%m-%d")+".PI"),
+            "--User", "admin",
+            "--Password",  row["Password"],
+            "--Host" , row["Address"],
+            "--Port", str(row["Port"]),
             ]
 #         print ("<br/>")
-#         print cmd
+         print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
