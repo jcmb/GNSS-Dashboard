@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 
 import sqlite3
 import os
@@ -18,7 +18,7 @@ try:
    conn = sqlite3.connect(databaseFile())
 #   print databaseFile()+ " Open\n"
 except sqlite3.Error:
-   print "Error opening db. " + databaseFile() +"\n"
+   print("Error opening db. " + databaseFile() +"\n")
    quit()
 
 conn.row_factory = sqlite3.Row
@@ -52,7 +52,7 @@ for row in rows:
 
 
 for row in rows:
-         print row
+         print(row)
          cmd=[
             "/usr/lib/cgi-bin/Dashboard/upgrade_with_clone.py",
             "--no_upgrade",
@@ -63,7 +63,7 @@ for row in rows:
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             ]
 #         print ("<br/>")
-         print cmd
+         print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
@@ -78,7 +78,7 @@ for row in rows:
             "--Port", row["Port"],
             ]
 #         print ("<br/>")
-         print cmd
+         print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
