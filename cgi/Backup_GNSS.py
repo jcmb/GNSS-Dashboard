@@ -73,7 +73,7 @@ for row in rows:
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             ]
 #         print ("<br/>")
-         print(cmd)
+#        print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
@@ -87,7 +87,7 @@ for row in rows:
             "--Port", str(row["Port"]),
             ]
 #         print ("<br/>")
-         print(cmd)
+#         print(cmd)
 #         Popen(cmd,stdout=None)
          clone=Popen(cmd)
          clone.wait()
