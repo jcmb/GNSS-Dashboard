@@ -8,6 +8,7 @@ WWW_USER=www-data
 mkdir -p $WWW || exit Error could not make directory $WWW
 mkdir -p $WWW/Firmware || exit Error could not make directory $WWW/Firmware
 mkdir -p $WWW/Clones || exit Error could not make directory $WWW/Clones
+mkdir -p $WWW/PI || exit Error could not make directory $WWW/Clones
 
 mkdir -p $CGI || exit Error could not make directory $CGI
 mkdir -p $CGI/User || exit Error could not make directory $CGI/User

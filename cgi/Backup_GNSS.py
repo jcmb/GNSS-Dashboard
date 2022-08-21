@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 import sqlite3
 import os
@@ -7,11 +7,7 @@ import stat
 
 from subprocess import Popen
 
-try:
-   execfile("db.inc.py")
-except :
-   execfile("/usr/lib/cgi-bin/Dashboard/db.inc.py")
-#from db.inc import databaseFile
+from db_inc import *
 
 from pprint import pprint
 
@@ -61,7 +57,7 @@ for row in rows:
             "/usr/lib/cgi-bin/Dashboard/upgrade_with_clone.py",
             "--no_upgrade",
             "--clonedate",
-            "--clonedir", "/var/www/clones",
+            "--clonedir", "/var/www/Dashboard/Clones",
             "-padmin:" + row["Password"],
             "-c" + "GPS_"+ str(row["id"]),
             "-i" + row["Address"]+":"+str(row["Port"]) ,
@@ -76,7 +72,7 @@ for row in rows:
             "/usr/lib/cgi-bin/Dashboard/Programmatic_Backup.py",
             "--no_upgrade",
             "--clonedate",
-            "--clonedir", "/var/www/clones",
+            "--clonedir", "/var/www/Dashboard/PI",
             "-padmin:" + row["Password"],
             "--Host" + row["Address"],
             "--Port", row["Port"],
