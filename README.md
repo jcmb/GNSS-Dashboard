@@ -17,11 +17,12 @@ sqlite3 and the php version of it needs to be installed
 python 2 needs to be installed, currently.
     apt-get install python2
 
+
+
 make sure that php is enabled for the web server
 
 run the setup script as root
     sudo setup.sh
-
 
   cgi goes to the Dashboard subfolder in the cgi-bin folder for that site.
   www goes to the Dashboard subfolder in the www folder for that site.
@@ -41,4 +42,7 @@ The Backup options need to be added into CRON
     0 0 * * *       www-data /usr/lib/cgi-bin/Dashboard/Backup_GNSS_DB.sh
     1 0 * * *       www-data /usr/lib/cgi-bin/Dashboard/Backup_GNSS.py
 
+
 You need to change the to email in Backup_GNSS_DB.sh
+
+The backup using PI Programatic_Backup.py. https://github.com/jcmb/Programmatic needs to be in te cgi/Dashboard directory
