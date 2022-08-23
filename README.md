@@ -37,6 +37,7 @@ To be able to support the loading of firmware the default PHP settings need to b
     upload_max_filesize = 25M
     post_max_size = 100M
 
+** Backup
 The Backup options need to be added into CRON
 
     0 0 * * *       www-data /usr/lib/cgi-bin/Dashboard/Backup_GNSS_DB.sh
@@ -46,3 +47,13 @@ The Backup options need to be added into CRON
 You need to change the to email in Backup_GNSS_DB.sh
 
 The backup using PI Programatic_Backup.py. https://github.com/jcmb/Programmatic needs to be in te cgi/Dashboard directory
+
+** Nagios
+
+Install nagios and nagios-plugin's as normal
+
+The nagios config file is normally located in
+    /usr/local/nagios/etc
+
+Add the following line to the nagios.cfg file
+    cfg_dir=/usr/lib/cgi-bin/Dashboard/User
