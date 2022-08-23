@@ -13,8 +13,9 @@ mkdir -p $WWW/PI || exit Error could not make directory $WWW/Clones
 mkdir -p $CGI || exit Error could not make directory $CGI
 mkdir -p $CGI/User || exit Error could not make directory $CGI/User
 
-cp  cgi/* $CGI
 cp  www/* $WWW
+cp  cgi/* $CGI
+cp  User/* $CGI/User
 
 cd $CGI
 chown $WWW_USER $WWW/*
