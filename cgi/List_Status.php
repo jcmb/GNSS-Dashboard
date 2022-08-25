@@ -344,7 +344,7 @@ if ($_REQUEST["User_ID"]) {
     echo 'View <a href="/Dashboard/Receiver_List.php?User_ID='.$_REQUEST["User_ID"] . '">Receiver List</a>';
     }
 ?>
-
+<br>
 <?php
 if ($_REQUEST["User_ID"]) {
     echo 'View <a href="/Dashboard/Receiver_Upgrade.php?User_ID='.$_REQUEST["User_ID"] . '">Upgrade Firmware</a>';
