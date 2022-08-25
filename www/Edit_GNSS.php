@@ -412,13 +412,13 @@ Enabled:
 <tr><td>
 Minimum:
 </td><td>
-<input name="Timed_Minimum" type="number" size="10" value="<?php echo ($Editing?$row["TIMED_MIN_DELTA"]:"30") ?>"/>
+<input name="Timed_Minimum" type="number" size="10" pattern="\d*" value="<?php echo ($Editing?$row["TIMED_MIN_DELTA"]:"30") ?>"/>
 </td></tr>
 
 <tr><td>
 Maximum:
 </td><td>
-<input name="Timed_Maximum" type="number" size="10" value="<?php echo ($Editing?$row["TIMED_MAX_DELTA"]:"120") ?>"/>
+<input name="Timed_Maximum" type="number" size="10" pattern="\d*" value="<?php echo ($Editing?$row["TIMED_MAX_DELTA"]:"120") ?>"/>
 </td></tr>
 </table>
 <p/>
