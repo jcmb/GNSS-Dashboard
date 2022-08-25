@@ -190,6 +190,9 @@ else {
           case "249":
             echo "Brewster Heading";
             break;
+          case "509":
+            echo "BX992-SPS";
+            break;
           default:
             echo "Unknown ID ". $row["Reciever_Type"];
        }
