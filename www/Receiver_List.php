@@ -102,20 +102,32 @@ else {
        echo "\n<td> ".$row["Port"]." </td>";
        echo "\n<td> ";
        switch ($row["Reciever_Type"]) {
-          case "118":
-            echo "SPS855";
+          case "38":
+            echo "SPS850";
             break;
-          case "107":
-            echo "SPS852";
+          case "59":
+            echo "SPS851";
             break;
           case "101":
             echo "SPS985";
             break;
-          case "169":
-            echo "SPS986";
+          case "107":
+            echo "SPS852";
+            break;
+          case "118":
+            echo "SPS855";
             break;
           case "138":
             echo "SPS356";
+            break;
+          case "169":
+            echo "SPS986";
+            break;
+          case "188":
+            echo "R750";
+            break;
+          case "240":
+            echo "BD935";
             break;
           case "248":
             echo "Brewster Upgradable";
@@ -123,17 +135,11 @@ else {
           case "249":
             echo "Brewster Heading";
             break;
-          case "38":
-            echo "SPS850";
-            break;
-          case "59":
-            echo "SPS851";
-            break;
-          case "240":
-            echo "BD935";
-            break;
           case "250":
             echo "SPS585";
+            break;
+          case "509":
+            echo "BX992-SPS";
             break;
 
           default:
