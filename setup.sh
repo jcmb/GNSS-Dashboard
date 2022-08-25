@@ -3,9 +3,12 @@
 WWW=/var/www/html/Dashboard
 CGI=/usr/lib/cgi-bin/Dashboard
 WWW_USER=www-data
+NAGIOS_USER=nagios
 
 
 mkdir -p $WWW || exit Error could not make directory $WWW
+chown www-data $WWW
+chgrp nagios $WWW
 mkdir -p $WWW/Firmware || exit Error could not make directory $WWW/Firmware
 mkdir -p $WWW/Clones || exit Error could not make directory $WWW/Clones
 mkdir -p $WWW/PI || exit Error could not make directory $WWW/Clones
@@ -37,4 +40,6 @@ then
 fi
 
 chown $WWW_USER GNSS.db
+chgrp $NAGIOS_USER GNSS.db
+chmod 0770 GNSS.db
 
