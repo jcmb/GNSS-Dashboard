@@ -229,7 +229,9 @@ else {
           case "185":
             echo "Zephyr 2 Geodetic";
             break;
-
+          case "265":
+            echo "Zephyr 2 Geodetic ROHS";
+            break;
           case "512":
             echo "Zephyr 3 Rover";
             break;
