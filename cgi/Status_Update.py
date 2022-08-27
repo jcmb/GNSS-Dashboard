@@ -712,7 +712,7 @@ def check_errors(GNSS_ID,DB,HTTP):
     Errors_Valid = Num_Errors==0
 
     if Errors_Valid == False:
-        Message="There are {} Errors and {}  Warnings\n".format(Num_Errors, Num_Entries-Num_Errors)
+        Message="There are {} Errors and {} Warnings\n".format(Num_Errors, Num_Entries-Num_Errors)
 
     return(Errors_Valid,Message)
 
