@@ -869,8 +869,11 @@ def check_Radio(GNSS_ID,DB,HTTP):
     root=ET.fromstring(reply)
 
 
-    RadioOnOffState = root.find("RadioOnOffState").text
-    radioMode = root.find("radioMode").text
+    RadioOnOffState = root.find("RadioOnOffState")
+    radioMode = root.find("radioMode")
+
+    print (RadioOnOffState)
+    print (radioMode)
     Radio_Valid=True
 
     if DB.RadioOnOffState != RadioOnOffState:
