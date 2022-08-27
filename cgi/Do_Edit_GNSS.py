@@ -181,19 +181,33 @@ if "Ref_Lat" not in form:
    print "Latitude must be entered"
    quit(100)
 else :
-   Ref_Lat=form["Ref_Lat"].value
+   try:
+      Ref_Lat=float(form["Ref_Lat"].value.strip())
+   except
+       print "Latitude must be a number"
+       quit(100)
+
 
 if "Ref_Long" not in form:
    print "Longitude must be entered"
    quit(100)
 else :
-   Ref_Long=form["Ref_Long"].value
+   try:
+      Ref_Long=float(form["Ref_Long"].value.strip())
+   except
+       print "Longitude must be a number"
+       quit(100)
+
 
 if "Ref_Height" not in form:
    print "Ref Height must be entered"
    quit(100)
 else :
-   Ref_Height=form["Ref_Height"].value
+   try:
+      Ref_Height=float(form["Ref_Long"].value.strip())
+   except
+       print "Height must be a number"
+       quit(100)
 
 
 if "Auth" not in form:
@@ -211,7 +225,7 @@ if "FTP_To" not in form:
    else:
       FTP_To=""
 else :
-  FTP_To=form["FTP_To"].value
+  FTP_To=form["FTP_To"].value.strip()
 
 
 Logging_Enabled =  "Logging_Enabled" in form
