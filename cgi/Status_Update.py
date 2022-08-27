@@ -878,7 +878,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
         Radio_Valid=False
 
     if DB.RadioMode != radioMode:
-        Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.radioMode)
+        Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
         Radio_Valid=False
 
 
