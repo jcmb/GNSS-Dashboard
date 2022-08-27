@@ -444,7 +444,9 @@ On:
 Operation Mode:
 </td><td>
 <select required name="RadioMode">
-  <option value="Base" <?php echo ($row["RadioMode"]=="Base"?"selected":""); ?>>Base</option>
+  <option value="RadioModeBaseW0Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW0Repeater"?"selected":""); ?>>Base with 0 Repeaters</option>
+  <option value="RadioModeBaseW1Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
+  <option value="RadioModeBaseW2Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
   <option value="Rover" <?php echo ($row["RadioMode"]=="Rover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
   <option value="Repeater" <?php echo ($row["RadioMode"]=="Repeater"?"selected":""); ?>>Repeater</option>
 </select>
