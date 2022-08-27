@@ -158,6 +158,11 @@ class DB_Class:
         self.Timed_Delta_Min=row["TIMED_MIN_DELTA"]
         self.Timed_Delta_Max=row["TIMED_MAX_DELTA"]
 
+        self.RadioEnabled=row["RadioEnabled"]
+        self.RadioOnOffState=row["RadioOnOffState"]
+        self.RadioMode=row["RadioMode"]
+
+
 
 class HTTP_Class:
     def __init__(self,Host,Port,User_Name,Password,TimeOut):
@@ -844,6 +849,50 @@ def check_Uptime(GNSS_ID,DB,HTTP):
         return (False,"Unit has uptime of less than 1 hour")
     else:
         return (True,"")
+
+
+def check_Radio(GNSS_ID,DB,HTTP):
+
+    if not DB.RadioEnabled: #If we aren't checking the radio then just leave
+        return (True,"")
+
+
+        self.RadioOnOffState=row["RadioOnOffState"]
+        self.RadioMode=row["RadioMode"]
+
+
+    Message=""
+
+    (reply,result)=HTTP.get("/xml/dynamic/radiosummary.xml")
+    print reply
+
+    root=ET.fromstring(reply)
+
+
+    RadioOnOffState = root.find("RadioOnOffState")
+    radioMode = root.find("radioMode")
+    Radio_Valid=True
+
+    if DB.RadioOnOffState != RadioOnOffState:
+        Message+="RadioOnOffState is {}, Expected {}\n".attribute(RadioOnOffState,DB.RadioOnOffState)
+        Radio_Valid=False
+
+    if DB.radioMode != radioModee:
+        Message+="radioMode is {}, Expected {}\n".attribute(radioMode,DB.radioMode)
+        Radio_Valid=False
+
+
+    Radio_Str=RadioOnOffState) + ":" + radioMode
+    logger.debug(DB.Address+":"+str(DB.Port)+ " : " + Radio_Str + " Valid: " + str(Radio_Valid))
+
+    DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?",(Radio_Str,Radio_Valid, GNSS_ID))
+    DB.conn.commit()
+
+    if radio_Valid:
+        return (True,"")
+    else:
+        return (False,Message)
+
 
 
 def check_clock(GNSS_ID,DB,HTTP):
@@ -1699,6 +1748,10 @@ if not Success:
 
 OK=OK and Success
 
+(Success,Message)=check_Radio(args.GNSS_ID,DB,HTTP)
+if not Success:
+    Result_String+=Message
+OK=OK and Success
 
 
 (Success,Message)=check_Tracking(args.GNSS_ID,DB,HTTP)
