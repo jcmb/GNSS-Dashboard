@@ -204,7 +204,7 @@ if "Ref_Height" not in form:
    quit(100)
 else :
    try:
-      Ref_Height=float(form["Ref_Long"].value.strip())
+      Ref_Height=float(form["Ref_Height"].value.strip())
    except:
        print "Height must be a number"
        quit(100)
