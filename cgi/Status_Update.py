@@ -886,12 +886,12 @@ def check_Radio(GNSS_ID,DB,HTTP):
         radioMode=radioMode.text
 
         if DB.RadioOnOffState:
-            DB.RadioOnOffState_Str="On"
+            RadioOnOffState_Str="On"
         else:
-            DB.RadioOnOffState_Str="Off"
+            RadioOnOffState_Str="Off"
 
-        if DB.RadioOnOffState != RadioOnOffState:
-            Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,DB.RadioOnOffState)
+        if DB.RadioOnOffState != RadioOnOffState_Str:
+            Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,RadioOnOffState_Str)
             Radio_Valid=False
 
         if DB.RadioMode != radioMode:
