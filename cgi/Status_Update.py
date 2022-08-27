@@ -890,7 +890,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
         else:
             RadioOnOffState_Str="Off"
 
-        if DB.RadioOnOffState != RadioOnOffState_Str:
+        if RadioOnOffState != RadioOnOffState_Str:
             Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,RadioOnOffState_Str)
             Radio_Valid=False
 
