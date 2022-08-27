@@ -870,7 +870,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
 
 
     RadioOnOffState = root.find("RadioOnOffState")
-    radioMode = root.find("radioMode")
+    radioMode = root.find("general/radioMode")
 
     print (RadioOnOffState)
     print (radioMode)
