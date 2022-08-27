@@ -868,24 +868,37 @@ def check_Radio(GNSS_ID,DB,HTTP):
 
     root=ET.fromstring(reply)
 
+    Radio_Valid=True
+
 
     RadioOnOffState = root.find("RadioOnOffState")
     radioMode = root.find("general/radioMode")
 
-    print (RadioOnOffState)
-    print (radioMode)
-    Radio_Valid=True
-
-    if DB.RadioOnOffState != RadioOnOffState:
-        Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,DB.RadioOnOffState)
+    if RadioOnOffState == None:
+        Message+="RadioOnOffState not found\n"
         Radio_Valid=False
 
-    if DB.RadioMode != radioMode:
-        Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
+    if radioMode == None:
+        Message+="radioMode not found\n"
         Radio_Valid=False
 
+    if Radio_Valid == True:
+        RadioOnOffState=RadioOnOffState.text
+        radioMode=radioMode.text
 
-    Radio_Str=RadioOnOffState + ":" + radioMode
+        if DB.RadioOnOffState != RadioOnOffState:
+            Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,DB.RadioOnOffState)
+            Radio_Valid=False
+
+        if DB.RadioMode != radioMode:
+            Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
+            Radio_Valid=False
+
+
+        Radio_Str=RadioOnOffState + ":" + radioMode
+    else:
+        Radio_Str="Radio States not found"
+
     logger.debug(DB.Address+":"+str(DB.Port)+ " : " + Radio_Str + " Valid: " + str(Radio_Valid))
 
     DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?",(Radio_Str,Radio_Valid, GNSS_ID))
