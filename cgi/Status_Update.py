@@ -904,7 +904,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
     DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?",(Radio_Str,Radio_Valid, GNSS_ID))
     DB.conn.commit()
 
-    if radio_Valid:
+    if Radio_Valid:
         return (True,"")
     else:
         return (False,Message)
