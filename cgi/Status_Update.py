@@ -856,7 +856,6 @@ def check_Radio(GNSS_ID,DB,HTTP):
     if not DB.RadioEnabled: #If we aren't checking the radio then just leave
         return (True,"")
 
-
         self.RadioOnOffState=row["RadioOnOffState"]
         self.RadioMode=row["RadioMode"]
 
@@ -864,7 +863,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
     Message=""
 
     (reply,result)=HTTP.get("/xml/dynamic/radiosummary.xml")
-    print reply
+#    print reply
 
     root=ET.fromstring(reply)
 
@@ -885,6 +884,11 @@ def check_Radio(GNSS_ID,DB,HTTP):
     if Radio_Valid == True:
         RadioOnOffState=RadioOnOffState.text
         radioMode=radioMode.text
+
+        if DB.RadioOnOffState:
+            DB.RadioOnOffState_Str="On"
+        else:
+            DB.RadioOnOffState_Str="Off"
 
         if DB.RadioOnOffState != RadioOnOffState:
             Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,DB.RadioOnOffState)
