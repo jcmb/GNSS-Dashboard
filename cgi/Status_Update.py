@@ -877,7 +877,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
         Message+="RadioOnOffState is {}, Expected {}\n".attribute(RadioOnOffState,DB.RadioOnOffState)
         Radio_Valid=False
 
-    if DB.radioMode != radioModee:
+    if DB.radioMode != radioMode:
         Message+="radioMode is {}, Expected {}\n".attribute(radioMode,DB.radioMode)
         Radio_Valid=False
 
