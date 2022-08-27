@@ -183,7 +183,7 @@ if "Ref_Lat" not in form:
 else :
    try:
       Ref_Lat=float(form["Ref_Lat"].value.strip())
-   except
+   except:
        print "Latitude must be a number"
        quit(100)
 
@@ -194,7 +194,7 @@ if "Ref_Long" not in form:
 else :
    try:
       Ref_Long=float(form["Ref_Long"].value.strip())
-   except
+   except:
        print "Longitude must be a number"
        quit(100)
 
@@ -205,7 +205,7 @@ if "Ref_Height" not in form:
 else :
    try:
       Ref_Height=float(form["Ref_Long"].value.strip())
-   except
+   except:
        print "Height must be a number"
        quit(100)
 
