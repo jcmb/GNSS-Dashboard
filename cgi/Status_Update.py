@@ -882,7 +882,7 @@ def check_Radio(GNSS_ID,DB,HTTP):
         Radio_Valid=False
 
 
-    Radio_Str=RadioOnOffState) + ":" + radioMode
+    Radio_Str=RadioOnOffState + ":" + radioMode
     logger.debug(DB.Address+":"+str(DB.Port)+ " : " + Radio_Str + " Valid: " + str(Radio_Valid))
 
     DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?",(Radio_Str,Radio_Valid, GNSS_ID))
