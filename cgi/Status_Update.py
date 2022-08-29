@@ -158,6 +158,11 @@ class DB_Class:
         self.Timed_Delta_Min=row["TIMED_MIN_DELTA"]
         self.Timed_Delta_Max=row["TIMED_MAX_DELTA"]
 
+        self.RadioEnabled=row["RadioEnabled"]
+        self.RadioOnOffState=row["RadioOnOffState"]
+        self.RadioMode=row["RadioMode"]
+
+
 
 class HTTP_Class:
     def __init__(self,Host,Port,User_Name,Password,TimeOut):
@@ -844,6 +849,70 @@ def check_Uptime(GNSS_ID,DB,HTTP):
         return (False,"Unit has uptime of less than 1 hour")
     else:
         return (True,"")
+
+
+def check_Radio(GNSS_ID,DB,HTTP):
+
+    if not DB.RadioEnabled: #If we aren't checking the radio then just leave
+        return (True,"")
+
+        self.RadioOnOffState=row["RadioOnOffState"]
+        self.RadioMode=row["RadioMode"]
+
+
+    Message=""
+
+    (reply,result)=HTTP.get("/xml/dynamic/radiosummary.xml")
+#    print reply
+
+    root=ET.fromstring(reply)
+
+    Radio_Valid=True
+
+
+    RadioOnOffState = root.find("RadioOnOffState")
+    radioMode = root.find("general/radioMode")
+
+    if RadioOnOffState == None:
+        Message+="RadioOnOffState not found\n"
+        Radio_Valid=False
+
+    if radioMode == None:
+        Message+="radioMode not found\n"
+        Radio_Valid=False
+
+    if Radio_Valid == True:
+        RadioOnOffState=RadioOnOffState.text
+        radioMode=radioMode.text
+
+        if DB.RadioOnOffState:
+            RadioOnOffState_Str="On"
+        else:
+            RadioOnOffState_Str="Off"
+
+        if RadioOnOffState != RadioOnOffState_Str:
+            Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,RadioOnOffState_Str)
+            Radio_Valid=False
+
+        if DB.RadioMode != radioMode:
+            Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
+            Radio_Valid=False
+
+
+        Radio_Str=RadioOnOffState + ":" + radioMode
+    else:
+        Radio_Str="Radio States not found"
+
+    logger.debug(DB.Address+":"+str(DB.Port)+ " : " + Radio_Str + " Valid: " + str(Radio_Valid))
+
+    DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?",(Radio_Str,Radio_Valid, GNSS_ID))
+    DB.conn.commit()
+
+    if Radio_Valid:
+        return (True,"")
+    else:
+        return (False,Message)
+
 
 
 def check_clock(GNSS_ID,DB,HTTP):
@@ -1699,6 +1768,10 @@ if not Success:
 
 OK=OK and Success
 
+(Success,Message)=check_Radio(args.GNSS_ID,DB,HTTP)
+if not Success:
+    Result_String+=Message
+OK=OK and Success
 
 
 (Success,Message)=check_Tracking(args.GNSS_ID,DB,HTTP)
