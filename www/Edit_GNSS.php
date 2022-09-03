@@ -451,7 +451,10 @@ Operation Mode:
   <option value="RadioModeBaseW1Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
   <option value="RadioModeBaseW2Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
   <option value="RadioModeRover" <?php echo ($row["RadioMode"]=="RadioModeRover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
-  <option value="Repeater" <?php echo ($row["RadioMode"]=="Repeater"?"selected":""); ?>>Repeater</option>
+  <option value="RadioModeRepeater1" <?php echo ($row["RadioMode"]=="RadioModeRepeater1"?"selected":""); ?>>Repeater 1</option>
+  <option value="RadioModeRepeater2" <?php echo ($row["RadioMode"]=="RadioModeRepeater2"?"selected":""); ?>>Repeater 2</option>
+  <option value="RadioModeRepeater3" <?php echo ($row["RadioMode"]=="RadioModeRepeater3"?"selected":""); ?>>Repeater 3</option>
+  <option value="RadioModeRepeater4" <?php echo ($row["RadioMode"]=="RadioModeRepeater4"?"selected":""); ?>>Repeater 4</option>
 </select>
 
 </td></tr>
