@@ -278,6 +278,7 @@ Type:
   <option value="379" <?php echo ($row["Antenna"]=="379"?"selected":""); ?>>SPS585</option>
   <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
+  <option value="569" <?php echo ($row["Antenna"]=="146"?"selected":""); ?>>R10</option>
   <option value="184" <?php echo ($row["Antenna"]=="184"?"selected":""); ?>>Zephyr 2</option>
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":""); ?>>Zephyr Geodetic 2</option>
   <option value="265" <?php echo ($row["Antenna"]=="265"?"selected":""); ?>>Zephyr Geodetic 2 ROHS</option>
@@ -449,7 +450,7 @@ Operation Mode:
   <option value="RadioModeBaseW0Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW0Repeater"?"selected":""); ?>>Base with 0 Repeaters</option>
   <option value="RadioModeBaseW1Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
   <option value="RadioModeBaseW2Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
-  <option value="Rover" <?php echo ($row["RadioMode"]=="Rover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
+  <option value="RadioModeRover" <?php echo ($row["RadioMode"]=="RadioModeRover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
   <option value="Repeater" <?php echo ($row["RadioMode"]=="Repeater"?"selected":""); ?>>Repeater</option>
 </select>
 
