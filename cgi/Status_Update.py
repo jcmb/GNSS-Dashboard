@@ -633,7 +633,7 @@ def check_logging(GNSS_ID,DB,HTTP):
             logger.info(DB.Address+":"+str(DB.Port)+ " voltTempInterval could not be found:")
 
         Logging_obs=None
-        m=re.search("logCorrection=(\w*)",line)
+        m=re.search("logCorrections=(\w*)",line)
         if m:
             Logging_obs = m.group(1)
             if not (Logging_obs=="yes"):
