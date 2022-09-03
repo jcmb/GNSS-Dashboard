@@ -1402,7 +1402,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
             if DB.GAL:
                 Message+="GAL Not enabled\n"
             else:
-                Message+="GAL enabled when it shoudld not be\n"
+                Message+="GAL enabled when it should not be\n"
 
 
 
