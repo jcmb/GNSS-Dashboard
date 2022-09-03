@@ -147,11 +147,11 @@ Receiver:
 </td><td>
 <select required name=Receiver_Type>
   <option value="118" <?php echo ($row["Reciever_Type"]=="118")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>SPS855</option>
+  <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="250" <?php echo ($row["Reciever_Type"]=="250")?"selected":"" ?>>SPS585</option>
   <option value="107" <?php echo ($row["Reciever_Type"]=="107")?"selected":"" ?>>SPS852</option>
   <option value="101" <?php echo ($row["Reciever_Type"]=="101")?"selected":"" ?>>SPS985</option>
   <option value="169" <?php echo ($row["Reciever_Type"]=="169")?"selected":"" ?>>SPS986</option>
-  <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="38"  <?php echo  ($row["Reciever_Type"]=="38")?"selected":"" ?>>SPS850</option>
   <option value="59"  <?php echo  ($row["Reciever_Type"]=="59")?"selected":"" ?>>SPS851</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
