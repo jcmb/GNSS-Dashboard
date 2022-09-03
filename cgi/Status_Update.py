@@ -632,6 +632,19 @@ def check_logging(GNSS_ID,DB,HTTP):
         else:
             logger.info(DB.Address+":"+str(DB.Port)+ " voltTempInterval could not be found:")
 
+        Logging_obs=None
+        m=re.search("logCorrection=(\w*)",line)
+        if m:
+            Logging_obs = m.group(1)
+            if not (Logging_obs=="yes"):
+                Logging_Valid=False;
+                Message+="Logging_obs is " + str(Logging_obs) + " Expected yes\n"
+        else:
+           logger.info(DB.Address+":"+str(DB.Port)+ " logCorrection could not be found:")
+
+
+
+
         logger.debug(DB.Address+":"+str(DB.Port)+ " Logging:: Enabled: "+ str(Logging_Enabled) + " Duration: " + str(Logging_Duration) + " Measurement: " + str(Logging_measInterval) + " Position: " + str (Logging_posInterval) + " Volt/Temp: " + str(Logging_voltTempInterval) + " Valid: " + str(Logging_Valid))
         DB.STATUS.execute("UPDATE STATUS SET Logging_Enabled=?,Logging_Duration=?,Logging_Measurement_Interval=?,Logging_Position_Interval=?,Logging_Volt_Temp_Interval=?,Logging_Valid=? where id=?",(Logging_Enabled,Logging_Duration,Logging_measInterval,Logging_posInterval,Logging_voltTempInterval,Logging_Valid,GNSS_ID))
 
@@ -1488,7 +1501,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
             if DB.BDS:
                 Message+="BDS Not Enabled\n"
             else:
-                Message+="BDS Enabled when it shoud not be\n"
+                Message+="BDS Enabled when it should not be\n"
 
 
         if DB.BDS:
