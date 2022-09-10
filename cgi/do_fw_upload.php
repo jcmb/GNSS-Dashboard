@@ -226,6 +226,8 @@ else {
 echo "<br/>\n";
 
 $db = new SQLite3($databaseFile);
+$db->exec("PRAGMA busy_timeout=5000");
+
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
 #  echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\",  TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
@@ -243,6 +245,8 @@ $db->exec("UPDATE Firmware SET
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
 
+// Close the connection
+$db->close();
 
 print "<p/>You can now:<ul>";
 echo '<li><a href="/Dashboard/Receiver_List.php?User_ID=',$User_ID,'">View and edit receivers</a>';
