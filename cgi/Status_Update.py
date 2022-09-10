@@ -638,7 +638,7 @@ def check_logging(GNSS_ID,DB,HTTP):
             Logging_obs = m.group(1)
             if not (Logging_obs=="yes"):
                 Logging_Valid=False;
-                Message+="Logging_obs is " + str(Logging_obs) + " Expected yes\n"
+                Message+="Logging base obs is " + str(Logging_obs) + " Expected yes\n"
         else:
            logger.info(DB.Address+":"+str(DB.Port)+ " logCorrection could not be found:")
 
