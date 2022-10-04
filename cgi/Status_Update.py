@@ -808,9 +808,16 @@ def check_FTP(GNSS_ID,DB,HTTP):
 
         for log in root.findall('log'):
             status = log.find('status').text
+
             if status == "FTPTestBadLogin":
                 FTP_Valid = False
                 Message="FTP Has a Bad login"
+
+            if status == "FTPTestBadDir":
+                FTP_Valid = False
+                Message="FTP Has a Bad remote directory"
+
+# We ignore FTPTestBadSend since it expect this to fix itself.
 
 
         DB.STATUS.execute("UPDATE STATUS SET FTP_Enabled=?, FTP_To=?, FTP_Valid=? where id=?",(FTP_Enabled,FTP_To,FTP_Valid,GNSS_ID))
