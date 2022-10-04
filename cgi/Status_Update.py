@@ -806,6 +806,12 @@ def check_FTP(GNSS_ID,DB,HTTP):
             FTP_Valid = False
             Message="NotPushedFileCount is {} it should be 0".format(FTP_Not_Pushed)
 
+        for log in root.findall('log'):
+            status = log.find('status').text
+            if status == "FTPTestBadLogin":
+                FTP_Valid = False
+                Message="FTP Has a Bad login"
+
 
         DB.STATUS.execute("UPDATE STATUS SET FTP_Enabled=?, FTP_To=?, FTP_Valid=? where id=?",(FTP_Enabled,FTP_To,FTP_Valid,GNSS_ID))
         DB.conn.commit()
