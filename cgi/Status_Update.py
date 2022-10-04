@@ -793,6 +793,20 @@ def check_FTP(GNSS_ID,DB,HTTP):
             Message+="FTP To is " + str(FTP_To) + " Expected " + str(DB.FTP_To) + "\n"
             logger.debug(DB.Address+":"+str(DB.Port)+ " FTP To: " + str(FTP_To) + ", Expected To: " + str(DB.FTP_To) + ', Valid: ' + str(FTP_Valid))
 
+        (reply,result)=HTTP.get("/xml/dynamic/ftpPushLog.xml")
+        if result !=  200:
+            FTP_Valid = False
+            Message="Could not determine FTPPushLog"
+            return(FTP_Valid,Message)
+
+#       print reply
+        root=ET.fromstring(reply)
+        FTP_Not_Pushed = int(root.find('NotPushedFileCount').text)
+        if FTP_Not_Pushed <> 0:
+            FTP_Valid = False
+            Message="NotPushedFileCount is {} it should be 0".format(FTP_Not_Pushed)
+
+
         DB.STATUS.execute("UPDATE STATUS SET FTP_Enabled=?, FTP_To=?, FTP_Valid=? where id=?",(FTP_Enabled,FTP_To,FTP_Valid,GNSS_ID))
         DB.conn.commit()
     else:
