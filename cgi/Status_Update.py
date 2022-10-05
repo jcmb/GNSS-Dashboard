@@ -691,6 +691,12 @@ def check_email(GNSS_ID,DB,HTTP):
                     Email_Valid=False
                     Message+="Email is enabled without crash reporting\n";
                     logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting crashes")
+
+
+        if root.find('result').text != "EmailStatusOK":
+            Email_Valid = False
+            Message="Email result is {} should be OK\n".format(root.find('result').text)
+
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?",(Email_Enabled,Email_To,Email_Valid,GNSS_ID))
         DB.conn.commit()
     else:
@@ -779,7 +785,15 @@ def check_FTP(GNSS_ID,DB,HTTP):
 
 #        print reply
 
-        root=ET.fromstring(reply)
+
+        try:
+            root=ET.fromstring(reply)
+        except:
+            FTP_Valid=False
+            Message+="ftpPush.xml was invalid\n"
+            return(FTP_Valid,Message)
+
+
         try:
             FTP_To = root.find('server').find("dir").text.lower()
         except:
@@ -796,26 +810,32 @@ def check_FTP(GNSS_ID,DB,HTTP):
         (reply,result)=HTTP.get("/xml/dynamic/ftpPushLog.xml")
         if result !=  200:
             FTP_Valid = False
-            Message="Could not determine FTPPushLog"
+            Message+="Could not determine FTPPushLog\n"
             return(FTP_Valid,Message)
 
 #       print reply
-        root=ET.fromstring(reply)
+        try:
+            root=ET.fromstring(reply)
+        except:
+            FTP_Valid=False
+            Message+="ftpPushLog.xml was invalid\n"
+            return(FTP_Valid,Message)
+
         FTP_Not_Pushed = int(root.find('NotPushedFileCount').text)
         if FTP_Not_Pushed <> 0:
             FTP_Valid = False
-            Message="NotPushedFileCount is {} it should be 0".format(FTP_Not_Pushed)
+            Message+="NotPushedFileCount is {} it should be 0\n".format(FTP_Not_Pushed)
 
         for log in root.findall('log'):
             status = log.find('status').text
 
             if status == "FTPTestBadLogin":
                 FTP_Valid = False
-                Message="FTP Has a Bad login"
+                Message="FTP Has a Bad login\n"
 
             if status == "FTPTestBadDir":
                 FTP_Valid = False
-                Message="FTP Has a Bad remote directory"
+                Message="FTP Has a Bad remote directory\n"
 
 # We ignore FTPTestBadSend since it expect this to fix itself.
 
