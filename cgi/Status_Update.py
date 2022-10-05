@@ -693,9 +693,9 @@ def check_email(GNSS_ID,DB,HTTP):
                     logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting crashes")
 
 
-        if root.find('result').text != "EmailStatusOK":
+        if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing"):
             Email_Valid = False
-            Message="Email result is {} should be OK\n".format(root.find('result').text)
+            Message+="Email result is {} should be OK\n".format(root.find('result').text)
 
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?",(Email_Enabled,Email_To,Email_Valid,GNSS_ID))
         DB.conn.commit()
