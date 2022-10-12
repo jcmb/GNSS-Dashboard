@@ -99,6 +99,26 @@ if ($TitianVersion=="") {
     quit(100);
     }
 
+if ($_FILES['AlloyUpload'] ) {
+   echo "Alloy File: " , $_FILES['AlloyUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No Alloy File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name =  $_FILES['AlloyUpload']["tmp_name"];
+   $BCudaName = $_FILES['AlloyUpload']["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$AlloyName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br/>\n";
+
 if ($_FILES['BarracudaUpload'] ) {
    echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
    }
@@ -237,6 +257,7 @@ $db->exec("PRAGMA busy_timeout=5000");
 $db->exec("UPDATE Firmware SET
    Version=\"$Version\",
    Titian_Version=\"$TitianVersion\",
+   AlloyFile=\"$AlloyName\",
    BarracudaFile=\"$BCudaName\",
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",

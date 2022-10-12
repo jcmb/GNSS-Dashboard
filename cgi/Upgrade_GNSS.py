@@ -95,6 +95,9 @@ for row in rows:
       elif Reciever_Type == 101 :
          print "SPS985 ",
          firmware_file=RockyFile
+      elif Reciever_Type == 162 :
+         print "Alloy ",
+         firmware_file=AlloyFile
       elif Reciever_Type == 169 :
          print "SPS986 ",
          firmware_file=ChinstrapFile

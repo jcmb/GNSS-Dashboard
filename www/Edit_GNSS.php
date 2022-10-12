@@ -146,6 +146,7 @@ Firmware to install:
 Receiver:
 </td><td>
 <select required name=Receiver_Type>
+  <option value="162" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>Alloy</option>
   <option value="118" <?php echo ($row["Reciever_Type"]=="118")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>SPS855</option>
   <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="250" <?php echo ($row["Reciever_Type"]=="250")?"selected":"" ?>>SPS585</option>

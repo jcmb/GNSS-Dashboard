@@ -100,6 +100,15 @@ if ($User_ID=="") {
 
 <tr>
 <td>
+Alloy
+</td><td>
+<input size="60" type="file" name="AlloyUpload" id="AlloyUpload" accept=".timg" required/></br>
+</td>
+</tr>
+
+
+<tr>
+<td>
 R750 (Barracuda)
 </td><td>
 <input size="60" type="file" name="BarracudaUpload" id="BarracudaUpload" accept=".timg" required/></br>
