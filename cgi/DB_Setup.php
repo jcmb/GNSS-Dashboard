@@ -173,6 +173,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Type TEXT PRIMARY KEY,
       Version TEXT,
       Titian_Version TEXT,
+      AlloyFile TEXT,
       BarracudaFile TEXT,
       ChinstrapFile TEXT,
       GamelFile TEXT,
