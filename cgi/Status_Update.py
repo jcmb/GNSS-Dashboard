@@ -1653,8 +1653,10 @@ def check_Tracking(GNSS_ID,DB,HTTP):
                 logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 Disabled")
         else:
             SBAS=0
-            Frequencies_Valid=False
-            logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 N/A")
+            Frequencies_Valid=not DB.SBAS
+            if not Frequencies_Valid:
+                logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 N/A")
+
 
         SBAS_Valid=DB.SBAS==SBAS;
 
