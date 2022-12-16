@@ -292,7 +292,7 @@ Type:
 <tr><td>
 Antenna Height:
 </td><td>
-<input name="Ant_Height" type="number" min="-.1" max="4" step="0.001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
+<input name="Ant_Height" type="number" min="-.1" max="4" step="0.0001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
 </td></tr>
 
 <tr><td>
