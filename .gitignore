@@ -4,3 +4,4 @@
 cgi/db_inc.py
 cgi/Programmatic_Backup.py
 cgi/GNSS.db
+*.pyc

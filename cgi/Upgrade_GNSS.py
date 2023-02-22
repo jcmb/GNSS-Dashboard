@@ -11,6 +11,7 @@ import os
 import os.path
 import stat
 import sys
+import time
 
 from db_inc import *
 
@@ -90,6 +91,15 @@ for row in rows:
       elif Reciever_Type == 118 :
          print "SPS855 ",
          firmware_file=GamelFile
+      elif Reciever_Type == 508 :
+         print "BX992-MS ",
+         firmware_file=KryptonFile
+      elif Reciever_Type == 509 :
+         print "BX992-SPS ",
+         firmware_file=KryptonFile
+      elif Reciever_Type == 164 :
+         print "BD992 ",
+         firmware_file=KryptonFile
       elif Reciever_Type == 38 :
          print "SPS850 ",
       elif Reciever_Type == 101 :
@@ -122,13 +132,25 @@ for row in rows:
          print "Upgrading"
          cmd=[
             "./upgrade_with_clone.py",
-            "-padmin:" + row["Password"],
-            "-cGPS_"+ str(row["id"]),
-            "-d/var/www/html/Dashboard/Clones",
-            "-i" + row["Address"]+":"+str(row["Port"]) ,
-            "-f" + firmwareLocation() + '/' + firmware_file
+            "-p" ,"admin:" + row["Password"],
+            "-c", "GPS_"+ str(row["id"]),
+            "-d", "/var/www/html/Dashboard/Clones",
+            "-i", row["Address"]+":"+str(row["Port"]) ,
+            "-f", firmwareLocation() + '/' + firmware_file ,
+            "-u",
+            "-v"
             ]
-#         print cmd
+         cmd = "./upgrade_with_clone.py" +\
+            " -p admin:" + row["Password"] +\
+            " -c GPS_"+ str(row["id"]) +\
+            " -d /var/www/html/Dashboard/Clones"  +\
+            " -i " +  row["Address"]+":"+str(row["Port"])  +\
+            " -f " + firmwareLocation() + '/' + firmware_file +\
+            " -u" 
+
+         print (cmd)
 #         Popen(cmd,stdout=None)
-         call(cmd,stdout=None)
+         pprint(Popen(cmd, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True))
+         time.sleep(2)
+#         call(cmd,stdout=None)
 #      print ("</pre><br/>")
