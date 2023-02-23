@@ -138,6 +138,7 @@ Firmware to install:
   <option value="Branch" <?php echo ($row["Firmware"]=="Branch")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?> >Branch</option>
   <option value="Trunk" <?php echo ($row["Firmware"]=="Trunk")?"selected":"" ?>>Trunk</option>
   <option value="Unmanaged" <?php echo ($row["Firmware"]=="Unmanaged")?"selected":"" ?>>Unmanaged</option>
+  <option value="EOL" <?php echo ($row["Firmware"]=="EOL")?"selected":"" ?>>EOL</option>
 </select>
 </td></tr>
 

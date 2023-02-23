@@ -124,6 +124,7 @@ else:
    print ("You can now:<ul>")
    print ('<li><a href="/cgi-bin/Dashboard/List_Status.php?User_ID='+User_ID+'">Receiver Dashboard</a>')
    print ('<li><a href="/Dashboard/Receiver_List.php?User_ID='+User_ID+'">View and edit receivers</a>')
+   print ('<li><a href="/Dashboard/Error_List.php?User_ID='+User_ID+'">View Errors and Warnings receivers</a>')
    print ('<li><a href="/Dashboard/Receiver_Upgrade.php?User_ID='+User_ID+'">Update Reciever Firmware</a>')
    print ('<li><a href="/Dashboard/fw_upload.php?User_ID='+User_ID+'">Upload firmware</a>')
    print ('<li><a href="/Dashboard/Edit_User.php?User_ID='+User_ID+'">Edit your user details</a>')

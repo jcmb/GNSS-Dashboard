@@ -738,6 +738,10 @@ def check_errors(GNSS_ID,DB,HTTP):
     if Errors_Valid == False:
         Message="There are {} Errors and {} Warnings\n".format(Num_Errors, Num_Entries-Num_Errors)
 
+    DB.STATUS.execute("UPDATE STATUS SET Errors=?, Warnings=? where id=?",(Num_Errors, Num_Entries-Num_Errors,GNSS_ID))
+    DB.conn.commit()
+
+
     return(Errors_Valid,Message)
 
 def check_FTP(GNSS_ID,DB,HTTP):
@@ -1970,8 +1974,9 @@ if not Success:
 logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
 
 OK=OK and Success
+#pprint(DB.Firmware)
 
-if DB.Firmware != "Unmanaged" :
+if DB.Firmware != "EOL" :
     (Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
 
     if not Success:
