@@ -24,6 +24,8 @@ table.tablesorter tbody td.Issue {
     color: red;
 }
 
+</style>
+
 <script>
 $(document).ready(function()
     {
@@ -31,7 +33,7 @@ $(document).ready(function()
     }
 );
 </script>
-</style>
+
 
 </head>
 <body>
@@ -47,15 +49,6 @@ else {
    }
 ?>
 
-<script>
-$(document).ready(function()
-    {
-        $("#Receivers").tablesorter();
-    }
-);
-</script>
-
-
 <?php
    error_reporting(E_ALL);
    include 'error.php.inc';
@@ -66,7 +59,7 @@ $(document).ready(function()
    {
        // Start a table, with column headers
 
-      echo "\n<table border='1' id=\"Receivers\" class=\"tablesorter\">\n<tr>\n" .
+      echo "\n<table border='1' id=\"Receivers\" class=\"tablesorter\">\n<thead><tr>\n" .
           "\n<th>ID</th>" .
           "\n<th>Details</th>" .
           "\n<th>Download</th>" .
@@ -81,13 +74,17 @@ $(document).ready(function()
           "\n<th>Errors</th>" .
           "\n<th>Warnings</th>" .
           "\n<th>Clear</th>" .
-          "\n</tr>";
+          "\n</tr></thead><tbody>";
 
      // Until there are no rows in the result set,
      // fetch a row into the $row array and ...
      while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
         {
         if (!$row["Enabled"] ) {
+            continue;
+            }
+
+        if ($row["Firmware"] == "EOL" ) {
             continue;
             }
 //        var_dump($row);
@@ -163,14 +160,14 @@ $(document).ready(function()
        echo "\n<td> ".$row["Password"]." </td>";
        echo "\n<td> ".$row["Errors"]." </td>";
        echo "\n<td> ".$row["Warnings"]." </td>";
-       echo "\n".'<td><a href="/cgi-bin/Dashboard/Delete_Errors?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"]."&ID=".$row["id"].'">Delete</a>';
+       echo "\n".'<td><a target="_blank" href="/cgi-bin/Dashboard/Delete_Errors?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"]."&ID=".$row["id"].'">Delete</a>';
 
        echo "\n</tr>";
 
      }
 
      // Then, finish the table
-     echo "\n</table>\n";
+     echo "\n</tbody></table>\n";
      echo "<p>\n";
   }
 
