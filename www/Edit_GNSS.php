@@ -138,6 +138,7 @@ Firmware to install:
   <option value="Branch" <?php echo ($row["Firmware"]=="Branch")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?> >Branch</option>
   <option value="Trunk" <?php echo ($row["Firmware"]=="Trunk")?"selected":"" ?>>Trunk</option>
   <option value="Unmanaged" <?php echo ($row["Firmware"]=="Unmanaged")?"selected":"" ?>>Unmanaged</option>
+  <option value="EOL" <?php echo ($row["Firmware"]=="EOL")?"selected":"" ?>>EOL</option>
 </select>
 </td></tr>
 
@@ -146,12 +147,13 @@ Firmware to install:
 Receiver:
 </td><td>
 <select required name=Receiver_Type>
+  <option value="162" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>Alloy</option>
   <option value="118" <?php echo ($row["Reciever_Type"]=="118")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>SPS855</option>
+  <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="250" <?php echo ($row["Reciever_Type"]=="250")?"selected":"" ?>>SPS585</option>
   <option value="107" <?php echo ($row["Reciever_Type"]=="107")?"selected":"" ?>>SPS852</option>
   <option value="101" <?php echo ($row["Reciever_Type"]=="101")?"selected":"" ?>>SPS985</option>
   <option value="169" <?php echo ($row["Reciever_Type"]=="169")?"selected":"" ?>>SPS986</option>
-  <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="38"  <?php echo  ($row["Reciever_Type"]=="38")?"selected":"" ?>>SPS850</option>
   <option value="59"  <?php echo  ($row["Reciever_Type"]=="59")?"selected":"" ?>>SPS851</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
@@ -278,6 +280,7 @@ Type:
   <option value="379" <?php echo ($row["Antenna"]=="379"?"selected":""); ?>>SPS585</option>
   <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
+  <option value="569" <?php echo ($row["Antenna"]=="146"?"selected":""); ?>>R10</option>
   <option value="184" <?php echo ($row["Antenna"]=="184"?"selected":""); ?>>Zephyr 2</option>
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":""); ?>>Zephyr Geodetic 2</option>
   <option value="265" <?php echo ($row["Antenna"]=="265"?"selected":""); ?>>Zephyr Geodetic 2 ROHS</option>
@@ -290,7 +293,7 @@ Type:
 <tr><td>
 Antenna Height:
 </td><td>
-<input name="Ant_Height" type="number" min="-.1" max="4" step="0.001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
+<input name="Ant_Height" type="number" min="-.1" max="4" step="0.0001" value="<?php echo ($row["Ant_Height"])?$row["Ant_Height"]:"0"; echo ($Editing)?"":"0"?>">
 </td></tr>
 
 <tr><td>
@@ -449,8 +452,11 @@ Operation Mode:
   <option value="RadioModeBaseW0Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW0Repeater"?"selected":""); ?>>Base with 0 Repeaters</option>
   <option value="RadioModeBaseW1Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
   <option value="RadioModeBaseW2Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
-  <option value="Rover" <?php echo ($row["RadioMode"]=="Rover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
-  <option value="Repeater" <?php echo ($row["RadioMode"]=="Repeater"?"selected":""); ?>>Repeater</option>
+  <option value="RadioModeRover" <?php echo ($row["RadioMode"]=="RadioModeRover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
+  <option value="RadioModeRepeater1" <?php echo ($row["RadioMode"]=="RadioModeRepeater1"?"selected":""); ?>>Repeater 1</option>
+  <option value="RadioModeRepeater2" <?php echo ($row["RadioMode"]=="RadioModeRepeater2"?"selected":""); ?>>Repeater 2</option>
+  <option value="RadioModeRepeater3" <?php echo ($row["RadioMode"]=="RadioModeRepeater3"?"selected":""); ?>>Repeater 3</option>
+  <option value="RadioModeRepeater4" <?php echo ($row["RadioMode"]=="RadioModeRepeater4"?"selected":""); ?>>Repeater 4</option>
 </select>
 
 </td></tr>

@@ -265,6 +265,8 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
       if (r.status_code == 200) :
 #        print r.text
         xml_reply = fromstring(r.text)
+        if xml_reply == None:
+            continue
 #        dump(xml_reply)
         State=xml_reply.find("fw_status/status/mode").text
 #        print State
@@ -310,7 +312,7 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
 
    r = requests.get("http://{0}@{1}/cgi-bin/resetPage.xml?doReset=1".format(USER,IP))
 
-
+#pprint(sys.argv,stream=sys.stderr)
 (IP,USER,VERBOSE,CLONE_FILE,CLONE_DIR,CLONE_DATE,FIRMWARE_FILE,NO_UPGRADE,UPGRADE_ONLY) = process_arguments()
 
 if VERBOSE:

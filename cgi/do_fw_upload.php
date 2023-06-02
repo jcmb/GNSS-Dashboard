@@ -99,6 +99,26 @@ if ($TitianVersion=="") {
     quit(100);
     }
 
+if ($_FILES['AlloyUpload'] ) {
+   echo "Alloy File: " , $_FILES['AlloyUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No Alloy File");
+    }
+
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name =  $_FILES['AlloyUpload']["tmp_name"];
+   $BCudaName = $_FILES['AlloyUpload']["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$AlloyName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br/>\n";
+
 if ($_FILES['BarracudaUpload'] ) {
    echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
    }
@@ -226,6 +246,8 @@ else {
 echo "<br/>\n";
 
 $db = new SQLite3($databaseFile);
+$db->exec("PRAGMA busy_timeout=5000");
+
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
 #  echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\",  TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
@@ -235,6 +257,7 @@ $db = new SQLite3($databaseFile);
 $db->exec("UPDATE Firmware SET
    Version=\"$Version\",
    Titian_Version=\"$TitianVersion\",
+   AlloyFile=\"$AlloyName\",
    BarracudaFile=\"$BCudaName\",
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",
@@ -243,6 +266,8 @@ $db->exec("UPDATE Firmware SET
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
 
+// Close the connection
+$db->close();
 
 print "<p/>You can now:<ul>";
 echo '<li><a href="/Dashboard/Receiver_List.php?User_ID=',$User_ID,'">View and edit receivers</a>';

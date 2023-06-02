@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>GNSS Receivers</title>
+<title>GNSS Receivers Errors & Warnings</title>
 <link rel="stylesheet" type="text/css" href="/Dashboard/style.css"></link>
 <link rel="stylesheet" type="text/css" href="/Dashboard/tcui-styles.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -23,7 +23,7 @@
 table.tablesorter tbody td.Issue {
     color: red;
 }
-</style>
+
 <script>
 $(document).ready(function()
     {
@@ -31,11 +31,12 @@ $(document).ready(function()
     }
 );
 </script>
+</style>
+
 </head>
 <body>
-<H1>GNSS Receivers</H1>
 
-<form name="input" action="Edit_GNSS.php" method="get">
+<H1>GNSS Receivers Errors and Warnings</H1>
 
 <?php
 if ($_REQUEST["User_ID"]) {
@@ -46,6 +47,14 @@ else {
    }
 ?>
 
+<script>
+$(document).ready(function()
+    {
+        $("#Receivers").tablesorter();
+    }
+);
+</script>
+
 
 <?php
    error_reporting(E_ALL);
@@ -53,49 +62,45 @@ else {
    include 'db.inc.php';
 
 
-   function displayGNSS($result)
+   function displayGNSSErrors($result)
    {
        // Start a table, with column headers
 
-      echo "\n<table border='1' id=\"Receivers\" class='tablesorter'>\n<tr>\n" .
-          "\n<th>EDIT</th>".
-          "\n<th>DUP</th>".
+      echo "\n<table border='1' id=\"Receivers\" class=\"tablesorter\">\n<tr>\n" .
+          "\n<th>ID</th>" .
+          "\n<th>Details</th>" .
+          "\n<th>Download</th>" .
+          "\n<th>Clone</th>" .
           "\n<th>Name</th>" .
-          "\n<th>Enabled</th>" .
           "\n<th>Firmware Release</th>" .
           "\n<th>Group</th>" .
           "\n<th>IP</th>" .
           "\n<th>Port</th>" .
           "\n<th>Type</th>" .
           "\n<th>Password</th>" .
-          "\n<th>Pos Type</th>" .
-          "\n<th>Static</th>" .
-          "\n<th>Logging</th>" .
-          "\n<th>Email</th>" .
-          "\n<th>Auth</th>" .
-          "\n<th>NTRIP</th>" .
-          "\n<th>IBSS</th>" .
-          "\n<th>GLN</th>" .
-          "\n<th>GAL</th>" .
-          "\n<th>BDS</th>" .
-          "\n<th>QZSS</th>" .
-          "\n<th>DEL</th>" .
+          "\n<th>Errors</th>" .
+          "\n<th>Warnings</th>" .
+          "\n<th>Clear</th>" .
           "\n</tr>";
 
      // Until there are no rows in the result set,
      // fetch a row into the $row array and ...
      while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
         {
+        if (!$row["Enabled"] ) {
+            continue;
+            }
 //        var_dump($row);
         // ... start a TABLE row ...
         echo "\n<tr>";
 
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
-       echo '<td><a href="Edit_GNSS.php?GNSS_ID='.$row["id"].'&User_ID='. $_REQUEST["User_ID"].'">Edit</a></td>';
-       echo '<td><a href="Edit_GNSS.php?DUP=1&GNSS_ID='.$row["id"].'&User_ID='. $_REQUEST["User_ID"].'">Dup</a></td>';
+       echo "\n<td> ".$row["id"]." </td>";
+       echo '<td><a href="/cgi-bin/Dashboard/View_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">View</a>';
+       echo '<td><a href="/cgi-bin/Dashboard/Download_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Download</a>';
+       echo '<td><a href="/cgi-bin/Dashboard/Download_Clone?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Clone</a>';
        echo "\n<td> ".$row["name"]." </td>";
-       echo "\n<td> ".($row["Enabled"]?"Enabled":"Disabled")." </td>";
        echo "\n<td> ".$row["Firmware"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
        echo "\n<td> ".$row["Address"]." </td>";
@@ -156,30 +161,9 @@ else {
        }
        echo " </td>";
        echo "\n<td> ".$row["Password"]." </td>";
-       echo "\n<td> ".$row["Pos_Type"]." </td>";
-       echo "\n<td> ".($row["Static"] ? 'True' : 'False')." </td>";
-       if ($row["Logging_Enabled"] == 0 ) {
-           echo "\n<td> Disabled </td>";
-           }
-       else {
-           echo "\n<td> ".$row["Logging_Duration"]."m, ".$row["Logging_Position_Interval"].", ".$row["Logging_Measurement_Interval"]." </td>";
-           }
-
-       if ($row["Email_Enabled"] == 0 ) {
-           echo "\n<td> Disabled </td>";
-           }
-        else {
-           echo "\n<td> ".$row["Email_To"]." </td>";
-           }
-
-       echo "\n<td> ".$row["Auth"]." </td>";
-       echo "\n<td> ".($row["NTRIP_Enabled"] ? 'True' : 'False') ." </td>";
-       echo "\n<td> ".($row["IBSS_Enabled"] ? 'True' : 'False') ." </td>";
-       echo "\n<td> ".($row["GLN"] ? 'True' : 'False') ." </td>";
-       echo "\n<td> ".($row["GAL"] ? 'True' : 'False')." </td>";
-       echo "\n<td> ".($row["BDS"] ? 'True' : 'False')." </td>";
-       echo "\n<td> ".($row["QZSS"] ? 'True' : 'False')." </td>";
-       echo '<td><a href="DEL_GNSS.php?GNSS_ID='.$row["id"].'&User_ID='. $_REQUEST["User_ID"].'">Delete</a></td>';
+       echo "\n<td> ".$row["Errors"]." </td>";
+       echo "\n<td> ".$row["Warnings"]." </td>";
+       echo "\n".'<td><a href="/cgi-bin/Dashboard/Delete_Errors?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"]."&ID=".$row["id"].'">Delete</a>';
 
        echo "\n</tr>";
 
@@ -204,8 +188,7 @@ if (! $db) {
 
 // Run the query on the connection
 
-$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-
+$query = "SELECT * FROM GNSS JOIN STATUS on GNSS.id = STATUS.id WHERE User_ID=" . $_REQUEST["User_ID"];
 
 $result = $db->query($query);
 
@@ -215,7 +198,7 @@ if (!($result))
   }
 
    // Display the results
-displayGNSS($result);
+displayGNSSErrors($result);
 
 
   // Close the connection
@@ -225,15 +208,6 @@ if (!($db->close()))
 
 ?>
 
-<input type="submit" value="Add a GNSS Receiver" />
-<p/>
-
-<?php
-if ($_REQUEST["User_ID"]) {
-    echo 'View <a href="/cgi-bin/Dashboard/List_Status.php?User_ID='.$_REQUEST["User_ID"].'">Receiver Status</a>';
-    }
-?>
-</form>
 </div>
 </div>
 </div>

@@ -632,6 +632,19 @@ def check_logging(GNSS_ID,DB,HTTP):
         else:
             logger.info(DB.Address+":"+str(DB.Port)+ " voltTempInterval could not be found:")
 
+        Logging_obs=None
+        m=re.search("logCorrections=(\w*)",line)
+        if m:
+            Logging_obs = m.group(1)
+            if not (Logging_obs=="yes"):
+                Logging_Valid=False;
+                Message+="Logging base obs is " + str(Logging_obs) + " Expected yes\n"
+        else:
+           logger.info(DB.Address+":"+str(DB.Port)+ " logCorrection could not be found:")
+
+
+
+
         logger.debug(DB.Address+":"+str(DB.Port)+ " Logging:: Enabled: "+ str(Logging_Enabled) + " Duration: " + str(Logging_Duration) + " Measurement: " + str(Logging_measInterval) + " Position: " + str (Logging_posInterval) + " Volt/Temp: " + str(Logging_voltTempInterval) + " Valid: " + str(Logging_Valid))
         DB.STATUS.execute("UPDATE STATUS SET Logging_Enabled=?,Logging_Duration=?,Logging_Measurement_Interval=?,Logging_Position_Interval=?,Logging_Volt_Temp_Interval=?,Logging_Valid=? where id=?",(Logging_Enabled,Logging_Duration,Logging_measInterval,Logging_posInterval,Logging_voltTempInterval,Logging_Valid,GNSS_ID))
 
@@ -678,6 +691,15 @@ def check_email(GNSS_ID,DB,HTTP):
                     Email_Valid=False
                     Message+="Email is enabled without crash reporting\n";
                     logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting crashes")
+
+
+        if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing"):
+            Email_Valid = False
+            if root.find('err') != None:
+                Message+="Email result is {} should be OK\n".format(root.find('result').text)
+            else:
+                Message+="Email result is {} ({}) should be OK\n".format(root.find('result').text, root.find('err').text.strip())
+
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?",(Email_Enabled,Email_To,Email_Valid,GNSS_ID))
         DB.conn.commit()
     else:
@@ -718,6 +740,10 @@ def check_errors(GNSS_ID,DB,HTTP):
 
     if Errors_Valid == False:
         Message="There are {} Errors and {} Warnings\n".format(Num_Errors, Num_Entries-Num_Errors)
+
+    DB.STATUS.execute("UPDATE STATUS SET Errors=?, Warnings=? where id=?",(Num_Errors, Num_Entries-Num_Errors,GNSS_ID))
+    DB.conn.commit()
+
 
     return(Errors_Valid,Message)
 
@@ -766,7 +792,15 @@ def check_FTP(GNSS_ID,DB,HTTP):
 
 #        print reply
 
-        root=ET.fromstring(reply)
+
+        try:
+            root=ET.fromstring(reply)
+        except:
+            FTP_Valid=False
+            Message+="ftpPush.xml was invalid\n"
+            return(FTP_Valid,Message)
+
+
         try:
             FTP_To = root.find('server').find("dir").text.lower()
         except:
@@ -779,6 +813,39 @@ def check_FTP(GNSS_ID,DB,HTTP):
             FTP_Valid=False
             Message+="FTP To is " + str(FTP_To) + " Expected " + str(DB.FTP_To) + "\n"
             logger.debug(DB.Address+":"+str(DB.Port)+ " FTP To: " + str(FTP_To) + ", Expected To: " + str(DB.FTP_To) + ', Valid: ' + str(FTP_Valid))
+
+        (reply,result)=HTTP.get("/xml/dynamic/ftpPushLog.xml")
+        if result !=  200:
+            FTP_Valid = False
+            Message+="Could not determine FTPPushLog\n"
+            return(FTP_Valid,Message)
+
+#       print reply
+        try:
+            root=ET.fromstring(reply)
+        except:
+            FTP_Valid=False
+            Message+="ftpPushLog.xml was invalid\n"
+            return(FTP_Valid,Message)
+
+        FTP_Not_Pushed = int(root.find('NotPushedFileCount').text)
+        if FTP_Not_Pushed <> 0:
+            FTP_Valid = False
+            Message+="NotPushedFileCount is {} it should be 0\n".format(FTP_Not_Pushed)
+
+        for log in root.findall('log'):
+            status = log.find('status').text
+
+            if status == "FTPTestBadLogin":
+                FTP_Valid = False
+                Message="FTP Has a Bad login\n"
+
+            if status == "FTPTestBadDir":
+                FTP_Valid = False
+                Message="FTP Has a Bad remote directory\n"
+
+# We ignore FTPTestBadSend since it expect this to fix itself.
+
 
         DB.STATUS.execute("UPDATE STATUS SET FTP_Enabled=?, FTP_To=?, FTP_Valid=? where id=?",(FTP_Enabled,FTP_To,FTP_Valid,GNSS_ID))
         DB.conn.commit()
@@ -856,8 +923,10 @@ def check_Radio(GNSS_ID,DB,HTTP):
     if not DB.RadioEnabled: #If we aren't checking the radio then just leave
         return (True,"")
 
+
         self.RadioOnOffState=row["RadioOnOffState"]
         self.RadioMode=row["RadioMode"]
+
 
 
     Message=""
@@ -865,10 +934,19 @@ def check_Radio(GNSS_ID,DB,HTTP):
     (reply,result)=HTTP.get("/xml/dynamic/radiosummary.xml")
 #    print reply
 
+
+    if reply==None:
+        Radio_Valid=False
+        Message="Radiosummary not found. Does the unit have a radio?\n"
+        return (Radio_Valid,Message)
+
     root=ET.fromstring(reply)
+    if root==None:
+        Radio_Valid=False
+        Message="Radiosummary.xml not found. Does the unit have a radio?\n"
+        return (Radio_Valid,Message)
 
     Radio_Valid=True
-
 
     RadioOnOffState = root.find("RadioOnOffState")
     radioMode = root.find("general/radioMode")
@@ -1397,7 +1475,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
             if DB.GAL:
                 Message+="GAL Not enabled\n"
             else:
-                Message+="GAL enabled when it shoudld not be\n"
+                Message+="GAL enabled when it should not be\n"
 
 
 
@@ -1483,7 +1561,7 @@ def check_Tracking(GNSS_ID,DB,HTTP):
             if DB.BDS:
                 Message+="BDS Not Enabled\n"
             else:
-                Message+="BDS Enabled when it shoud not be\n"
+                Message+="BDS Enabled when it should not be\n"
 
 
         if DB.BDS:
@@ -1588,8 +1666,10 @@ def check_Tracking(GNSS_ID,DB,HTTP):
                 logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 Disabled")
         else:
             SBAS=0
-            Frequencies_Valid=False
-            logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 N/A")
+            Frequencies_Valid=not DB.SBAS
+            if not Frequencies_Valid:
+                logger.info(DB.Address+":"+str(DB.Port) + " Tracking:: SBAS L1 N/A")
+
 
         SBAS_Valid=DB.SBAS==SBAS;
 
@@ -1903,8 +1983,9 @@ if not Success:
 logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
 
 OK=OK and Success
+#pprint(DB.Firmware)
 
-if DB.Firmware != "Unmanaged" :
+if DB.Firmware != "EOL" :
     (Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
 
     if not Success:
