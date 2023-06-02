@@ -924,23 +924,29 @@ def check_Radio(GNSS_ID,DB,HTTP):
         return (True,"")
 
 
+        self.RadioOnOffState=row["RadioOnOffState"]
+        self.RadioMode=row["RadioMode"]
+
+
+
     Message=""
 
     (reply,result)=HTTP.get("/xml/dynamic/radiosummary.xml")
 #    print reply
+
+
     if reply==None:
         Radio_Valid=False
         Message="Radiosummary not found. Does the unit have a radio?\n"
         return (Radio_Valid,Message)
-    Radio_Valid=True
 
     root=ET.fromstring(reply)
     if root==None:
         Radio_Valid=False
         Message="Radiosummary.xml not found. Does the unit have a radio?\n"
         return (Radio_Valid,Message)
-    Radio_Valid=True
 
+    Radio_Valid=True
 
     RadioOnOffState = root.find("RadioOnOffState")
     radioMode = root.find("general/radioMode")
