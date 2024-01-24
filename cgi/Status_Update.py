@@ -712,15 +712,18 @@ def check_email(GNSS_ID,DB,HTTP):
 def check_errors(GNSS_ID,DB,HTTP):
 
 
-    (reply,result)=HTTP.get("/xml/dynamic/errLog.xml")
+    (reply,result)=HTTP.get("/xml/dynamic/merge.xml?errLog=")
 
-#    print reply
+#    print (reply)
     if result !=  200:
         Errors_Valid = False
         Message="Could not determine errors\n"
         return(Errors_Valid,Message)
 
     root=ET.fromstring(reply)
+    root=root.find("errLog")
+
+#    pprint(root)
 
 
     Message=""
