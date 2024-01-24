@@ -353,6 +353,13 @@ if ($_REQUEST["User_ID"]) {
     }
 ?>
 
+<br>
+<?php
+if ($_REQUEST["User_ID"]) {
+    echo 'View <a href="/Dashboard/Error_List.php?User_ID='.$_REQUEST["User_ID"] . '">Errors and Warnings</a>';
+    }
+?>
+
 
 </form>
 
