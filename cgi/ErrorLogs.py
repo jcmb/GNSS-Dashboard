@@ -14,7 +14,7 @@ from tempfile import gettempdir
 
 def get_args():
 
-   parser = argparse.ArgumentParser(fromfile_prefix_chars="@",description='Log raw TCP Data to a file with ', epilog="V1.0 (c) JCMBsoft 2022", formatter_class=argparse.ArgumentDefaultsHelpFormatter);
+   parser = argparse.ArgumentParser(fromfile_prefix_chars="@",description='Log raw TCP Data to a file with ', epilog="V1.1 (c) JCMBsoft 2022", formatter_class=argparse.ArgumentDefaultsHelpFormatter);
    parser.add_argument("host", help="Remote Host",)
    parser.add_argument("port", help="Remote Port",type=int)
    parser.add_argument("user", help="User Name",)
@@ -59,7 +59,7 @@ def SendAndCheckHttpPost(IPAddr,cmd,user,password,check_response="<OK>1</OK>"):
   if check_response not in response:
     raise RuntimeError("Web interface returned an error: %s" % response)
 
-def SendHttpGet(IPAddr,loc,user,password, verbose=False ,proxies={}, timeout=10, secure=False):
+def SendHttpGet(IPAddr,loc,user,password, cookies=None, verbose=False ,proxies={}, timeout=10, secure=False):
     """Get a URL from the receiver through HTTP GET http://IPAddr + loc
     If proxies={}, use the automatically-detected proxy info (e.g.,
       http_proxy environment variable).
@@ -78,52 +78,101 @@ def SendHttpGet(IPAddr,loc,user,password, verbose=False ,proxies={}, timeout=10,
       print(url_str)
 
     if(secure == False):
+      r = requests.get(url_str, auth=(user,password), proxies=proxies, cookies=cookies, timeout=timeout)
+    else:
+      # HTTPS request (without validating the certificate)
+      r = requests.get(url_str, auth=(user,password), proxies=proxies, cookies=cookies, timeout=timeout, verify=False)
+
+#    print(r.text)  
+    r.raise_for_status()
+    return r.text
+
+
+def Login(IPAddr,user,password, verbose=False ,proxies={}, timeout=10, secure=False):
+    """Get a Cookie from the login
+    If proxies={}, use the automatically-detected proxy info (e.g.,
+      http_proxy environment variable).
+    If proxies={'http':None}, disable HTTP proxy use.
+    """
+
+    loc="/cgi-bin/login.xml?username={}&password={}&t=1381112260".format(user,password)
+
+    if(secure == False):
+      url_str = "http://" + IPAddr + loc
+    else:
+      url_str = "https://" + IPAddr + loc
+      # As the certificate from our receivers can't be authenticated we're going to turn
+      # off validating it. However, this causes a warning so make sure we suppress that.
+      requests.packages.urllib3.disable_warnings()
+
+      
+    if(verbose):
+      print(url_str)
+
+    if(secure == False):
       r = requests.get(url_str, auth=(user,password), proxies=proxies, timeout=timeout)
     else:
       # HTTPS request (without validating the certificate)
       r = requests.get(url_str, auth=(user,password), proxies=proxies, timeout=timeout, verify=False)
 
+    d = etree.fromstring( r.text )
+    cookie = d.find('cookie').text
+    serial = d.find('serial').text
+    authstr= "Auth"+serial
+    
+    result={authstr:cookie}
+
     r.raise_for_status()
-    return r.text
+    return result
 
 
-def IsTestModeEnabled(IPAddr,user,password):
+ 
+def IsTestModeEnabled(IPAddr,user,password,verbose=False):
   """Check if test mode is enabled on receiver"""
-  txt = SendHttpGet(IPAddr,"/xml/dynamic/sysData.xml",user,password)
+  txt = SendHttpGet(IPAddr,"/xml/dynamic/sysData.xml",user,password,verbose=verbose)
   d = etree.fromstring( txt )
   testMode = d.find('testMode')
   if testMode is not None and testMode.text == 'TRUE':
     return True
   return False
 
-def DisableTestMode(IPAddr,user,password):
+def DisableTestMode(IPAddr,user,password,verbose,cookies):
   """Disable test mode on receiver."""
   # Sending any password (other than the testmode PW) will turn off
   # testmode
   SendHttpGet(IPAddr,"/cgi-bin/testMode.xml?Password=Anything",user,password)
 
-def EnableTestMode(IPAddr,user,password):
+def EnableTestMode(IPAddr,user,password,verbose,cookies):
   """Enable test mode on receiver.  Some commands below only work in test mode..."""
-  test_password_list = ["TURING","EUCLIDEAN","EUCLID","FARADAY"]
+  test_password_list = ["BUILDING.ARR.VALUE", "TURING","EUCLIDEAN","EUCLID","FARADAY"]
   for test_pw in test_password_list:
-    if IsTestModeEnabled(IPAddr,user,password):
+#    print(test_pw) 
+    if IsTestModeEnabled(IPAddr,user,password,verbose=verbose):
       break
-    SendHttpGet(IPAddr,"/cgi-bin/testMode.xml?Password=%s"%test_pw,user,password)
+#    print(IPAddr)
+#    print("/cgi-bin/testMode.xml?Password=%s"%test_pw,user,password)
+#    pprint(cookies)
+    
+    SendHttpGet(IPAddr,"/cgi-bin/testMode.xml?Password=%s"%test_pw,user,password,cookies=cookies,verbose=verbose)
 
 
-def ClearErrorLog(IPAddr,user,password):
+def ClearErrorLog(IPAddr,user,password,cookies):
   ClearLog = "/cgi-bin/eraseErrorLog.xml"
-  SendAndCheckHttpPost(IPAddr,ClearLog,user,password)
+#  SendAndCheckHttpPost(IPAddr,ClearLog,user,password,cookies=cookies)
+
+  SendHttpGet(IPAddr,ClearLog,user,password,cookies=cookies)
+
+#     SendAndCheckHttpPost(IPAddr,ClearLog,user,password)
 
 
 # Download the system error log to 'filename'
-def DownloadSystemErrlog(IPAddr,user,password,filename,date_str, timeout=10.0):
+def DownloadSystemErrlog(IPAddr,user,password,filename,date_str, timeout=10.0,verbose=False,cookies={}):
   # Some firmware versions hang when trying to download an errlog
   # with nothing in it, so check for that first...
   filename=filename+date_str
 #  pprint(timeout)
 
-  url = "http://%s:%s@%s/xml/dynamic/errLog.xml" % (user,password,IPAddr)
+  url = "http://%s:%s@%s/xml/dynamic/merge.xml?errLog=" % (user,password,IPAddr)
   r = requests.get( url, timeout=timeout )
   r.raise_for_status()
   if 'numEntries>0<' in r.text:
@@ -137,12 +186,16 @@ def DownloadSystemErrlog(IPAddr,user,password,filename,date_str, timeout=10.0):
     r.raise_for_status()
     f.write( r.content )
 
+  
   url = "http://%s:%s@%s/xml/dynamic/errorLog.txt" % (user,password,IPAddr)
+#  print(url)
   r = requests.get( url, timeout=timeout )
+#  print(r.text)
   r.raise_for_status()
 
   with open(f'{filename}.xml','w') as f:
     f.write( r.text )
+
 
   return (True)
 
@@ -262,15 +315,18 @@ def main():
     if args["Clone"]:
         CreateAndDownloadClone(args["host"]+":"+str(args["port"]),args["user"],args["password"], args["baseName"], baseName , date_str)
 
+    cookies=Login (args["host"]+":"+str(args["port"]),args["user"],args["password"],args["Verbose"])
+    EnableTestMode (args["host"]+":"+str(args["port"]),args["user"],args["password"],args["Verbose"],cookies=cookies)
 
-    if not DownloadSystemErrlog(args["host"]+":"+str(args["port"]),args["user"],args["password"] , baseName , date_str):
+    if not DownloadSystemErrlog(args["host"]+":"+str(args["port"]),args["user"],args["password"] , baseName , date_str,verbose=args["Verbose"],cookies=cookies):
         sys.stderr.write("No Error Logs on the device\n")
     else:
         if args["View"]:
             Display_Error_Log(baseName+date_str+".xml")
 
         if args["Clear"]:
-            ClearErrorLog(args["host"]+":"+str(args["port"]),args["user"],args["password"])
+            ClearErrorLog(args["host"]+":"+str(args["port"]),args["user"],args["password"],cookies)
+            
 
         if args["Zip"]:
             os.chdir(gettempdir())
@@ -286,6 +342,7 @@ def main():
             if args["Clone"]:
                 os.remove(baseName+date_str+".clone.xml")
 
+    DisableTestMode (args["host"]+":"+str(args["port"]),args["user"],args["password"],args["Verbose"],cookies=cookies)
 
 
 if __name__ == '__main__':
