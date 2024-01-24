@@ -265,6 +265,31 @@ $db->exec("UPDATE Firmware SET
    RockyFile=\"$RockyName\",
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
+if ( $Firmware == "Beta" or $Firmware == "Released" ) {
+   $db->exec("UPDATE Firmware SET
+      Version=\"$Version\",
+      Titian_Version=\"$TitianVersion\",
+      AlloyFile=\"$AlloyName\",
+      BarracudaFile=\"$BCudaName\",
+      ChinstrapFile=\"$ChinstrapName\",
+      GamelFile=\"$GamelName\",
+      MetallicaFile=\"$MetallicaName\",
+      RockyFile=\"$RockyName\",
+      KryptonFile=\"$KryptonName\" WHERE Type=\"Branch\"");
+   }
+
+if ( $Firmware == "Released" ) {
+   $db->exec("UPDATE Firmware SET
+      Version=\"$Version\",
+      Titian_Version=\"$TitianVersion\",
+      AlloyFile=\"$AlloyName\",
+      BarracudaFile=\"$BCudaName\",
+      ChinstrapFile=\"$ChinstrapName\",
+      GamelFile=\"$GamelName\",
+      MetallicaFile=\"$MetallicaName\",
+      RockyFile=\"$RockyName\",
+      KryptonFile=\"$KryptonName\" WHERE Type=\"Beta\"");
+   }
 
 // Close the connection
 $db->close();
