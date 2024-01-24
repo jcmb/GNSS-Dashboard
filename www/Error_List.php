@@ -149,6 +149,9 @@ else {
           case "250":
             echo "SPS585";
             break;
+          case "508":
+            echo "BX992-MS";
+            break;
           case "509":
             echo "BX992-SPS";
             break;

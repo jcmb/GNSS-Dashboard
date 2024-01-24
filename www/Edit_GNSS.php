@@ -160,6 +160,7 @@ Receiver:
   <option value="100" <?php echo ($row["Reciever_Type"]=="100")?"selected":"" ?>>R10</option>
   <option value="188" <?php echo ($row["Reciever_Type"]=="188")?"selected":"" ?>>R750</option>
   <option value="76"  <?php echo  ($row["Reciever_Type"]=="76")?"selected":"" ?>>NetR9</option>
+  <option value="508" <?php echo ($row["Reciever_Type"]=="508")?"selected":"" ?>>BX992-MS</option>
   <option value="509" <?php echo ($row["Reciever_Type"]=="509")?"selected":"" ?>>BX992-SPS</option>
 </select>
 </td></tr>
