@@ -97,6 +97,12 @@ for row in rows:
       elif Reciever_Type == 509 :
          print "BX992-SPS ",
          firmware_file=KryptonFile
+      elif Reciever_Type == 330 :
+         print "MP1086 ",
+         firmware_file=KryptonFile
+      elif Reciever_Type == 331 :
+         print "MS1086 ",
+         firmware_file=KryptonFile
       elif Reciever_Type == 164 :
          print "BD992 ",
          firmware_file=KryptonFile

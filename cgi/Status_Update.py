@@ -282,6 +282,9 @@ def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
     if (DB.Reciever_Type == "162"):
         firmwareType=1
 
+    if (DB.Reciever_Type == "164"):
+        firmwareType=1
+
     if (DB.Reciever_Type == "169"):
         firmwareType=1
 
@@ -294,7 +297,16 @@ def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
     if (DB.Reciever_Type == "507"):
         firmwareType=1
 
+    if (DB.Reciever_Type == "508"):
+        firmwareType=1
+
     if (DB.Reciever_Type == "509"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "330"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "331"):
         firmwareType=1
 
 
@@ -400,7 +412,7 @@ def check_motion_type(GNSS_ID,DB,HTTP):
             Motion_Valid = Motion == DB.Static
 
             if not Motion_Valid:
-                Message+="Motion is "+ str(Motion)+ " Expected " +  str(DB.Static)+"\n"
+                Message+="Motion is "+ str(m.group(2)) + " Expected " +  ("static" if DB.Static else "kinematic")+"\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Static: " + str(DB.Static) + " Current: " + str(Motion) + " Motion Valid: " + str(Motion_Valid))
 
             DB.STATUS.execute("UPDATE STATUS SET Static=?, Static_Valid=? where id=?",(Motion,Motion_Valid,GNSS_ID))
@@ -686,11 +698,36 @@ def check_email(GNSS_ID,DB,HTTP):
 
         for alert in root.findall("alert"):
 #            pprint (alert.attrib)
+            if alert.attrib['id']=="0":
+                if (not 'enabled' in alert.attrib) or (alert.attrib['enabled'] != "1"):
+                    Email_Valid=False
+                    Message+="Email is enabled without reboot reporting\n";
+                    logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting reboots")
+
+            if alert.attrib['id']=="9":
+                if (not 'enabled' in alert.attrib) or (alert.attrib['enabled'] != "1"):
+                    Email_Valid=False
+                    Message+="Email is enabled without Power change warning\n";
+                    logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting reboots")
+
+            if alert.attrib['id']=="10":
+                if (not 'enabled' in alert.attrib) or (alert.attrib['enabled'] != "1"):
+                    Email_Valid=False
+                    Message+="Email is enabled without Power Low reporting\n";
+                    logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting reboots")
+
+            if alert.attrib['id']=="11":
+                if (not 'enabled' in alert.attrib) or (alert.attrib['enabled'] != "1"):
+                    Email_Valid=False
+                    Message+="Email is enabled without Temp Range reporting\n";
+                    logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting reboots")
+
             if alert.attrib['id']=="16":
                 if (not 'enabled' in alert.attrib) or (alert.attrib['enabled'] != "1"):
                     Email_Valid=False
                     Message+="Email is enabled without crash reporting\n";
                     logger.info(DB.Address+":"+str(DB.Port)+ " Email enabled but not reporting crashes")
+
 
 
         if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing"):
@@ -1000,7 +1037,7 @@ def check_clock(GNSS_ID,DB,HTTP):
         m=re.search('ClockSteering enable=(.*)',reply)
         if m:
             Clock_Valid=Clock = m.group(1) == "yes"
-            Clock_Valid=True
+#            Clock_Valid=True
             if not Clock_Valid:
                 Message="Clock Steering is not enabled\n"
                 logger.debug(DB.Address+":"+str(DB.Port)+ " Clock:: Current: " + str(Clock) + ", Clock Valid: " + str(Clock_Valid))
