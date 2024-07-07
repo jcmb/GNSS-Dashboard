@@ -157,9 +157,12 @@ Receiver:
   <option value="38"  <?php echo  ($row["Reciever_Type"]=="38")?"selected":"" ?>>SPS850</option>
   <option value="59"  <?php echo  ($row["Reciever_Type"]=="59")?"selected":"" ?>>SPS851</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
+  <option value="330" <?php echo ($row["Reciever_Type"]=="330")?"selected":"" ?>>MP1086</option>
+  <option value="331" <?php echo ($row["Reciever_Type"]=="331")?"selected":"" ?>>MS1086</option>  
   <option value="100" <?php echo ($row["Reciever_Type"]=="100")?"selected":"" ?>>R10</option>
   <option value="188" <?php echo ($row["Reciever_Type"]=="188")?"selected":"" ?>>R750</option>
   <option value="76"  <?php echo  ($row["Reciever_Type"]=="76")?"selected":"" ?>>NetR9</option>
+  <option value="164" <?php echo ($row["Reciever_Type"]=="508")?"selected":"" ?>>BD992-INS</option>
   <option value="508" <?php echo ($row["Reciever_Type"]=="508")?"selected":"" ?>>BX992-MS</option>
   <option value="509" <?php echo ($row["Reciever_Type"]=="509")?"selected":"" ?>>BX992-SPS</option>
 </select>

@@ -129,6 +129,9 @@ else {
           case "162":
             echo "Alloy";
             break;
+          case "164":
+            echo "BD992-INS";
+            break;
           case "169":
             echo "SPS986";
             break;
@@ -152,6 +155,12 @@ else {
             break;
           case "509":
             echo "BX992-SPS";
+            break;
+          case "330":
+            echo "MP1086";
+            break;
+          case "331":
+            echo "MS1086";
             break;
 
           default:

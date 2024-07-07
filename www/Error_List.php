@@ -94,9 +94,9 @@ else {
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
        echo "\n<td> ".$row["id"]." </td>";
-       echo '<td><a href="/cgi-bin/Dashboard/View_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">View</a>';
-       echo '<td><a href="/cgi-bin/Dashboard/Download_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Download</a>';
-       echo '<td><a href="/cgi-bin/Dashboard/Download_Clone?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Clone</a>';
+       echo '<td><a href="/cgi-bin/Dashboard/View_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".urlencode($row["Password"])."&NAME=".$row["name"].'">View</a>';
+       echo '<td><a href="/cgi-bin/Dashboard/Download_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".urlencode($row["Password"])."&NAME=".$row["name"].'">Download</a>';
+       echo '<td><a href="/cgi-bin/Dashboard/Download_Clone?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".urlencode($row["Password"])."&NAME=".$row["name"].'">Clone</a>';
        echo "\n<td> ".$row["name"]." </td>";
        echo "\n<td> ".$row["Firmware"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
@@ -131,6 +131,9 @@ else {
           case "162":
             echo "Alloy";
             break;
+          case "164":
+            echo "BD992-INS";
+            break;
           case "169":
             echo "SPS986";
             break;
@@ -154,6 +157,12 @@ else {
             break;
           case "509":
             echo "BX992-SPS";
+            break;
+          case "330":
+            echo "MP1086";
+            break;
+          case "331":
+            echo "MS1086";
             break;
 
           default:
