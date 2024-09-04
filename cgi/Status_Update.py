@@ -404,11 +404,15 @@ def check_motion_type(GNSS_ID,DB,HTTP):
 
 #    print reply
     if reply:
-        m=re.search('RtkControls mode=(.*) motion=(.*)',reply)
+        m=re.search('RtkControls mode=(.*) motion=(.*) ionoguard=(.*)',reply)
+        if not m:
+            IonoGuard="N/A"
+
         if m:
             Message=""
             LowLatency=m.group(1)=="lowLatency"
             Motion=m.group(2)=="static"
+            IonoGuard=m.group(3)
             Motion_Valid = Motion == DB.Static
 
             if not Motion_Valid:
