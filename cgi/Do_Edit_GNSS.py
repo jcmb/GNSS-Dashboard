@@ -668,24 +668,25 @@ Nagios_File.write("# a host definition for the GNSS Receiver, Auto Generated\n")
 
 if Enabled:
     if NAGIOS:
-        Nagios_Parent=open("User/"+Loc_Group+".cfg","w")
-        Nagios_Parent.write("# a host definition for the GNSS Receiver parent, Auto Generated\n")
+        if not os.path.exists:
+           Nagios_Parent=open("User/"+Loc_Group+".cfg","w")
+           Nagios_Parent.write("# a host definition for the GNSS Receiver parent, Auto Generated\n")
 
-        Nagios_Parent.write("\n");
-        Nagios_Parent.write("define host {\n")
-        Nagios_Parent.write("   host_name "+ Loc_Group +"\n")
-        Nagios_Parent.write("   alias "+ Loc_Group+"\n")
+           Nagios_Parent.write("\n");
+           Nagios_Parent.write("define host {\n")
+           Nagios_Parent.write("   host_name "+ Loc_Group +"\n")
 #        Nagios_Parent.write("   address "+Address+"\n")
-        Nagios_Parent.write("   use  generic-host"+"\n")
-        Nagios_Parent.write("   check_command SUCCESS\n")
-        Nagios_Parent.write("   max_check_attempts 2\n")
-        Nagios_Parent.write("   parents gateway\n")
-        Nagios_Parent.write("   contacts " + User_Name +"\n")
+           Nagios_Parent.write("   alias "+ Loc_Group+"\n")
+           Nagios_Parent.write("   use  generic-host"+"\n")
+           Nagios_Parent.write("   check_command SUCCESS\n")
+           Nagios_Parent.write("   max_check_attempts 2\n")
+           Nagios_Parent.write("   parents gateway\n")
+           Nagios_Parent.write("   contacts " + User_Name +"\n")
 
-        Nagios_Parent.write("    }"+"\n")
-        Nagios_Parent.write("\n");
+           Nagios_Parent.write("    }"+"\n")
+           Nagios_Parent.write("\n");
 
-        Nagios_Parent.close()
+           Nagios_Parent.close()
 
         Nagios_File.write("\n");
         Nagios_File.write("define host {\n")
