@@ -235,6 +235,9 @@ else {
           case "470":
             echo "GA830";
             break;
+          case "785":
+            echo "GA860";
+            break;
           case "146":
             echo "R10";
             break;
