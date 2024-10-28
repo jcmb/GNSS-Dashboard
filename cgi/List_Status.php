@@ -163,17 +163,29 @@ else {
           case "59":
             echo "SPS851";
             break;
+          case "76":
+            echo "NetR9";
+            break;
           case "118":
             echo "SPS855";
             break;
           case "107":
             echo "SPS852";
             break;
+          case "100":
+            echo "R10";
+            break;
           case "101":
             echo "SPS985";
             break;
           case "138":
             echo "SPS356";
+            break;
+          case "162":
+            echo "Alloy";
+            break;
+          case "164":
+            echo "BD992-INS";
             break;
           case "169":
             echo "SPS986";
@@ -189,6 +201,12 @@ else {
             break;
           case "249":
             echo "Brewster Heading";
+            break;
+          case "330":
+            echo "MP1086";
+            break;
+          case "331":
+            echo "MS1086";
             break;
           case "509":
             echo "BX992-SPS";
@@ -212,10 +230,13 @@ else {
             echo "Zephyr Geodetic";
             break;
           case "250":
-            echo "GA510";
+            echo "GA530";
             break;
           case "470":
             echo "GA830";
+            break;
+          case "146":
+            echo "R10";
             break;
           case "147":
             echo "SPS985";
@@ -228,6 +249,9 @@ else {
             break;
           case "185":
             echo "Zephyr 2 Geodetic";
+            break;
+          case "194":
+            echo "GA510";
             break;
           case "265":
             echo "Zephyr 2 Geodetic ROHS";
