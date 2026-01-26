@@ -469,7 +469,7 @@ Operation Mode:
 Base Follow:
 </td><td>
 
-<select required name="BASEFOLLOW">
+<select required name="BaseFollow">
   <option value="0" <?php echo ($row["BASEFOLLOW"]=="0"?"selected":""); ?>>Unknown</option>
   <option value="1" <?php echo ($row["BASEFOLLOW"]=="1"?"selected":""); echo ($Editing?"":"selected") ?>>Disabled</option>
   <option value="2" <?php echo ($row["BASEFOLLOW"]=="2"?"selected":""); ?>>Add Signals</option>
