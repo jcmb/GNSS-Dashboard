@@ -14,12 +14,16 @@ sqlite3 and the php version of it needs to be installed
 
     apt-get install sqlite3 php-sqlite3
 
-python 2 needs to be installed, currently.
-    apt-get install python2
+python 3 needs to be installed, currently with the legacy-cgi module
+
+    apt-get install python3-legacy-cgi
 
 
+make sure that php is enabled for the web server.
 
-make sure that php is enabled for the web server
+For apache
+
+    apt install php libapache2-mod-php
 
 run the setup script as root
     sudo setup.sh
@@ -34,8 +38,8 @@ Note that if the cgi files are not installed in /usr/lib/cgi-bin/ you have to ed
 To be able to support the loading of firmware the default PHP settings need to be changed to allow a post_max_size of 20m
 
     sudo nano /etc/php/7.4/apache2/php.ini
-    upload_max_filesize = 25M
-    post_max_size = 100M
+    upload_max_filesize = 30M
+    post_max_size = 150M
 
 ** Backup
 The Backup options need to be added into CRON
