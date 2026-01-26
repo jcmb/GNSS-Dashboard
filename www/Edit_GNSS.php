@@ -461,6 +461,24 @@ Operation Mode:
 
 </td></tr>
 </table>
+
+<p/>
+<table>
+<tr><caption>Base Follow</caption>
+<tr><td>
+Base Follow:
+</td><td>
+
+<select required name="BaseFollow">
+  <option value="0" <?php echo ($row["BaseFollow"]=="0"?"selected":""); ?>>Unknown</option>
+  <option value="1" <?php echo ($row["BaseFollow"]=="1"?"selected":""); echo ($Editing?"":"selected") ?>>Disabled</option>
+  <option value="2" <?php echo ($row["BaseFollow"]=="2"?"selected":""); ?>>Add Signals</option>
+  <option value="3" <?php echo ($row["BaseFollow"]=="3"?"selected":""); ?>>Standard</option>
+  <option value="4" <?php echo ($row["BaseFollow"]=="4"?"selected":""); ?>>Minimum Signals</option>
+</select>
+
+</td></tr>
+</table>
 <p/>
 
 
