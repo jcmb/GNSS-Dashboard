@@ -469,12 +469,12 @@ Operation Mode:
 Base Follow:
 </td><td>
 
-<select required name="BaseFollow">
-  <option value="0" <?php echo ($row["BaseFollow"]=="0"?"selected":""); ?>>Unknown</option>
-  <option value="1" <?php echo ($row["BaseFollow"]=="1"?"selected":""); echo ($Editing?"":"selected") ?>>Disabled</option>
-  <option value="2" <?php echo ($row["BaseFollow"]=="2"?"selected":""); ?>>Add Signals</option>
-  <option value="3" <?php echo ($row["BaseFollow"]=="3"?"selected":""); ?>>Standard</option>
-  <option value="4" <?php echo ($row["BaseFollow"]=="4"?"selected":""); ?>>Minimum Signals</option>
+<select required name="BASEFOLLOW">
+  <option value="0" <?php echo ($row["BASEFOLLOW"]=="0"?"selected":""); ?>>Unknown</option>
+  <option value="1" <?php echo ($row["BASEFOLLOW"]=="1"?"selected":""); echo ($Editing?"":"selected") ?>>Disabled</option>
+  <option value="2" <?php echo ($row["BASEFOLLOW"]=="2"?"selected":""); ?>>Add Signals</option>
+  <option value="3" <?php echo ($row["BASEFOLLOW"]=="3"?"selected":""); ?>>Standard</option>
+  <option value="4" <?php echo ($row["BASEFOLLOW"]=="4"?"selected":""); ?>>Minimum Signals</option>
 </select>
 
 </td></tr>
