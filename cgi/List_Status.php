@@ -193,6 +193,9 @@ else {
           case "188":
             echo "R750";
             break;
+          case "191":
+            echo "R750-2";
+            break;
           case "240":
             echo "BD935";
             break;
@@ -201,6 +204,15 @@ else {
             break;
           case "249":
             echo "Brewster Heading";
+            break;
+          case "193":
+            echo "MPS566-2";
+            break;
+          case "327":
+            echo "R780";
+            break;
+          case "329":
+            echo "R780-2";
             break;
           case "330":
             echo "MP1086";
@@ -235,8 +247,8 @@ else {
           case "470":
             echo "GA830";
             break;
-          case "785":
-            echo "GA860";
+          case "784":
+            echo "MP1086";
             break;
           case "146":
             echo "R10";
@@ -261,6 +273,9 @@ else {
             break;
           case "512":
             echo "Zephyr 3 Rover";
+            break;
+          case "513":
+            echo "Zephyr 3 Geodetic";
             break;
           case "570":
             echo "Zephyr 3 Base";
@@ -314,7 +329,7 @@ else {
        echo "\n<td " . ($row["UPS_Valid"]?"":"class=\"Issue\"") . "> ".($row["UPS"] ? 'Enabled' : 'Disabled')." </td>";
        echo "\n<td " . ($row["Clock_Valid"]?"":"class=\"Issue\"") . "> ".($row["Clock"] ? 'Steered' : 'Unsteered')." </td>";
        echo "\n<td " . ($row["MultipathReject_Valid"]?"":"class=\"Issue\"") . "> ".($row["MultipathReject"] ? 'Enabled' : 'Disabled')." </td>";
-       echo "\n<td " . ($row["testMode_Valid"]?"":"class=\"Issue\"") . "> ".($row["testMode"] ? 'Enabled' : 'Disabled')." </td>";
+       echo "\n<td " . ($row["testMode_Valid"]?"class=\"Issue\"":"") . "> ".($row["testMode"] ? 'Enabled' : 'Disabled')." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Name"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Lat"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Long"] ." </td>";

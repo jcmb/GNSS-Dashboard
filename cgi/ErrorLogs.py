@@ -83,7 +83,7 @@ def SendHttpGet(IPAddr,loc,user,password, cookies=None, verbose=False ,proxies={
       # HTTPS request (without validating the certificate)
       r = requests.get(url_str, auth=(user,password), proxies=proxies, cookies=cookies, timeout=timeout, verify=False)
 
-#    print(r.text)  
+#    print(r.text)
     r.raise_for_status()
     return r.text
 
@@ -105,7 +105,7 @@ def Login(IPAddr,user,password, verbose=False ,proxies={}, timeout=10, secure=Fa
       # off validating it. However, this causes a warning so make sure we suppress that.
       requests.packages.urllib3.disable_warnings()
 
-      
+
     if(verbose):
       print(url_str)
 
@@ -119,14 +119,14 @@ def Login(IPAddr,user,password, verbose=False ,proxies={}, timeout=10, secure=Fa
     cookie = d.find('cookie').text
     serial = d.find('serial').text
     authstr= "Auth"+serial
-    
+
     result={authstr:cookie}
 
     r.raise_for_status()
     return result
 
 
- 
+
 def IsTestModeEnabled(IPAddr,user,password,verbose=False):
   """Check if test mode is enabled on receiver"""
   txt = SendHttpGet(IPAddr,"/xml/dynamic/sysData.xml",user,password,verbose=verbose)
@@ -144,15 +144,15 @@ def DisableTestMode(IPAddr,user,password,verbose,cookies):
 
 def EnableTestMode(IPAddr,user,password,verbose,cookies):
   """Enable test mode on receiver.  Some commands below only work in test mode..."""
-  test_password_list = ["BUILDING.ARR.VALUE", "TURING","EUCLIDEAN","EUCLID","FARADAY"]
+  test_password_list = ["TEST"]
   for test_pw in test_password_list:
-#    print(test_pw) 
+#    print(test_pw)
     if IsTestModeEnabled(IPAddr,user,password,verbose=verbose):
       break
 #    print(IPAddr)
 #    print("/cgi-bin/testMode.xml?Password=%s"%test_pw,user,password)
 #    pprint(cookies)
-    
+
     SendHttpGet(IPAddr,"/cgi-bin/testMode.xml?Password=%s"%test_pw,user,password,cookies=cookies,verbose=verbose)
 
 
@@ -186,7 +186,7 @@ def DownloadSystemErrlog(IPAddr,user,password,filename,date_str, timeout=10.0,ve
     r.raise_for_status()
     f.write( r.content )
 
-  
+
   url = "http://%s:%s@%s/xml/dynamic/errorLog.txt" % (user,password,IPAddr)
 #  print(url)
   r = requests.get( url, timeout=timeout )
@@ -245,7 +245,7 @@ def CloneAllConfig(IPAddr,user,password,filename):
 
   SendAndCheckHttpPost(IPAddr,CloneCommand,user,password)
   result = CheckCloneStatus(IPAddr,user,password)
-#  pprint(result) 
+#  pprint(result)
   if result[0] == False:
     raise RuntimeError("Couldn't CloneAllConfig: {}".format(result[1]))
 
@@ -253,7 +253,7 @@ def CloneAllConfig(IPAddr,user,password,filename):
 # Download the cloned GNSS configuration
 def DownloadClone(IPAddr,user,password,basename,filename,date_str, timeout=10.0):
 
-#<  pprint(timeout) 
+#<  pprint(timeout)
 
   remote_filename = basename.upper() + '.xml' # force to upper case
 
@@ -326,7 +326,7 @@ def main():
 
         if args["Clear"]:
             ClearErrorLog(args["host"]+":"+str(args["port"]),args["user"],args["password"],cookies)
-            
+
 
         if args["Zip"]:
             os.chdir(gettempdir())

@@ -149,6 +149,12 @@ if "Frequencies" not in form:
 else :
    Frequencies=form["Frequencies"].value
 
+if "BaseFollow" not in form:
+   print "BaseFollow must be entered"
+   quit(100)
+else :
+   BaseFollow=form["BaseFollow"].value
+
 
 GPS =  "GPS" in form
 GLN =  "GLN" in form
@@ -480,7 +486,8 @@ if Update:
       TIMED_MAX_DELTA=?,
       RadioEnabled=?,
       RadioOnOffState=?,
-      RadioMode=?
+      RadioMode=?,
+      BASEFOLLOW=?
       WHERE id=?''',(
         User_ID,
         Enabled,
@@ -536,6 +543,7 @@ if Update:
         Radio_Enabled,
         Radio_OnOffState,
         Radio_Mode,
+        BaseFollow,
         GNSS_ID))
     print "Record Updated.<br>"
     conn.commit()
@@ -593,9 +601,10 @@ else:
       TIMED_MAX_DELTA,
       RadioEnabled,
       RadioOnOffState,
-      RadioMode
+      RadioMode,
+      BASEFOLLOW
       )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
         User_ID,
         Enabled,
         Name,
@@ -653,7 +662,8 @@ else:
         Timed_Maximum,
         Radio_Enabled,
         Radio_OnOffState,
-        Radio_Mode
+        Radio_Mode,
+        BaseFollow 
         ))
     print "Record added<br>"
     conn.commit()

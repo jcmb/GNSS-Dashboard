@@ -57,20 +57,19 @@ else:
     Firmware_ID=form["Firmware"].value
 
 
-query = 'SELECT Version, BarracudaFile, ChinstrapFile, GamelFile, LancetFile, MetallicaFile, RockyFile, KryptonFile, AlloyFile, LancetFile  FROM Firmware where type="' + Firmware_ID + '"';
+query = 'SELECT Titian_Version, AlloyFile, BarracudaFile, ChinstrapFile, KryptonFile, LancetFile, ClarkFile FROM Firmware where type="' + Firmware_ID + '"';
 cursor.execute(query);
 
 rows = cursor.fetchone()
 #print rows
 Firmware=(rows[0])
-BarracudaFile=rows[1]
-ChinstrapFile=rows[2]
-GamelFile=rows[3]
-MetallicaFile=rows[4]
-RockyFile=rows[5]
-KryptonFile=rows[6]
-AlloyFile=rows[7]
-LancetFileFile=rows[8]
+AlloyFile=rows[1]
+BarracudaFile=rows[2]
+ChinstrapFile=rows[3]
+KryptonFile=rows[4]
+LancetFile=rows[5]
+ClarkFile=rows[6]
+
 
 print "Upgrading to firmware V" + Firmware + "<br/>"
 #print os.getcwd()
@@ -87,13 +86,13 @@ for row in rows:
       GNSS_ID=row["id"]
       print row["name"]+ " (" + str(GNSS_ID) + ") Type: ",
       Reciever_Type = int(row["Reciever_Type"])
-      if Reciever_Type == 107 :
-         print "SPS852 ",
-         firmware_file=GamelFile
-      elif Reciever_Type == 118 :
-         print "SPS855 ",
-         firmware_file=GamelFile
-      elif Reciever_Type == 508 :
+#      if Reciever_Type == 107 :
+#         print "SPS852 ",
+#         firmware_file=GamelFile
+#      elif Reciever_Type == 118 :
+#         print "SPS855 ",
+#         firmware_file=GamelFile
+      if Reciever_Type == 508 :
          print "BX992-MS ",
          firmware_file=KryptonFile
       elif Reciever_Type == 509 :
@@ -106,13 +105,13 @@ for row in rows:
          print "MS1086 ",
          firmware_file=KryptonFile
       elif Reciever_Type == 164 :
-         print "BD992 ",
+         print "BD992-INS",
          firmware_file=KryptonFile
-      elif Reciever_Type == 38 :
-         print "SPS850 ",
-      elif Reciever_Type == 101 :
-         print "SPS985 ",
-         firmware_file=RockyFile
+#      elif Reciever_Type == 38 :
+#         print "SPS850 ",
+#      elif Reciever_Type == 101 :
+#         print "SPS985 ",
+#         firmware_file=RockyFile
       elif Reciever_Type == 162 :
          print "Alloy ",
          firmware_file=AlloyFile
@@ -122,12 +121,24 @@ for row in rows:
       elif Reciever_Type == 188 :
          print "R750 ",
          firmware_file=BarracudaFile
-      elif Reciever_Type == 250 :
-         print "SPS585 ",
-         firmware_file=""
-      elif Reciever_Type == 138 :
-         print "SPS356 ",
-         firmware_file=""
+      elif Reciever_Type == 191 :
+         print "R750-2 ",
+         firmware_file=LancetFile
+      elif Reciever_Type == 193 :
+         print "MPS566-2 ",
+         firmware_file=LancetFile
+      elif Reciever_Type == 327 :
+         print "R780-0 ",
+         firmware_file=ClarkFile
+      elif Reciever_Type == 329 :
+         print "R780-2 ",
+         firmware_file=ClarkFile
+#      elif Reciever_Type == 250 :
+#         print "SPS585 ",
+#         firmware_file=""
+#      elif Reciever_Type == 138 :
+#         print "SPS356 ",
+#         firmware_file=""
       else :
          print "Unknown Receiver Type: {}".format(Reciever_Type)
 
@@ -141,17 +152,19 @@ for row in rows:
          cmd=[
             "./upgrade_with_clone.py",
             "-p" ,"admin:" + row["Password"],
-            "-c", "GPS_"+ str(row["id"]),
-            "-d", "/var/www/html/Dashboard/Clones",
+#            "-c", "GPS_"+ str(row["id"]),
+#            "-d", "/var/www/html/Dashboard/Clones",
             "-i", row["Address"]+":"+str(row["Port"]) ,
             "-f", firmwareLocation() + '/' + firmware_file ,
             "-u",
             "-v"
             ]
+
+#            " -c GPS_"+ str(row["id"]) +\
+#            " -d /var/www/html/Dashboard/Clones"  +\
+
          cmd = "./upgrade_with_clone.py" +\
             " -p admin:" + row["Password"] +\
-            " -c GPS_"+ str(row["id"]) +\
-            " -d /var/www/html/Dashboard/Clones"  +\
             " -i " +  row["Address"]+":"+str(row["Port"])  +\
             " -f " + firmwareLocation() + '/' + firmware_file +\
             " -u"

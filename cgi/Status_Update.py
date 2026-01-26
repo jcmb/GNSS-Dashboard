@@ -22,7 +22,7 @@ import logging
 import logging.handlers
 
 logger = logging.getLogger('Status_Update')
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 
 handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -161,6 +161,7 @@ class DB_Class:
         self.RadioEnabled=row["RadioEnabled"]
         self.RadioOnOffState=row["RadioOnOffState"]
         self.RadioMode=row["RadioMode"]
+        self.BASEFOLLOW=row["BASEFOLLOW"]
 
 
 
@@ -176,7 +177,12 @@ class HTTP_Class:
         try:
 #            print "http://" + self.Host + ":" + str(self.Port) + url_part
 #            pprint (self.Ses)
-            Response=self.Ses.get("http://" + self.Host + ":" + str(self.Port) + url_part,timeout=self.TimeOut)
+            if self.Port==443:
+#                print "https://" + self.Host + ":" + str(self.Port) + url_part
+                Response=self.Ses.get("https://" + self.Host + ":" + str(self.Port) + url_part,timeout=self.TimeOut)
+            else:
+#                print "http://" + self.Host + ":" + str(self.Port) + url_part
+                Response=self.Ses.get("http://" + self.Host + ":" + str(self.Port) + url_part,timeout=self.TimeOut)
             if Response.status_code != 200:
                 reply=None
             else:
@@ -294,6 +300,9 @@ def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
     if (DB.Reciever_Type == "189"):
         firmwareType=1
 
+    if (DB.Reciever_Type == "191"):
+        firmwareType=1
+
     if (DB.Reciever_Type == "507"):
         firmwareType=1
 
@@ -301,6 +310,15 @@ def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
         firmwareType=1
 
     if (DB.Reciever_Type == "509"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "193"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "327"):
+        firmwareType=1
+
+    if (DB.Reciever_Type == "329"):
         firmwareType=1
 
     if (DB.Reciever_Type == "330"):
@@ -312,10 +330,31 @@ def check_firmware(GNSS_ID,FirmwareVersions,DB,HTTP):
 
 #    print (DB.Reciever_Type)
 #    print (firmwareType)
-    if (DB.Firmware in FirmwareVersions) :
+    if (DB.Firmware in FirmwareVersions) : # Since EOL and Unmanaged are not in the database this does not get tested for them
 #        pprint(FirmwareVersions[DB.Firmware])
         firmwareValid= Firmware_Version == FirmwareVersions[DB.Firmware][firmwareType]
-        Message="Receiver Firmware is " + Firmware_Version + " Should be " + FirmwareVersions[DB.Firmware][firmwareType] + " Ring " + DB.Firmware + "\n";
+        if not firmwareValid:
+           Message+="Receiver Firmware is " + Firmware_Version + " Should be " + FirmwareVersions[DB.Firmware][firmwareType] + " Ring " + DB.Firmware + "\n";
+
+    (reply,result)=HTTP.get("/xml/dynamic/merge.xml?sysData=")
+
+#    print (reply)
+    if result !=  200:
+        firmwareValid = False
+        Message+="Could not determine beta\n"
+        return(firmwareValid,Message)
+
+    root=ET.fromstring(reply)
+#    ET.dump(root)
+    beta=root.find(".//betaExpires")
+
+    if beta is not None:
+        beta=int(beta.text)
+        if beta < 7:
+            firmwareValid = False
+            Message+="Receiver firmware has has only " + str(beta)  + " days before expiring. It should be at least 7\n";
+
+#    pprint(root)
 
     return(firmwareValid,Message)
 
@@ -407,10 +446,10 @@ def check_motion_type(GNSS_ID,DB,HTTP):
         m=re.search('RtkControls mode=(.*) motion=(.*) ionoguard=(.*)',reply)
         if  m:
             ionoguard=m.group(3)
-        else:    
+        else:
             ionoguard="N/A"
-            m=re.search('RtkControls mode=(.*) motion=(.*)',reply)            
-            
+            m=re.search('RtkControls mode=(.*) motion=(.*)',reply)
+
         if m:
             Message=""
             LowLatency=m.group(1)=="lowLatency"
@@ -736,7 +775,7 @@ def check_email(GNSS_ID,DB,HTTP):
 
 
 
-        if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing"):
+        if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing") and (root.find('result').text != "EmailStatusHostLookupErr"): # Ignore EmailStatusHostLookupErr as it mostly indictive of a network outage.
             Email_Valid = False
             if root.find('err') != None:
                 Message+="Email result is {} should be OK\n".format(root.find('result').text)
@@ -879,9 +918,13 @@ def check_FTP(GNSS_ID,DB,HTTP):
             FTP_Valid = False
             Message+="NotPushedFileCount is {} it should be 0\n".format(FTP_Not_Pushed)
 
-        for log in root.findall('log'):
-            status = log.find('status').text
+        logs = root.findall('log')
+        if logs:
+            latest_log = max(logs, key=lambda log: int(log.find('time').text))
 
+            # 4. Extract the 'status' from the latest log entry
+            status = latest_log.find('status').text
+            latest_time = latest_log.find('time').text
             if status == "FTPTestBadLogin":
                 FTP_Valid = False
                 Message="FTP Has a Bad login\n"
@@ -889,6 +932,18 @@ def check_FTP(GNSS_ID,DB,HTTP):
             if status == "FTPTestBadDir":
                 FTP_Valid = False
                 Message="FTP Has a Bad remote directory\n"
+
+#        for log in root.findall('log'):
+#            status = log.find('status').text
+#            print(status)
+#
+#            if status == "FTPTestBadLogin":
+#                FTP_Valid = False
+#                Message="FTP Has a Bad login\n"
+#
+#            if status == "FTPTestBadDir":
+#                FTP_Valid = False
+#                Message="FTP Has a Bad remote directory\n"
 
 # We ignore FTPTestBadSend since it expect this to fix itself.
 
@@ -999,10 +1054,12 @@ def check_Radio(GNSS_ID,DB,HTTP):
         Message+="radioMode not found\n"
         Radio_Valid=False
 
+
     if Radio_Valid == True:
         RadioOnOffState=RadioOnOffState.text
         radioMode=radioMode.text
 
+#        print(DB.RadioOnOffState)
         if DB.RadioOnOffState:
             RadioOnOffState_Str="On"
         else:
@@ -1012,9 +1069,10 @@ def check_Radio(GNSS_ID,DB,HTTP):
             Message+="RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState,RadioOnOffState_Str)
             Radio_Valid=False
 
-        if DB.RadioMode != radioMode:
-            Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
-            Radio_Valid=False
+        if  DB.RadioOnOffState:
+            if DB.RadioMode != radioMode:
+                Message+="radioMode is {}, Expected {}\n".format(radioMode,DB.RadioMode)
+                Radio_Valid=False
 
 
         Radio_Str=RadioOnOffState + ":" + radioMode
@@ -1209,12 +1267,15 @@ def check_Auth(GNSS_ID,DB,HTTP):
     Auth="Unknown"
     Message=""
 
-#    logging.debug(Host+":"+str(Port)+ " Checking Auth: ")
+    logging.debug(Host+":"+str(Port)+ " Checking Auth: ")
     Auth="Unknown"
     try:
 #            print "http://" + self.Host + ":" + str(self.Port) + url_part
 #            pprint (self.Ses)
-        Response=Ses.get("http://" + Host + ":" + str(Port) + "/prog/show?pdopMask",timeout=TimeOut)
+        if HTTP.Port == 443:
+            Response=Ses.get("https://" + Host + ":" + str(Port) + "/prog/show?pdopMask",timeout=TimeOut)
+        else:
+            Response=Ses.get("http://" + Host + ":" + str(Port) + "/prog/show?pdopMask",timeout=TimeOut)
 
 #        print Response.status_code
         if Response.status_code==401:
@@ -1227,7 +1288,10 @@ def check_Auth(GNSS_ID,DB,HTTP):
                 PDOP = int(m.group(1),10)
 #                print "http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP)
 
-                Response=Ses.get("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
+                if HTTP.Port == 443:
+                    Response=Ses.get("https://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
+                else:
+                    Response=Ses.get("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP),timeout=TimeOut)
 
                 m=re.search('^ERROR',Response.text)
                 if m:
@@ -1763,7 +1827,7 @@ def check_timed(GNSS_ID,DB,HTTP):
             else:
                 result=termLicense_installed.text=="0"
                 if not result :
-                    message+="Termed check FAILED: Expected 0 Got {}\n".format(termLicense_installed.text)
+                   message+="Termed check FAILED: Expected 0 Got {}\n".format(termLicense_installed.text)
 
             if result :
                 logging.info("termLicense_installed check: {}".format(result))
@@ -1817,8 +1881,14 @@ def check_timed(GNSS_ID,DB,HTTP):
 
         return(result,message)
 
+
     timed_message=""
+    if not DB.Timed_Active:
+        return (True,timed_message)
+
     (reply,result)=HTTP.get("/xml/dynamic/merge.xml?config=")
+#    print(result)
+#    print(reply)
     config = ET.fromstring(reply)
     timed_xml=config.find("./config/termLicense")
 
@@ -1836,6 +1906,48 @@ def check_timed(GNSS_ID,DB,HTTP):
 
     return(result,timed_message)
 
+def check_BaseFollow(GNSS_ID,DB,HTTP):
+
+    BaseFollowMap = [
+        (0, "Unknown","Unknown"),
+        (1, "Disabled","Disabled"),
+        (2, "Add Signals","AddSignals"),
+        (3, "Standard", "Standard"),
+        (4, "Minimum Signals","MinSignals")
+    ]
+
+    (reply,result)=HTTP.get("/xml/dynamic/configData.xml")
+
+#    print reply
+
+    root=ET.fromstring(reply)
+
+    baseFollow = root.find("baseFollow")
+    if  baseFollow is None:
+        return (False,"Could not detmeine baseFollow")
+    else:
+        baseFollow=baseFollow.text
+
+#    print(DB.BASEFOLLOW)
+
+    if DB.BASEFOLLOW > len(BaseFollowMap):
+        return (False,"baseFollow to check for is unknown")
+
+    expected=BaseFollowMap[DB.BASEFOLLOW][2]
+    baseFollowValid=baseFollow==expected==baseFollow
+
+
+    if baseFollowValid:
+        logger.debug(DB.Address+":"+str(DB.Port)+ " Valid baseFollow: " + str(baseFollow))
+    else:
+        logger.debug(DB.Address+":"+str(DB.Port)+ " Incorrect baseFollow: " + str(baseFollow) + " expected baseFollow: " + expected + "("+ str(DB.BASEFOLLOW) + ")")
+
+    DB.STATUS.execute("UPDATE STATUS SET BASEFOLLOW=?, BaseFollowValid=? where id=?",(baseFollow,baseFollowValid,GNSS_ID))
+    DB.conn.commit()
+    if baseFollowValid:
+        return (True,"")
+    else:
+        return (False,"Incorrect baseFollow: " + str(baseFollow) + " expected baseFollow: " + expected + " ("+ str(DB.BASEFOLLOW) + ")")
 
 
 
@@ -1894,7 +2006,11 @@ if not Success:
 OK=OK and Success
 
 
-(Success,Message)=check_Tracking(args.GNSS_ID,DB,HTTP)
+if (DB.BASEFOLLOW == 1) or DB.BASEFOLLOW is None :
+    (Success,Message)=check_Tracking(args.GNSS_ID,DB,HTTP)
+else:
+#    (Success,Message)=check_BaseFollow(args.GNSS_ID,DB,HTTP)
+    (Success,Message)=check_BaseFollow(args.GNSS_ID,DB,HTTP)
 
 if not Success:
     Result_String+=Message
@@ -2015,7 +2131,8 @@ if not Success:
 
 OK=OK and Success
 
-(Success,Message)=check_testMode(args.GNSS_ID,DB,HTTP)
+#if DB.Firmware != "Unmanaged" : # Allow unmanaged units to be in test mode
+#	(Success,Message)=check_testMode(args.GNSS_ID,DB,HTTP)
 
 if not Success:
     Result_String+=Message
@@ -2025,15 +2142,15 @@ logger.debug(DB.Address+":"+str(DB.Port)+ " After TESTMODE: " + str(Success) + "
 OK=OK and Success
 #pprint(DB.Firmware)
 
-if DB.Firmware != "EOL" :
-    (Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
-
-    if not Success:
-        Result_String+=Message
-
-    logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
-
-    OK=OK and Success
+#if DB.Firmware != "EOL" :
+#    (Success,Message)=check_errors(args.GNSS_ID,DB,HTTP)
+#
+#    if not Success:
+#        Result_String+=Message
+#
+#    logger.debug(DB.Address+":"+str(DB.Port)+ " After Check Errors: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
+#
+#    OK=OK and Success
 
 
 (Success,Message)=check_timed(args.GNSS_ID,DB,HTTP)
@@ -2042,7 +2159,6 @@ if not Success:
     Result_String+=Message
 
 logger.debug(DB.Address+":"+str(DB.Port)+ " After Timed: " + str(Success) + ":::" + str(OK)+ " :: " + Message)
-
 OK=OK and Success
 
 

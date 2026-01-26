@@ -281,7 +281,6 @@ Type:
   <option value="194" <?php echo ($row["Antenna"]=="194"?"selected":""); ?>>GA510</option>
   <option value="250" <?php echo ($row["Antenna"]=="250"?"selected":""); ?>>GA530</option>
   <option value="470" <?php echo ($row["Antenna"]=="470"?"selected":""); ?>>GA830</option>
-  <option value="785" <?php echo ($row["Antenna"]=="785"?"selected":""); ?>>GA860</option>
   <option value="379" <?php echo ($row["Antenna"]=="379"?"selected":""); ?>>SPS585</option>
   <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
