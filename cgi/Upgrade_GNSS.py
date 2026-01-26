@@ -57,7 +57,7 @@ else:
     Firmware_ID=form["Firmware"].value
 
 
-query = 'SELECT Version, BarracudaFile, ChinstrapFile, GamelFile, MetallicaFile, RockyFile, KryptonFile FROM Firmware where type="' + Firmware_ID + '"';
+query = 'SELECT Version, BarracudaFile, ChinstrapFile, GamelFile, LancetFile, MetallicaFile, RockyFile, KryptonFile, AlloyFile, LancetFile  FROM Firmware where type="' + Firmware_ID + '"';
 cursor.execute(query);
 
 rows = cursor.fetchone()
@@ -69,6 +69,8 @@ GamelFile=rows[3]
 MetallicaFile=rows[4]
 RockyFile=rows[5]
 KryptonFile=rows[6]
+AlloyFile=rows[7]
+LancetFileFile=rows[8]
 
 print "Upgrading to firmware V" + Firmware + "<br/>"
 #print os.getcwd()
@@ -152,7 +154,7 @@ for row in rows:
             " -d /var/www/html/Dashboard/Clones"  +\
             " -i " +  row["Address"]+":"+str(row["Port"])  +\
             " -f " + firmwareLocation() + '/' + firmware_file +\
-            " -u" 
+            " -u"
 
          print (cmd)
 #         Popen(cmd,stdout=None)

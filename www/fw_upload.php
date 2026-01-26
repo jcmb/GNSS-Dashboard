@@ -42,6 +42,7 @@ function check_file(file_control,name) {
          check_file("MetallicaUpload","SPS356") &&
          check_file("ChinstrapUpload","BD986") &&
          check_file("BarracudaUpload","R750") &&
+         check_file("LancetUpload","R750") &&
          check_file("KryptonUpload","BD992");
   }
 </script>
@@ -134,6 +135,24 @@ SPS852/SPS855: (Gamel)
 
 <tr>
 <td>
+BD992: (Krypton)
+</td><td>
+<input size="60" type="file" name="KryptonUpload" id="KryptonUpload" accept=".timg" required/></br>
+</td>
+</tr>
+
+<tr>
+<td>
+Lancet: (Krypton)
+</td><td>
+<input size="60" type="file" name="LancetUpload" id="LacentUpload" accept=".timg" required/></br>
+</td>
+</tr>
+
+
+
+<tr>
+<td>
 SPS356: (Metallica)
 </td><td>
 <input size="60" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
@@ -145,14 +164,6 @@ SPS356: (Metallica)
 SPS985: (Rockhopper)
 </td><td>
 <input size="60" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
-</td>
-</tr>
-
-<tr>
-<td>
-BD992: (Krypton)
-</td><td>
-<input size="60" type="file" name="KryptonUpload" id="KryptonUpload" accept=".timg" required/></br>
 </td>
 </tr>
 

@@ -181,6 +181,27 @@ else {
 
 echo "<br>";
 
+if ($_FILES['LancetUpload'] ) {
+   echo "Lancet File: " , $_FILES['LancetUpload']['name'] , ", ";
+   }
+else {
+    exit ("Internal Error: No Lancet File");
+    }
+
+$error=$_FILES["LancetUpload"]["error"];
+if ($error == UPLOAD_ERR_OK) {
+   $tmp_name = $_FILES["LancetUpload"]["tmp_name"];
+   $LancetName = $_FILES["LancetUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$LancetName");
+   echo "uploaded";
+   }
+else {
+   echo "Upload Error";
+   quit(101);
+   }
+
+echo "<br>";
+
 
 if ($_FILES['MetallicaUpload'] ) {
    echo "SPS356 File: " , $_FILES['MetallicaUpload']['name'] , ", ";
@@ -261,6 +282,7 @@ $db->exec("UPDATE Firmware SET
    BarracudaFile=\"$BCudaName\",
    ChinstrapFile=\"$ChinstrapName\",
    GamelFile=\"$GamelName\",
+   LancetFile=\"$LancetName\",
    MetallicaFile=\"$MetallicaName\",
    RockyFile=\"$RockyName\",
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
@@ -273,6 +295,7 @@ if ( $Firmware == "Beta" or $Firmware == "Released" ) {
       BarracudaFile=\"$BCudaName\",
       ChinstrapFile=\"$ChinstrapName\",
       GamelFile=\"$GamelName\",
+      LancetFile=\"$LancetName\",
       MetallicaFile=\"$MetallicaName\",
       RockyFile=\"$RockyName\",
       KryptonFile=\"$KryptonName\" WHERE Type=\"Branch\"");
@@ -286,6 +309,7 @@ if ( $Firmware == "Released" ) {
       BarracudaFile=\"$BCudaName\",
       ChinstrapFile=\"$ChinstrapName\",
       GamelFile=\"$GamelName\",
+      LancetFile=\"$LancetName\",
       MetallicaFile=\"$MetallicaName\",
       RockyFile=\"$RockyName\",
       KryptonFile=\"$KryptonName\" WHERE Type=\"Beta\"");

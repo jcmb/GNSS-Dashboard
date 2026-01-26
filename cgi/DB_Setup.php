@@ -177,6 +177,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       BarracudaFile TEXT,
       ChinstrapFile TEXT,
       GamelFile TEXT,
+      LancetFile TEXT,
       MetallicaFile TEXT,
       RockyFile TEXT,
       KryptonFile TEXT
