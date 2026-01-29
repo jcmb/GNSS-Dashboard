@@ -148,19 +148,25 @@ Receiver:
 </td><td>
 <select required name=Receiver_Type>
   <option value="162" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>Alloy</option>
-  <option value="118" <?php echo ($row["Reciever_Type"]=="118")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>SPS855</option>
+  <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
+  <option value="164" <?php echo ($row["Reciever_Type"]=="164")?"selected":"" ?>>BX992-INS</option>
+  <option value="509" <?php echo ($row["Reciever_Type"]=="509")?"selected":"" ?>>BX992-SPS</option>
+  <option value="193" <?php echo ($row["Reciever_Type"]=="193")?"selected":"" ?>>MPS566-2</option>
+  <option value="330" <?php echo ($row["Reciever_Type"]=="330")?"selected":"" ?>>MP86</option>
+  <option value="331" <?php echo ($row["Reciever_Type"]=="331")?"selected":"" ?>>MS86</option>
   <option value="138" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>SPS356</option>
   <option value="250" <?php echo ($row["Reciever_Type"]=="250")?"selected":"" ?>>SPS585</option>
   <option value="107" <?php echo ($row["Reciever_Type"]=="107")?"selected":"" ?>>SPS852</option>
+  <option value="118" <?php echo ($row["Reciever_Type"]=="118")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>SPS855</option>
   <option value="101" <?php echo ($row["Reciever_Type"]=="101")?"selected":"" ?>>SPS985</option>
   <option value="169" <?php echo ($row["Reciever_Type"]=="169")?"selected":"" ?>>SPS986</option>
   <option value="38"  <?php echo  ($row["Reciever_Type"]=="38")?"selected":"" ?>>SPS850</option>
   <option value="59"  <?php echo  ($row["Reciever_Type"]=="59")?"selected":"" ?>>SPS851</option>
-  <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
   <option value="100" <?php echo ($row["Reciever_Type"]=="100")?"selected":"" ?>>R10</option>
   <option value="188" <?php echo ($row["Reciever_Type"]=="188")?"selected":"" ?>>R750</option>
+  <option value="327" <?php echo ($row["Reciever_Type"]=="327")?"selected":"" ?>>R780</option>
+  <option value="329" <?php echo ($row["Reciever_Type"]=="329")?"selected":"" ?>>R780-2</option>
   <option value="76"  <?php echo  ($row["Reciever_Type"]=="76")?"selected":"" ?>>NetR9</option>
-  <option value="509" <?php echo ($row["Reciever_Type"]=="509")?"selected":"" ?>>BX992-SPS</option>
 </select>
 </td></tr>
 
@@ -277,15 +283,19 @@ Type:
   <option value="194" <?php echo ($row["Antenna"]=="194"?"selected":""); ?>>GA510</option>
   <option value="250" <?php echo ($row["Antenna"]=="250"?"selected":""); ?>>GA530</option>
   <option value="470" <?php echo ($row["Antenna"]=="470"?"selected":""); ?>>GA830</option>
+  <option value="784" <?php echo ($row["Antenna"]=="784"?"selected":""); ?>>MP86</option>
   <option value="379" <?php echo ($row["Antenna"]=="379"?"selected":""); ?>>SPS585</option>
   <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
   <option value="569" <?php echo ($row["Antenna"]=="146"?"selected":""); ?>>R10</option>
+  <option value="721" <?php echo ($row["Antenna"]=="751"?"selected":""); ?>>R780</option>
+  <option value="758" <?php echo ($row["Antenna"]=="758"?"selected":""); ?>>R780-2</option>
   <option value="184" <?php echo ($row["Antenna"]=="184"?"selected":""); ?>>Zephyr 2</option>
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":""); ?>>Zephyr Geodetic 2</option>
   <option value="265" <?php echo ($row["Antenna"]=="265"?"selected":""); ?>>Zephyr Geodetic 2 ROHS</option>
-  <option value="512" <?php echo ($row["Antenna"]=="512"?"selected":""); ?>>Zephyr 3 Rover</option>
   <option value="570" <?php echo ($row["Antenna"]=="570"?"selected":""); echo ($Editing?"":"selected") ?>>Zephyr 3 Base</option>
+  <option value="513" <?php echo ($row["Antenna"]=="513"?"selected":""); ?>>Zephyr 3 Geodetic</option>
+  <option value="512" <?php echo ($row["Antenna"]=="512"?"selected":""); ?>>Zephyr 3 Rover</option>
   <option value="146" <?php echo ($row["Antenna"]=="146"?"selected":""); ?>>R10</option>
 </select>
 </td></tr>
@@ -302,6 +312,9 @@ Measurement Method:
 <select required name="Measurement_Method">
   <option value="APC" <?php echo ($row["Measurement_Method"]=="APC"?"selected":""); ?>>APC</option>
   <option value="ARP" <?php echo ($row["Measurement_Method"]=="ARP"?"selected":""); echo ($Editing?"":"selected") ?>>ARP</option>
+  <option value="BottomOfReceiverWnoAntennas" <?php echo ($row["Measurement_Method"]=="BottomOfReceiverWnoAntennas"?"selected":""); echo ($Editing?"":"selected") ?>>BottomOfReceiverWnoAntennas</option>
+
+BottomOfReceiverWnoAntennas
 </select>
 </td></tr>
 
@@ -435,7 +448,6 @@ Check:
 </td><td>
 <input name="Radio_Enabled" type="checkbox" <?php echo ($row["RadioEnabled"]==1?"checked":""); echo ($Editing?"":"checked") ?>/>
 </td></tr>
-
 
 <tr><td>
 On:
