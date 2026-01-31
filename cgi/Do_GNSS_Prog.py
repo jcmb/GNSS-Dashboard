@@ -1,104 +1,108 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import cgi
 import cgitb
-#import httplib2
 import sqlite3
-import os.path
+import os
+import sys
 import stat
-import urllib
-import urllib2
+import urllib.request
+import urllib.parse
+import urllib.error
 import base64
 
+# Python 3 replacement for execfile("db.inc.py")
+# We use exec() because 'db.inc.py' contains a dot and cannot be imported as a standard module.
+try:
+    with open("db.inc.py") as f:
+        exec(f.read())
+except FileNotFoundError:
+    # Fallback in case the file was renamed to db_inc.py (standard python naming)
+    try:
+        from db_inc import *
+    except ImportError:
+        print("Error: Could not find database configuration file (db.inc.py).")
+        sys.exit(1)
 
-execfile("db.inc.py")
-#from db.inc import databaseFile
-
-from pprint import pprint
 cgitb.enable()
 
-print "Content-Type: text/html"     # HTML is following
-print                               # blank line, end of headers
+print("Content-Type: text/html")     # HTML is following
+print()                               # blank line, end of headers
 
 try:
    conn = sqlite3.connect(databaseFile())
-#   print databaseFile()+ " Open\n"
 except sqlite3.Error:
-   print "Error opening db. " + databaseFile() +"\n"
-   quit()
+   print("Error opening db. " + str(databaseFile()) + "\n")
+   sys.exit(1)
 
 cursor = conn.cursor()
 
 form = cgi.FieldStorage()
 
-#pprint(form)
-
-#print form["User_ID"].value
-#print "<br/>"
-
-
-
-
-print "<html><head>"
-print "</head><body>"
+print("<html><head>")
+print("</head><body>")
 
 if "U" not in form:
-    print "Internal Error: User ID (U) not provided<br/>"
-    quit(100)
-#    User_ID="1"
-else :
-    User_ID=form["U"].value
+    print("Internal Error: User ID (U) not provided<br/>")
+    sys.exit(100)
+else:
+    User_ID = form["U"].value
 
 if "G" not in form:
-    print "Internal Error: GNSS ID (G) not provided<br/>"
-    quit(100)
-#    GNSS_ID="1"
+    print("Internal Error: GNSS ID (G) not provided<br/>")
+    sys.exit(100)
 else:
-    GNSS_ID=form["G"].value
+    GNSS_ID = form["G"].value
 
 if "C" not in form:
-   print "Internal Error: CMD (C) not in form"
-   quit(100)
-#   CMD="fred"
+   print("Internal Error: CMD (C) not in form")
+   sys.exit(100)
 else:
-   CMD=form["C"].value
+   CMD = form["C"].value
 
 if "P" not in form:
-   print "Internal Error: Params (P) not in form"
-   quit(100)
-#   CMD="fred"
+   print("Internal Error: Params (P) not in form")
+   sys.exit(100)
 else:
-   Params=form["P"].value
+   Params = form["P"].value
 
-cursor.execute('SELECT id, User_ID, Address,Port, Password from GNSS WHERE (id=? and User_ID=?) ',(GNSS_ID, User_ID));
-GNSS_details=cursor.fetchone()
-if GNSS_details == None:
-   print "Internal Error, GNSS user mismatch"
-   quit(90)
+cursor.execute('SELECT id, User_ID, Address, Port, Password from GNSS WHERE (id=? and User_ID=?) ', (GNSS_ID, User_ID))
+GNSS_details = cursor.fetchone()
 
-print "GNSS Details"
-#pprint (GNSS_details)
+if GNSS_details is None:
+   print("Internal Error, GNSS user mismatch")
+   sys.exit(90)
 
-Address=str(GNSS_details[2])
-Port=str(GNSS_details[3])
-Password=str(GNSS_details[4])
+print("GNSS Details")
 
-URI="http://"+Address+":"+Port+"/prog/set?"+CMD+"&"+urllib.unquote(Params)
-#URI="http://admin:"+Password+"@"+Address+":"+Port+"/prog/set?"+CMD+"&"+Params
+Address = str(GNSS_details[2])
+Port = str(GNSS_details[3])
+Password = str(GNSS_details[4])
 
-#print URI
-#print "<br/>"
-#print "<br/>"
+# urllib.unquote has moved to urllib.parse.unquote in Python 3
+URI = "http://" + Address + ":" + Port + "/prog/set?" + CMD + "&" + urllib.parse.unquote(Params)
 
-request = urllib2.Request(URI)
-base64string = base64.encodestring('%s:%s' % ('admin', Password)).replace('\n', '')
-request.add_header("Authorization", "Basic %s" % base64string)
-result = urllib2.urlopen(request)
-print (result.read())
-#h = httplib2.Http()
-#h.add_credentials('admin', Password)
-#resp, content = h.request(URI, "GET")
-#print resp
-#print resp['status']
-#print content
-print "<br/>"
-print '<a href="/cgi-bin/Dashboard/User/User_Dashboard_' + User_ID +'.sh">Back to Dashboard</a>'
+# urllib2.Request has moved to urllib.request.Request
+request = urllib.request.Request(URI)
+
+# Base64 encoding for Basic Auth
+# In Python 3, b64encode expects bytes and returns bytes.
+auth_string = f'admin:{Password}'
+auth_bytes = auth_string.encode('utf-8')       # Convert string to bytes
+base64_bytes = base64.b64encode(auth_bytes)    # Encode to base64 bytes
+base64_string = base64_bytes.decode('ascii')   # Decode back to string for the header
+
+request.add_header("Authorization", "Basic %s" % base64_string)
+
+try:
+    # urllib2.urlopen has moved to urllib.request.urlopen
+    with urllib.request.urlopen(request) as result:
+        # result.read() returns bytes in Py3, need to decode to print
+        print(result.read().decode('utf-8'))
+except urllib.error.URLError as e:
+    print(f"<br>Error contacting device: {e}")
+
+print("<br/>")
+print('<a href="/cgi-bin/Dashboard/User/User_Dashboard_' + str(User_ID) + '.sh">Back to Dashboard</a>')
+
+print('</body>')
+print('</html>')
