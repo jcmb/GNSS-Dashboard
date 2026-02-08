@@ -95,7 +95,7 @@ else {
    $versions=array();
    while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
         {
-        $versions[$row["Type"]]=$row["Version"];
+        $versions[$row["Type"]]=$row["Titian_Version"];
 //        var_dump($versions);
 //        print "<br/>";
         }
