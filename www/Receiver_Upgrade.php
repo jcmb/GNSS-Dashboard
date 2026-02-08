@@ -196,5 +196,20 @@ $( document).ready(function() {
 </div>
 </div>
 </div>
+
+<br/>
+
+<?php
+if ($_REQUEST["User_ID"]) {
+    echo '<a href="fw_upload.php?User_ID='.$_REQUEST["User_ID"].'">Upload Firmware</a>';
+    }
+else {
+    die ("Internal Error: Missing User ID");
+   }
+?>
+
+
+
+
 </body>
 </html>
