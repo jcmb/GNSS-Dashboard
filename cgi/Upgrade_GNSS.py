@@ -53,7 +53,7 @@ else:
 # Fetch firmware filenames
 # Note: The original code does not select 'AlloyFile' in this query,
 # but tries to use it later. Ensure AlloyFile is defined in db_inc.py or add it to this query.
-query = 'SELECT Version, BarracudaFile, ChinstrapFile, GamelFile, MetallicaFile, RockyFile, KryptonFile FROM Firmware where type=?'
+query = 'SELECT Titian_Version, AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, KryptonFile, LancetFile FROM Firmware where type=?'
 cursor.execute(query, (Firmware_ID,))
 
 rows = cursor.fetchone()
@@ -63,12 +63,12 @@ if not rows:
     sys.exit(1)
 
 Firmware = rows[0]
-BarracudaFile = rows[1]
-ChinstrapFile = rows[2]
-GamelFile = rows[3]
-MetallicaFile = rows[4]
-RockyFile = rows[5]
-KryptonFile = rows[6]
+AlloyFile = rows[1]
+BarracudaFile = rows[2]
+ChinstrapFile = rows[3]
+ClarkFile = rows[4]
+KryptonFile = rows[5]
+LancetFile = rows[6]
 
 print("Upgrading to firmware V" + str(Firmware) + "<br/>")
 
@@ -91,10 +91,12 @@ for row in rows:
 
       if Reciever_Type == 107:
          print("SPS852 ", end=" ")
-         firmware_file = GamelFile
+         firmware_file = ""
+         print("Not Supported")
       elif Reciever_Type == 118:
          print("SPS855 ", end=" ")
-         firmware_file = GamelFile
+         firmware_file = ""
+         print("Not Supported")
       elif Reciever_Type == 508:
          print("BX992-MS ", end=" ")
          firmware_file = KryptonFile
@@ -104,33 +106,45 @@ for row in rows:
       elif Reciever_Type == 164:
          print("BD992 ", end=" ")
          firmware_file = KryptonFile
+      elif Reciever_Type == 330:
+         print("MP86 ", end=" ")
+         firmware_file = KryptonFile
+      elif Reciever_Type == 331:
+         print("MS96 ", end=" ")
+         firmware_file = KryptonFile
       elif Reciever_Type == 38:
          print("SPS850 ", end=" ")
-         # No firmware file assigned
+         firmware_file = ""
+         print("Not Supported")
       elif Reciever_Type == 101:
          print("SPS985 ", end=" ")
-         firmware_file = RockyFile
+         print("Not Supported")
       elif Reciever_Type == 162:
          print("Alloy ", end=" ")
-         # 'AlloyFile' was not in the SELECT query.
-         # Assuming it is a global from db_inc or a bug in original code.
-         try:
-            firmware_file = AlloyFile
-         except NameError:
-             print("[Error: AlloyFile not defined]", end=" ")
-             firmware_file = ""
+         firmware_file = AlloyFile
       elif Reciever_Type == 169:
          print("SPS986 ", end=" ")
          firmware_file = ChinstrapFile
       elif Reciever_Type == 188:
          print("R750 ", end=" ")
          firmware_file = BarracudaFile
+      elif Reciever_Type == 191:
+         print("R750-2 ", end=" ")
+         firmware_file = LancetFile
+      elif Reciever_Type == 327:
+         print("R780 ", end=" ")
+         firmware_file = ChinstrapFile
+      elif Reciever_Type == 329:
+         print("R780-2 ", end=" ")
+         firmware_file = ClarkFile
       elif Reciever_Type == 250:
          print("SPS585 ", end=" ")
          firmware_file = ""
+         print("Not Supported")
       elif Reciever_Type == 138:
          print("SPS356 ", end=" ")
          firmware_file = ""
+         print("Not Supported")
       else:
          print("Unknown Receiver Type: {}".format(Reciever_Type))
 
