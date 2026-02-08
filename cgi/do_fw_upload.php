@@ -45,8 +45,8 @@ case 'K':
   $filemax *= 1024;
 }
 
-if (25000000 > $filemax) {
-   echo "The firmware files are to large to upload. It must be possible to upload at least 25Mb files";
+if (30000000 > $filemax) {
+   echo "The firmware files are to large to upload. It must be possible to upload at least 30Mb files";
    echo "<br/>Contact your admin";
    phpinfo();
    exit(100);
@@ -160,18 +160,17 @@ else {
 
 echo "<br/>\n";
 
-if ($_FILES['GamelUpload'] ) {
-   echo "SPS855 File: " , $_FILES['GamelUpload']['name'] , ", ";
+if ($_FILES['ClarkUpload'] ) {
+   echo "R780-2 File: " , $_FILES['ClarkUpload']['name'] , ", ";
    }
 else {
-    exit ("Internal Error: No SPS855 File");
+    exit ("Internal Error: No R780-2 File");
     }
 
-$error=$_FILES["GamelUpload"]["error"];
 if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["GamelUpload"]["tmp_name"];
-   $GamelName = $_FILES["GamelUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$GamelName");
+   $tmp_name = $_FILES["ClarkUpload"]["tmp_name"];
+   $ClarkName = $_FILES["ClarkUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$ClarkName");
    echo "uploaded";
    }
 else {
@@ -179,49 +178,26 @@ else {
    quit(101);
    }
 
-echo "<br>";
+echo "<br/>\n";
 
-
-if ($_FILES['MetallicaUpload'] ) {
-   echo "SPS356 File: " , $_FILES['MetallicaUpload']['name'] , ", ";
+if ($_FILES['LancetUpload'] ) {
+   echo "Lancet File: " , $_FILES['LancetUpload']['name'] , ", ";
    }
 else {
-    exit ("Internal Error: No SPS356 File");
+    exit ("Internal Error: No Lancet File");
     }
 
-$error=$_FILES["MetallicaUpload"]["error"];
+$error=$_FILES["LancetUpload"]["error"];
 if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["MetallicaUpload"]["tmp_name"];
-   $MetallicaName = $_FILES["MetallicaUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$MetallicaName");
+   $tmp_name = $_FILES["LancetUpload"]["tmp_name"];
+   $LancetName = $_FILES["LancetUpload"]["name"];
+   move_uploaded_file($tmp_name, "$firmwareLocation/$LancetName");
    echo "uploaded";
    }
 else {
    echo "Upload Error";
    quit(101);
    }
-
-echo "<br>";
-
-
-if ($_FILES['RockyUpload'] ) {
-   echo "SPS985 File: " , $_FILES['RockyUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS985 File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["RockyUpload"]["tmp_name"];
-   $RockyName = $_FILES["RockyUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$RockyName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
 
 echo "<br/>\n";
 
@@ -255,16 +231,35 @@ $db->exec("PRAGMA busy_timeout=5000");
 
 
 $db->exec("UPDATE Firmware SET
-   Version=\"$Version\",
    Titian_Version=\"$TitianVersion\",
    AlloyFile=\"$AlloyName\",
    BarracudaFile=\"$BCudaName\",
+   ClarkFile=\"$ClarkName\",
    ChinstrapFile=\"$ChinstrapName\",
-   GamelFile=\"$GamelName\",
-   MetallicaFile=\"$MetallicaName\",
-   RockyFile=\"$RockyName\",
+   LancetFile=\"$LancetName\",
    KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"");
 
+if ( $Firmware == "Beta" or $Firmware == "Released" ) {
+   $db->exec("UPDATE Firmware SET
+      Titian_Version=\"$TitianVersion\",
+      AlloyFile=\"$AlloyName\",
+      BarracudaFile=\"$BCudaName\",
+      ClarkFile=\"$ClarkName\",
+      ChinstrapFile=\"$ChinstrapName\",
+      LancetFile=\"$LancetName\",
+      KryptonFile=\"$KryptonName\" WHERE Type=\"Branch\"");
+   }
+
+if ( $Firmware == "Released" ) {
+   $db->exec("UPDATE Firmware SET
+      Titian_Version=\"$TitianVersion\",
+      AlloyFile=\"$AlloyName\",
+      BarracudaFile=\"$BCudaName\",
+      ClarkFile=\"$ClarkName\",
+      ChinstrapFile=\"$ChinstrapName\",
+      LancetFile=\"$LancetName\",
+      KryptonFile=\"$KryptonName\" WHERE Type=\"Beta\"");
+   }
 
 // Close the connection
 $db->close();
