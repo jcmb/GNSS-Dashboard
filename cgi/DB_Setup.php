@@ -54,6 +54,7 @@
       IBSS_Test_Password TEXT,
       IBSS_1_Mount TEXT,
       IBSS_1_Type TEXT,
+      BASEFOLLOW NUMERIC,
       Frequencies NUMERIC,
       GPS BOOLEAN,
       GLN BOOLEAN,
@@ -164,7 +165,9 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       testMode_Valid BOOLEAN,
       TIMED_Valid BOOLEAN,
       Radio TEXT,
-      Radio_Valid BOOLEAN
+      Radio_Valid BOOLEAN,
+      BASEFOLLOW NUMERIC,
+      BaseFollowValid BOOLEAN
       )');
 
 
@@ -175,8 +178,10 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Titian_Version TEXT,
       AlloyFile TEXT,
       BarracudaFile TEXT,
+      ClarkFile TEXT,
       ChinstrapFile TEXT,
       GamelFile TEXT,
+      LancetFile TEXT,
       MetallicaFile TEXT,
       RockyFile TEXT,
       KryptonFile TEXT
