@@ -34,14 +34,15 @@ function check_file(file_control,name) {
    return true
    }
 
+ , AlloyFile TEXT, LancetFile TEXT, ClarkFile TEXT
 
 
   function check_files() {
-  return check_file("GamelUpload","SPS855") &&
-         check_file("RockyUpload","SPS985") &&
-         check_file("MetallicaUpload","SPS356") &&
-         check_file("ChinstrapUpload","BD986") &&
+  return check_file("AlloyUpload","Alloy") &&
          check_file("BarracudaUpload","R750") &&
+         check_file("ClarkUpload","R780-2") &&
+         check_file("ChinstrapUpload","SPS986") &&
+         check_file("LancetUpload","R750-2") &&
          check_file("KryptonUpload","BD992");
   }
 </script>
@@ -66,14 +67,6 @@ Firmware Level:
   <option value="Branch" selected>Branch</option>
   <option value="Trunk">Trunk</option>
 </select>
-</td>
-</tr>
-
-<tr>
-<td>
-Firmware Version:
-</td><td>
-<input name="version" type="text"><br/>
 </td>
 </tr>
 
@@ -124,29 +117,22 @@ SPS986: (Chinstrap)
 </tr>
 
 <tr>
+<td>
+R780-2: (Clark)
+</td><td>
+<input size="60" type="file" name="ClarkUpload" id="ClarkUpload" accept=".timg"  required/></br>
+</td>
+</tr>
+
+<tr>
 <td width="33%">
-SPS852/SPS855: (Gamel)
+R750-2: (Lancet)
 </td>
 <td width="67%">
-<input size="60" type="file" name="GamelUpload" id="GamelUpload" accept=".timg" required/></br>
+<input size="60" type="file" name="LancetUpload" id="LancetUpload" accept=".timg" required/></br>
 </td>
 </tr>
 
-<tr>
-<td>
-SPS356: (Metallica)
-</td><td>
-<input size="60" type="file" name="MetallicaUpload" id="MetallicaUpload" accept=".timg" required/></br>
-</td>
-</tr>
-<tr>
-
-<td>
-SPS985: (Rockhopper)
-</td><td>
-<input size="60" type="file" name="RockyUpload" id="RockyUpload" accept=".timg"  required/></br>
-</td>
-</tr>
 
 <tr>
 <td>
