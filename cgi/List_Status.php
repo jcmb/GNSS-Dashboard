@@ -163,11 +163,17 @@ else {
           case "59":
             echo "SPS851";
             break;
+          case "76":
+            echo "NetR9";
+            break;
           case "118":
             echo "SPS855";
             break;
           case "107":
             echo "SPS852";
+            break;
+          case "100":
+            echo "R10";
             break;
           case "101":
             echo "SPS985";
@@ -175,11 +181,20 @@ else {
           case "138":
             echo "SPS356";
             break;
+          case "162":
+            echo "Alloy";
+            break;
+          case "164":
+            echo "BD992-INS";
+            break;
           case "169":
             echo "SPS986";
             break;
           case "188":
             echo "R750";
+            break;
+          case "191":
+            echo "R750-2";
             break;
           case "240":
             echo "BD935";
@@ -189,6 +204,21 @@ else {
             break;
           case "249":
             echo "Brewster Heading";
+            break;
+          case "193":
+            echo "MPS566-2";
+            break;
+          case "327":
+            echo "R780";
+            break;
+          case "329":
+            echo "R780-2";
+            break;
+          case "330":
+            echo "MP1086";
+            break;
+          case "331":
+            echo "MS1086";
             break;
           case "509":
             echo "BX992-SPS";
@@ -212,10 +242,16 @@ else {
             echo "Zephyr Geodetic";
             break;
           case "250":
-            echo "GA510";
+            echo "GA530";
             break;
           case "470":
             echo "GA830";
+            break;
+          case "784":
+            echo "MP1086";
+            break;
+          case "146":
+            echo "R10";
             break;
           case "147":
             echo "SPS985";
@@ -229,11 +265,17 @@ else {
           case "185":
             echo "Zephyr 2 Geodetic";
             break;
+          case "194":
+            echo "GA510";
+            break;
           case "265":
             echo "Zephyr 2 Geodetic ROHS";
             break;
           case "512":
             echo "Zephyr 3 Rover";
+            break;
+          case "513":
+            echo "Zephyr 3 Geodetic";
             break;
           case "570":
             echo "Zephyr 3 Base";
@@ -353,7 +395,14 @@ if ($_REQUEST["User_ID"]) {
     }
 ?>
 
-
+<!--
+<br>
+<?php
+if ($_REQUEST["User_ID"]) {
+    echo 'View <a href="/Dashboard/Error_List.php?User_ID='.$_REQUEST["User_ID"] . '">Errors and Warnings</a>';
+    }
+?>
+-->
 </form>
 
 </div>
