@@ -1,0 +1,28 @@
+#!/bin/bash
+# Set the content type to HTML
+
+# Get the value of the "name" parameter from the URL
+HOST=$(echo "$QUERY_STRING" | sed -n 's/^.*HOST=\([^&]*\).*$/\1/p' | sed "s/%20/ /g")
+PORT=$(echo "$QUERY_STRING" | sed -n 's/^.*PORT=\([^&]*\).*$/\1/p' | sed "s/%20/ /g")
+USER=$(echo "$QUERY_STRING" | sed -n 's/^.*USER=\([^&]*\).*$/\1/p' | sed "s/%20/ /g")
+PASS=$(echo "$QUERY_STRING" | sed -n 's/^.*PASS=\([^&]*\).*$/\1/p' | sed "s/%20/ /g")
+NAME=$(echo "$QUERY_STRING" | sed -n 's/^.*NAME=\([^&]*\).*$/\1/p' | sed "s/%20/ /g")
+
+#HOST=172.27.0.15
+#PORT=80
+#USER=admin
+#PASS=jcmsps850
+#NAME=GRK_Base
+
+printf -v DATE '%(%Y-%m-%d)T' -1
+
+#echo ./ErrorLogs.py $HOST $PORT $USER $PASS $NAME --View
+# set the content type to octet-stream to indicate a binary file
+echo "Content-Type: application/octet-stream\n"
+# set the content disposition to indicate the filename
+echo "Content-Disposition: attachment; filename=\"$NAME-$DATE.zip\"\n"
+echo ""
+./ErrorLogs.py $HOST $PORT $USER $PASS $NAME --Zip --Clone
+
+# output the contents of the file to standard output
+cat /tmp/$NAME.zip
