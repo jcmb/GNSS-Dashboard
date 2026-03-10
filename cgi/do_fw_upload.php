@@ -224,7 +224,11 @@ $db->exec("PRAGMA busy_timeout=5000");
 
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
-# echo "UPDATE Firmware SET    Titian_Version=\"$TitianVersion\",    AlloyFile=\"$AlloyName\",   BarracudaFile=\"$BCudaName\",   ClarkFile=\"$ClarkName\",   ChinstrapFile=\"$ChinstrapName\",   LancetFile=\"$LancetName\",   KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"";
+#  echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\",  TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
+
+echo "UPDATE Firmware SET    Titian_Version=\"$TitianVersion\",    AlloyFile=\"$AlloyName\",   BarracudaFile=\"$BCudaName\",   ClarkFile=\"$ClarkName\",   ChinstrapFile=\"$ChinstrapName\",   LancetFile=\"$LancetName\",   KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"";
+
+
 
 
 $db->exec("UPDATE Firmware SET
