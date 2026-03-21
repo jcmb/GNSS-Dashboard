@@ -495,148 +495,79 @@ Base Follow:
 </table>
 <p/>
 
-
-<!--
-
+<p/>
 <table>
-<tr><caption>NTRIP Caster</caption>
+<tr><caption>NTRIP Client</caption></tr>
+<?php for ($i=1; $i<=3; $i++) { ?>
 <tr><td>
-Enabled
+Client <?php echo $i; ?> Enabled:
 </td><td>
-<input name="NTRIP_Enabled" type="checkbox" <?php echo ($row["NTRIP_Enabled"]==1?"checked":"") ?>/>
-</td></tr>
-
-<tr><td>
-Mount 1
-</td><td>
-<input name="NTRIP1_Mount" type="text" value="<?php echo $row["NTRIP_1_Mount"]?$row["NTRIP_1_Mount"]:"CMRx" ?>"/>
+<input name="NTRIP_Client_<?php echo $i; ?>_Enabled" type="checkbox" <?php echo (isset($row["NTRIP_Client_${i}_Enabled"]) && $row["NTRIP_Client_${i}_Enabled"]==1?"checked":"") ?>/>
 </td></tr>
 <tr><td>
-Type 1
+Mountpoint <?php echo $i; ?>:
 </td><td>
-<select required name="NTRIP1">
-  <option value="OFF" <?php echo ($row["NTRIP_1_Type"]=="OFF")?"selected":"" ?>>OFF</option>
-  <option value="CMR" <?php echo ($row["NTRIP_1_Type"]=="CMR")?"selected":"" ?>>CMR</option>
-  <option value="CMRp" <?php echo ($row["NTRIP_1_Type"]=="CMRp")?"selected":"" ?>>CMR+</option>
-  <option value="CMRx" <?php echo ($row["NTRIP_1_Type"]=="CMRx")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>CMRx</option>
-  <option value="DGPS" <?php echo ($row["NTRIP_1_Type"]=="DGPS")?"selected":"" ?>>DGPS</option>
-</select>
+<input name="NTRIP_Client_<?php echo $i; ?>_Mount" type="text" value="<?php echo isset($row["NTRIP_Client_${i}_Mount"])?$row["NTRIP_Client_${i}_Mount"]:"" ?>"/>
 </td></tr>
-
-<tr><td>
-Mount 2
-</td><td>
-<input name="NTRIP2_Mount" type="text" value="<?php echo $row["NTRIP_2_Mount"]?$row["NTRIP_2_Mount"]:"CMR" ?>"/>
-</td></tr>
-<tr><td>
-Type 2
-</td><td>
-<select required name="NTRIP2">
-  <option value="OFF" <?php echo ($row["NTRIP_2_Type"]=="OFF")?"selected":"" ?>>OFF</option>
-  <option value="CMR" <?php echo ($row["NTRIP_2_Type"]=="CMR")?"selected":"" ?>>CMR</option>
-  <option value="CMRp" <?php echo ($row["NTRIP_2_Type"]=="CMRp")?"selected":"" ?> <?php echo ($Editing?"":"selected") ?>>CMR+</option>
-  <option value="CMRx" <?php echo ($row["NTRIP_2_Type"]=="CMRx")?"selected":"" ?>>CMRx</option>
-  <option value="DGPS" <?php echo ($row["NTRIP_2_Type"]=="DGPS")?"selected":"" ?>>DGPS</option>
-</select>
-</td></tr>
-
-<tr><td>
-Mount 3
-</td><td>
-<input name="NTRIP3_Mount" type="text" value="<?php echo $row["NTRIP_3_Mount"]?$row["NTRIP_3_Mount"]:"DGPS" ?>"/>
-</td></tr>
-<tr><td>
-Type 3
-</td><td>
-<select required name="NTRIP3">
-  <option value="OFF" <?php echo ($row["NTRIP_3_Type"]=="OFF")?"selected":"" ?>>OFF</option>
-  <option value="CMR" <?php echo ($row["NTRIP_3_Type"]=="CMR")?"selected":"" ?>>CMR</option>
-  <option value="CMRp" <?php echo ($row["NTRIP_3_Type"]=="CMRp")?"selected":"" ?>>CMR+</option>
-  <option value="CMRx" <?php echo ($row["NTRIP_3_Type"]=="CMRx")?"selected":"" ?>>CMRx</option>
-  <option value="DGPS" <?php echo ($row["NTRIP_3_Type"]=="DGPS")?"selected":"" ?> <?php echo ($Editing?"":"selected")?>>DGPS</option>
-</select>
-</td></tr>
+<?php } ?>
 </table>
 
 <p/>
-
 <table>
-<tr><caption>IBSS Client</caption>
+<tr><caption>NTRIP Server</caption></tr>
+<?php for ($i=1; $i<=3; $i++) { ?>
 <tr><td>
-Enabled
+Server <?php echo $i; ?> Enabled:
 </td><td>
-<input name="IBSS_Enabled" type="checkbox" <?php echo ($row["IBSS_Enabled"]==1?"checked":"") ?>/>
-</td></tr>
-
-<tr><td>
-Organisation
-</td><td>
-<input name="IBSS_Org" type="text" value="<?php echo $row["IBSS_Org"] ?>"/>
-</td></tr>
-
-<tr><td>
-Test User
-</td><td>
-<input name="IBSS_Test_User" type="text"  value="<?php echo $row["IBSS_Test_User"] ?>"/>
-</td></tr>
-
-<tr><td>
-Test Password
-</td><td>
-<input name="IBSS_Test_Password" type="type" value="<?php echo $row["IBSS_Test_Password"] ?>"/>
-</td></tr>
-
-<tr><td>
-Mount 1
-</td><td>
-<input name="IBSS1_Mount" type="text" value="<?php echo $row["IBSS1_Mount"] ?>"/>
+<input name="NTRIP_Server_<?php echo $i; ?>_Enabled" type="checkbox" <?php echo (isset($row["NTRIP_Server_${i}_Enabled"]) && $row["NTRIP_Server_${i}_Enabled"]==1?"checked":"") ?>/>
 </td></tr>
 <tr><td>
-Type 1
+Mountpoint <?php echo $i; ?>:
 </td><td>
-<select required name="IBSS_1_Type">
-  <option value="OFF" <?php echo ($row["IBSS_1_Type"]=="OFF")?"selected":"" ?>>OFF</option>
-  <option value="CMR" <?php echo ($row["IBSS_1_Type"]=="CMR")?"selected":"" ?>>CMR</option>
-  <option value="CMRp" <?php echo ($row["IBSS_1_Type"]=="CMRp")?"selected":"" ?>>CMR+</option>
-  <option value="CMRx" <?php echo ($row["IBSS_1_Type"]=="CMRx")?"selected":"" ?>>CMRx</option>
+<input name="NTRIP_Server_<?php echo $i; ?>_Mount" type="text" value="<?php echo isset($row["NTRIP_Server_${i}_Mount"])?$row["NTRIP_Server_${i}_Mount"]:"" ?>"/>
+</td></tr>
+<tr><td>
+Format <?php echo $i; ?>:
+</td><td>
+<select name="NTRIP_Server_<?php echo $i; ?>_Format">
+  <option value="CMR" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMR")?"selected":"" ?>>CMR</option>
+  <option value="CMRp" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMRp")?"selected":"" ?>>CMRp</option>
+  <option value="CMRx" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMRx")?"selected":"" ?>>CMRx</option>
+  <option value="RTCM" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM</option>
 </select>
 </td></tr>
--->
+<?php } ?>
+</table>
 
-
-<!--
+<p/>
+<table>
+<tr><caption>NTRIP Caster</caption></tr>
+<?php for ($i=1; $i<=3; $i++) { ?>
 <tr><td>
-Mount 2
+Caster <?php echo $i; ?> Enabled:
 </td><td>
-<input name="IBSS2_Mount" type="text"/>
+<input name="NTRIP_Caster_<?php echo $i; ?>_Enabled" type="checkbox" <?php echo (isset($row["NTRIP_Caster_${i}_Enabled"]) && $row["NTRIP_Caster_${i}_Enabled"]==1?"checked":"") ?>/>
 </td></tr>
 <tr><td>
-Type 2
+Mountpoint <?php echo $i; ?>:
 </td><td>
-<select required name="IBSS2">
-  <option value="OFF">OFF</option>
-  <option value="CMR">CMR</option>
-  <option value="CMRp" selected>CMR+</option>
-  <option value="CMRx">CMRx</option>
+<input name="NTRIP_Caster_<?php echo $i; ?>_Mount" type="text" value="<?php echo isset($row["NTRIP_Caster_${i}_Mount"])?$row["NTRIP_Caster_${i}_Mount"]:"" ?>"/>
+</td></tr>
+<tr><td>
+Format <?php echo $i; ?>:
+</td><td>
+<select name="NTRIP_Caster_<?php echo $i; ?>_Format">
+  <option value="CMR" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMR")?"selected":"" ?>>CMR</option>
+  <option value="CMRp" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMRp")?"selected":"" ?>>CMR+</option>
+  <option value="CMRx" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMRx")?"selected":"" ?>>CMRx</option>
+  <option value="RTCM" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM V3</option>
 </select>
 </td></tr>
+<?php } ?>
+</table>
+<p/>
 
-<tr><td>
-Mount 3
-</td><td>
-<input name="IBSS3_Mount" type="text"/>
-</td></tr>
-<tr><td>
-Type 3
-</td><td>
-<select required name="IBSS3">
-  <option value="OFF">OFF</option>
-  <option value="CMR">CMR</option>
-  <option value="CMRp" selected>CMR+</option>
-  <option value="CMRx">CMRx</option>
-</select>
-</td></tr>
--->
+
 </table>
 <p/>
 

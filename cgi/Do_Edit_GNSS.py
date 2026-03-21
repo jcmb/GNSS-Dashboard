@@ -300,335 +300,180 @@ if "RadioMode" not in form:
 else:
     Radio_Mode = form["RadioMode"].value
 
-NTRIP_Enabled = "NTRIP_Enabled" in form
-NTRIP_Enabled = False  # Overridden in original script
+# --- NTRIP Processing and Validation ---
 
-if "NTRIP1_Mount" not in form:
-    if NTRIP_Enabled:
-        print("NTRIP1 Mount point must be entered when NTRIP enabled")
+ntrip_data = {}
+
+# Process Client 1-3
+for i in range(1, 4):
+    enabled_key = "NTRIP_Client_{}_Enabled".format(i)
+    mount_key = "NTRIP_Client_{}_Mount".format(i)
+
+    ntrip_data[enabled_key] = enabled_key in form
+    ntrip_data[mount_key] = form.getvalue(mount_key, "").strip()
+
+    if ntrip_data[enabled_key] and not ntrip_data[mount_key]:
+        print("Mountpoint must be entered when NTRIP Client {} is enabled.<br>".format(i))
         sys.exit(100)
-    else:
-        NTRIP1_Mount = ""
-else:
-    NTRIP1_Mount = form["NTRIP1_Mount"].value
 
-NTRIP1 = "OFF"
+# Process Server 1-3
+for i in range(1, 4):
+    enabled_key = "NTRIP_Server_{}_Enabled".format(i)
+    mount_key = "NTRIP_Server_{}_Mount".format(i)
+    format_key = "NTRIP_Server_{}_Format".format(i)
 
-if "NTRIP2_Mount" not in form:
-    if NTRIP_Enabled:
-        print("NTRIP2 Mount point must be entered when NTRIP enavbled")
+    ntrip_data[enabled_key] = enabled_key in form
+    ntrip_data[mount_key] = form.getvalue(mount_key, "").strip()
+    ntrip_data[format_key] = form.getvalue(format_key, "CMR")
+
+    if ntrip_data[enabled_key] and not ntrip_data[mount_key]:
+        print("Mountpoint must be entered when NTRIP Server {} is enabled.<br>".format(i))
         sys.exit(100)
-    else:
-        NTRIP2_Mount = ""
-else:
-    NTRIP2_Mount = form["NTRIP2_Mount"].value
 
-NTRIP2 = "OFF"
+# Process Caster 1-3
+for i in range(1, 4):
+    enabled_key = "NTRIP_Caster_{}_Enabled".format(i)
+    mount_key = "NTRIP_Caster_{}_Mount".format(i)
+    format_key = "NTRIP_Caster_{}_Format".format(i)
 
-if "NTRIP3_Mount" not in form:
-    if NTRIP_Enabled:
-        print("NTRIP3 Mount point must be entered when NTRIP enavbled")
+    ntrip_data[enabled_key] = enabled_key in form
+    ntrip_data[mount_key] = form.getvalue(mount_key, "").strip()
+    ntrip_data[format_key] = form.getvalue(format_key, "CMR")
+
+    if ntrip_data[enabled_key] and not ntrip_data[mount_key]:
+        print("Mountpoint must be entered when NTRIP Caster {} is enabled.<br>".format(i))
         sys.exit(100)
-    else:
-        NTRIP3_Mount = ""
-else:
-    NTRIP3_Mount = form["NTRIP3_Mount"].value
-
-NTRIP3 = "OFF"
-
-IBSS_Enabled = "IBSS_Enabled" in form
-IBSS_Enabled = False  # Overridden in original script
-
-if "IBSS_Org" not in form:
-    if IBSS_Enabled:
-        print("IBSS_Org must be entered when IBSS enabled")
-        sys.exit(100)
-    else:
-        IBSS_Org = ""
-else:
-    IBSS_Org = form["IBSS_Org"].value
-
-if "IBSS_Test_User" not in form:
-    if IBSS_Enabled:
-        print("IBSS_Test_User must be entered when IBSS enabled")
-        sys.exit(100)
-    else:
-        IBSS_Test_User = ""
-else:
-    IBSS_Test_User = form["IBSS_Test_User"].value
-
-if "IBSS_Test_Password" not in form:
-    if IBSS_Enabled:
-        print("IBSS_Test_Password must be entered when IBSS enabled")
-        sys.exit(100)
-    else:
-        IBSS_Test_Password = ""
-else:
-    IBSS_Test_Password = form["IBSS_Test_Password"].value
-
-if "IBSS_1_Mount" not in form:
-    if IBSS_Enabled:
-        print("IBSS_1_Mount must be entered when IBSS enabled")
-        sys.exit(100)
-    else:
-        IBSS_1_Mount = ""
-else:
-    IBSS_1_Mount = form["IBSS_1_Mount"].value
-
-if "IBSS_1" not in form:
-    if IBSS_Enabled:
-        print("IBSS_1_Type must be entered when IBSS enabled")
-        sys.exit(100)
-    else:
-        IBSS_1_Type = ""
-else:
-    IBSS_1_Type = form["IBSS_1"].value
 
 NAGIOS = "NAGIOS" in form
 
 print("<br/>")
+# --- Single UPSERT Execution ---
 
-# SQL Update/Insert
+# Pass the ID if updating, otherwise pass None to trigger SQLite Autoincrement
+upsert_id = GNSS_ID if Update else None
+
+cursor.execute('''
+    INSERT INTO GNSS (
+        id, User_ID, Enabled, name, Firmware, Loc_Group, Address, Port, Reciever_Type,
+        Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
+        Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
+        FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
+        Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
+        Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, TIMED_ACTIVE,
+        TIMED_MIN_DELTA, TIMED_MAX_DELTA, RadioEnabled, RadioOnOffState, RadioMode,
+        BASEFOLLOW,
+        NTRIP_Client_1_Enabled, NTRIP_Client_1_Mount,
+        NTRIP_Client_2_Enabled, NTRIP_Client_2_Mount,
+        NTRIP_Client_3_Enabled, NTRIP_Client_3_Mount,
+        NTRIP_Server_1_Enabled, NTRIP_Server_1_Mount, NTRIP_Server_1_Format,
+        NTRIP_Server_2_Enabled, NTRIP_Server_2_Mount, NTRIP_Server_2_Format,
+        NTRIP_Server_3_Enabled, NTRIP_Server_3_Mount, NTRIP_Server_3_Format,
+        NTRIP_Caster_1_Enabled, NTRIP_Caster_1_Mount, NTRIP_Caster_1_Format,
+        NTRIP_Caster_2_Enabled, NTRIP_Caster_2_Mount, NTRIP_Caster_2_Format,
+        NTRIP_Caster_3_Enabled, NTRIP_Caster_3_Mount, NTRIP_Caster_3_Format
+    ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    )
+    ON CONFLICT(id) DO UPDATE SET
+        User_ID=excluded.User_ID,
+        Enabled=excluded.Enabled,
+        name=excluded.name,
+        Firmware=excluded.Firmware,
+        Loc_Group=excluded.Loc_Group,
+        Address=excluded.Address,
+        Port=excluded.Port,
+        Reciever_Type=excluded.Reciever_Type,
+        Password=excluded.Password,
+        Pos_Type=excluded.Pos_Type,
+        Static=excluded.Static,
+        LowLatency=excluded.LowLatency,
+        Elev_Mask=excluded.Elev_Mask,
+        PDOP=excluded.PDOP,
+        Logging_Enabled=excluded.Logging_Enabled,
+        Logging_Duration=excluded.Logging_Duration,
+        Logging_Measurement_Interval=excluded.Logging_Measurement_Interval,
+        Logging_Position_Interval=excluded.Logging_Position_Interval,
+        FTP_Enabled=excluded.FTP_Enabled,
+        FTP_To=excluded.FTP_To,
+        Antenna=excluded.Antenna,
+        Measurement_Method=excluded.Measurement_Method,
+        Ant_Height=excluded.Ant_Height,
+        Ref_Name=excluded.Ref_Name,
+        Ref_Code=excluded.Ref_Code,
+        Ref_Lat=excluded.Ref_Lat,
+        Ref_Long=excluded.Ref_Long,
+        Ref_Height=excluded.Ref_Height,
+        Email_Enabled=excluded.Email_Enabled,
+        Email_To=excluded.Email_To,
+        Auth=excluded.Auth,
+        Frequencies=excluded.Frequencies,
+        GPS=excluded.GPS,
+        GLN=excluded.GLN,
+        GAL=excluded.GAL,
+        BDS=excluded.BDS,
+        QZSS=excluded.QZSS,
+        SBAS=excluded.SBAS,
+        NAGIOS=excluded.NAGIOS,
+        TIMED_ACTIVE=excluded.TIMED_ACTIVE,
+        TIMED_MIN_DELTA=excluded.TIMED_MIN_DELTA,
+        TIMED_MAX_DELTA=excluded.TIMED_MAX_DELTA,
+        RadioEnabled=excluded.RadioEnabled,
+        RadioOnOffState=excluded.RadioOnOffState,
+        RadioMode=excluded.RadioMode,
+        BASEFOLLOW=excluded.BASEFOLLOW,
+        NTRIP_Client_1_Enabled=excluded.NTRIP_Client_1_Enabled,
+        NTRIP_Client_1_Mount=excluded.NTRIP_Client_1_Mount,
+        NTRIP_Client_2_Enabled=excluded.NTRIP_Client_2_Enabled,
+        NTRIP_Client_2_Mount=excluded.NTRIP_Client_2_Mount,
+        NTRIP_Client_3_Enabled=excluded.NTRIP_Client_3_Enabled,
+        NTRIP_Client_3_Mount=excluded.NTRIP_Client_3_Mount,
+        NTRIP_Server_1_Enabled=excluded.NTRIP_Server_1_Enabled,
+        NTRIP_Server_1_Mount=excluded.NTRIP_Server_1_Mount,
+        NTRIP_Server_1_Format=excluded.NTRIP_Server_1_Format,
+        NTRIP_Server_2_Enabled=excluded.NTRIP_Server_2_Enabled,
+        NTRIP_Server_2_Mount=excluded.NTRIP_Server_2_Mount,
+        NTRIP_Server_2_Format=excluded.NTRIP_Server_2_Format,
+        NTRIP_Server_3_Enabled=excluded.NTRIP_Server_3_Enabled,
+        NTRIP_Server_3_Mount=excluded.NTRIP_Server_3_Mount,
+        NTRIP_Server_3_Format=excluded.NTRIP_Server_3_Format,
+        NTRIP_Caster_1_Enabled=excluded.NTRIP_Caster_1_Enabled,
+        NTRIP_Caster_1_Mount=excluded.NTRIP_Caster_1_Mount,
+        NTRIP_Caster_1_Format=excluded.NTRIP_Caster_1_Format,
+        NTRIP_Caster_2_Enabled=excluded.NTRIP_Caster_2_Enabled,
+        NTRIP_Caster_2_Mount=excluded.NTRIP_Caster_2_Mount,
+        NTRIP_Caster_2_Format=excluded.NTRIP_Caster_2_Format,
+        NTRIP_Caster_3_Enabled=excluded.NTRIP_Caster_3_Enabled,
+        NTRIP_Caster_3_Mount=excluded.NTRIP_Caster_3_Mount,
+        NTRIP_Caster_3_Format=excluded.NTRIP_Caster_3_Format;
+''', (
+    upsert_id,
+    User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Receiver_Type,
+    Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
+    Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
+    FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
+    Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
+    Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, Timed_Enabled,
+    Timed_Minimum, Timed_Maximum, Radio_Enabled, Radio_OnOffState, Radio_Mode,
+    BaseFollow,
+    ntrip_data["NTRIP_Client_1_Enabled"], ntrip_data["NTRIP_Client_1_Mount"],
+    ntrip_data["NTRIP_Client_2_Enabled"], ntrip_data["NTRIP_Client_2_Mount"],
+    ntrip_data["NTRIP_Client_3_Enabled"], ntrip_data["NTRIP_Client_3_Mount"],
+    ntrip_data["NTRIP_Server_1_Enabled"], ntrip_data["NTRIP_Server_1_Mount"], ntrip_data["NTRIP_Server_1_Format"],
+    ntrip_data["NTRIP_Server_2_Enabled"], ntrip_data["NTRIP_Server_2_Mount"], ntrip_data["NTRIP_Server_2_Format"],
+    ntrip_data["NTRIP_Server_3_Enabled"], ntrip_data["NTRIP_Server_3_Mount"], ntrip_data["NTRIP_Server_3_Format"],
+    ntrip_data["NTRIP_Caster_1_Enabled"], ntrip_data["NTRIP_Caster_1_Mount"], ntrip_data["NTRIP_Caster_1_Format"],
+    ntrip_data["NTRIP_Caster_2_Enabled"], ntrip_data["NTRIP_Caster_2_Mount"], ntrip_data["NTRIP_Caster_2_Format"],
+    ntrip_data["NTRIP_Caster_3_Enabled"], ntrip_data["NTRIP_Caster_3_Mount"], ntrip_data["NTRIP_Caster_3_Format"]
+))
+
+conn.commit()
+
+# Provide user feedback and capture ID if it was newly created
 if Update:
-    cursor.execute('''UPDATE GNSS SET
-      User_ID=?,
-      Enabled=?,
-      name=?,
-      Firmware=?,
-      Loc_Group=?,
-      Address=?,
-      Port=?,
-      Reciever_Type=?,
-      Password=?,
-      Pos_Type=?,
-      Static=?,
-      LowLatency=?,
-      Elev_Mask=?,
-      PDOP=?,
-      Logging_Enabled=?,
-      Logging_Duration=?,
-      Logging_Measurement_Interval=?,
-      Logging_Position_Interval=?,
-      FTP_Enabled=?,
-      FTP_To=?,
-      Antenna=?,
-      Measurement_Method=?,
-      Ant_Height=?,
-      Ref_Name=?,
-      Ref_Code=?,
-      Ref_Lat=?,
-      Ref_Long=?,
-      Ref_Height=?,
-      Email_Enabled=?,
-      Email_To=?,
-      Auth=?,
-      NTRIP_Enabled=?,
-      NTRIP_1_Mount=?,
-      NTRIP_1_Type=?,
-      NTRIP_2_Mount=?,
-      NTRIP_2_Type=?,
-      NTRIP_3_Mount=?,
-      NTRIP_3_Type=?,
-      IBSS_Enabled=?,
-      IBSS_Org=?,
-      IBSS_Test_User=?,
-      IBSS_Test_Password=?,
-      IBSS_1_Mount=?,
-      IBSS_1_Type=?,
-      Frequencies=?,
-      GPS=?,
-      GLN=?,
-      GAL=?,
-      BDS=?,
-      QZSS=?,
-      SBAS=?,
-      NAGIOS=?,
-      TIMED_ACTIVE=?,
-      TIMED_MIN_DELTA=?,
-      TIMED_MAX_DELTA=?,
-      RadioEnabled=?,
-      RadioOnOffState=?,
-      RadioMode=?,
-      BASEFOLLOW=?
-      WHERE id=?''', (
-        User_ID,
-        Enabled,
-        Name,
-        Firmware,
-        Loc_Group,
-        Address,
-        Port,
-        Receiver_Type,
-        Password,
-        Pos_Type,
-        Static,
-        LowLatency,
-        Elev_Mask,
-        PDOP,
-        Logging_Enabled,
-        Logging_Duration,
-        Logging_Measurement_Interval,
-        Logging_Position_Interval,
-        FTP_Enabled,
-        FTP_To,
-        Antenna,
-        Measurement_Method,
-        Ant_Height,
-        Ref_Name,
-        Ref_Code,
-        Ref_Lat,
-        Ref_Long,
-        Ref_Height,
-        Email_Enabled,
-        Email_To,
-        Auth,
-        NTRIP_Enabled,
-        NTRIP1_Mount, NTRIP1,
-        NTRIP2_Mount, NTRIP2,
-        NTRIP3_Mount, NTRIP3,
-        IBSS_Enabled,
-        IBSS_Org,
-        IBSS_Test_User,
-        IBSS_Test_Password,
-        IBSS_1_Mount, IBSS_1_Type,
-        Frequencies,
-        GPS,
-        GLN,
-        GAL,
-        BDS,
-        QZSS,
-        SBAS,
-        NAGIOS,
-        Timed_Enabled,
-        Timed_Minimum,
-        Timed_Maximum,
-        Radio_Enabled,
-        Radio_OnOffState,
-        Radio_Mode,
-        BaseFollow,
-        GNSS_ID))
     print("Record Updated.<br>")
-    conn.commit()
 else:
-    cursor.execute('''INSERT INTO GNSS (
-      User_ID,
-      Enabled,
-      name,
-      Firmware,
-      Loc_Group,
-      Address,
-      Port,
-      Reciever_Type,
-      Password,
-      Pos_Type,
-      Static,
-      LowLatency,
-      Elev_Mask,
-      PDOP,
-      Logging_Enabled,
-      Logging_Duration,
-      Logging_Measurement_Interval,
-      Logging_Position_Interval,
-      FTP_Enabled,
-      FTP_To,
-      Antenna,
-      Measurement_Method,
-      Ant_Height,
-      Ref_Name,
-      Ref_Code,
-      Ref_Lat,
-      Ref_Long,
-      Ref_Height,
-      Email_Enabled,
-      Email_To,
-      Auth,
-      NTRIP_Enabled,
-      NTRIP_1_Mount,       NTRIP_1_Type,
-      NTRIP_2_Mount,       NTRIP_2_Type,
-      NTRIP_3_Mount,       NTRIP_3_Type,
-      IBSS_Enabled,
-      IBSS_Org,
-      IBSS_Test_User,      IBSS_Test_Password,
-      IBSS_1_Mount,        IBSS_1_Type,
-      Frequencies,
-      GPS,
-      GLN,
-      GAL,
-      BDS,
-      QZSS,
-      SBAS,
-      NAGIOS,
-      TIMED_ACTIVE,
-      TIMED_MIN_DELTA,
-      TIMED_MAX_DELTA,
-      RadioEnabled,
-      RadioOnOffState,
-      RadioMode,
-      BASEFOLLOW
-      )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
-        User_ID,
-        Enabled,
-        Name,
-        Firmware,
-        Loc_Group,
-        Address,
-        Port,
-        Receiver_Type,
-        Password,
-        Pos_Type,
-        Static,
-        LowLatency,
-        Elev_Mask,
-        PDOP,
-        Logging_Enabled,
-        Logging_Duration,
-        Logging_Measurement_Interval,
-        Logging_Position_Interval,
-        FTP_Enabled,
-        FTP_To,
-        Antenna,
-        Measurement_Method,
-        Ant_Height,
-        Ref_Name,
-        Ref_Code,
-        Ref_Lat,
-        Ref_Long,
-        Ref_Height,
-        Email_Enabled,
-        Email_To,
-        Auth,
-        NTRIP_Enabled,
-        NTRIP1_Mount,
-        NTRIP1,
-        NTRIP2_Mount,
-        NTRIP2,
-        NTRIP3_Mount,
-        NTRIP3,
-        IBSS_Enabled,
-        IBSS_Org,
-        IBSS_Test_User,
-        IBSS_Test_Password,
-        IBSS_1_Mount,
-        IBSS_1_Type,
-        Frequencies,
-        GPS,
-        GLN,
-        GAL,
-        BDS,
-        QZSS,
-        SBAS,
-        NAGIOS,
-        Timed_Enabled,
-        Timed_Minimum,
-        Timed_Maximum,
-        Radio_Enabled,
-        Radio_OnOffState,
-        Radio_Mode,
-        BaseFollow
-    ))
     print("Record added<br>")
-    conn.commit()
     GNSS_ID = str(cursor.lastrowid)
 
 Nagios_FileName = "User/GNSS_" + str(GNSS_ID)
@@ -677,6 +522,8 @@ if Enabled:
         Nagios_File.write("       service_description Overview\n")
         Nagios_File.write("       check_command  sps_check_Status!" + GNSS_ID + "\n")
         Nagios_File.write("    }\n")
+
+        NTRIP_Enabled=False
 
         if NTRIP_Enabled:
             Nagios_File.write("# NTRIP Enabled\n")
