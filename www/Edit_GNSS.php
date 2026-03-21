@@ -497,6 +497,23 @@ Base Follow:
 
 <p/>
 <table>
+<tr><caption>DynDNS Check</caption></tr>
+<tr><td>
+Enabled:
+</td><td>
+<input name="DynDNS_Enabled" type="checkbox" <?php echo (isset($row["DynDNS_Enabled"]) && $row["DynDNS_Enabled"]==1?"checked":"") ?>/>
+</td></tr>
+
+<tr><td>
+Hostname:
+</td><td>
+<input name="DynDNS_Host" type="text" size="40" value="<?php echo (isset($row["DynDNS_Host"])?$row["DynDNS_Host"]:"") ?>"/>
+</td></tr>
+</table>
+
+
+<p/>
+<table>
 <tr><caption>NTRIP Client</caption></tr>
 <?php for ($i=1; $i<=3; $i++) { ?>
 <tr><td>

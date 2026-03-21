@@ -15,14 +15,14 @@ def trigger_nagios_restart(cmd_file="/usr/local/nagios/var/rw/nagios.cmd"):
     now = int(time.time())
     # Format: [<timestamp>] RESTART_PROGRAM
     command = f"[{now}] RESTART_PROGRAM\n"
-    
+
     try:
         with open(cmd_file, 'w') as f:
             f.write(command)
         print("Restart command sent to Nagios pipe.")
     except IOError as e:
         print(f"Error writing to Nagios pipe: {e}")
-        
+
 # Setup Logging
 logger = logging.getLogger('Do_Edit_GNSS')
 logger.setLevel(logging.INFO)
@@ -359,6 +359,18 @@ for i in range(1, 4):
 
 NAGIOS = "NAGIOS" in form
 
+# --- DynDNS Processing ---
+DynDNS_Enabled = "DynDNS_Enabled" in form
+
+if "DynDNS_Host" not in form:
+    if DynDNS_Enabled:
+        print("DynDNS Hostname must be entered when DynDNS check is enabled.<br>")
+        sys.exit(100)
+    else:
+        DynDNS_Host = ""
+else:
+    DynDNS_Host = form["DynDNS_Host"].value.strip()
+
 print("<br/>")
 # --- Single UPSERT Execution ---
 
@@ -383,10 +395,11 @@ cursor.execute('''
         NTRIP_Server_3_Enabled, NTRIP_Server_3_Mount, NTRIP_Server_3_Format,
         NTRIP_Caster_1_Enabled, NTRIP_Caster_1_Mount, NTRIP_Caster_1_Format,
         NTRIP_Caster_2_Enabled, NTRIP_Caster_2_Mount, NTRIP_Caster_2_Format,
-        NTRIP_Caster_3_Enabled, NTRIP_Caster_3_Mount, NTRIP_Caster_3_Format
+        NTRIP_Caster_3_Enabled, NTRIP_Caster_3_Mount, NTRIP_Caster_3_Format,
+        DynDNS_Enabled, DynDNS_Host
     ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
     ON CONFLICT(id) DO UPDATE SET
         User_ID=excluded.User_ID,
@@ -458,7 +471,9 @@ cursor.execute('''
         NTRIP_Caster_2_Format=excluded.NTRIP_Caster_2_Format,
         NTRIP_Caster_3_Enabled=excluded.NTRIP_Caster_3_Enabled,
         NTRIP_Caster_3_Mount=excluded.NTRIP_Caster_3_Mount,
-        NTRIP_Caster_3_Format=excluded.NTRIP_Caster_3_Format;
+        NTRIP_Caster_3_Format=excluded.NTRIP_Caster_3_Format,
+        DynDNS_Enabled=excluded.DynDNS_Enabled,
+        DynDNS_Host=excluded.DynDNS_Host;
 ''', (
     upsert_id,
     User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Receiver_Type,
@@ -477,9 +492,9 @@ cursor.execute('''
     ntrip_data["NTRIP_Server_3_Enabled"], ntrip_data["NTRIP_Server_3_Mount"], ntrip_data["NTRIP_Server_3_Format"],
     ntrip_data["NTRIP_Caster_1_Enabled"], ntrip_data["NTRIP_Caster_1_Mount"], ntrip_data["NTRIP_Caster_1_Format"],
     ntrip_data["NTRIP_Caster_2_Enabled"], ntrip_data["NTRIP_Caster_2_Mount"], ntrip_data["NTRIP_Caster_2_Format"],
-    ntrip_data["NTRIP_Caster_3_Enabled"], ntrip_data["NTRIP_Caster_3_Mount"], ntrip_data["NTRIP_Caster_3_Format"]
+    ntrip_data["NTRIP_Caster_3_Enabled"], ntrip_data["NTRIP_Caster_3_Mount"], ntrip_data["NTRIP_Caster_3_Format"],
+    DynDNS_Enabled, DynDNS_Host
 ))
-
 conn.commit()
 
 # Provide user feedback and capture ID if it was newly created

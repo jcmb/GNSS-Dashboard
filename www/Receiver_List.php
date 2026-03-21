@@ -73,8 +73,8 @@ else {
           "\n<th>Logging</th>" .
           "\n<th>Email</th>" .
           "\n<th>Auth</th>" .
+          "\n<th>DynDNS</th>" .
           "\n<th>NTRIP</th>" .
-          "\n<th>IBSS</th>" .
           "\n<th>GLN</th>" .
           "\n<th>GAL</th>" .
           "\n<th>BDS</th>" .
@@ -197,8 +197,17 @@ else {
            }
 
        echo "\n<td> ".$row["Auth"]." </td>";
+       echo "\n<td> ".(!empty($row["DynDNS_Enabled"]) ? $row["DynDNS_Host"] : "Disabled")." </td>";
+
+       // Build accurate NTRIP Status string
+       $ntrip_status = array();
+       if (!empty($row['NTRIP_Client_1_Enabled']) || !empty($row['NTRIP_Client_2_Enabled']) || !empty($row['NTRIP_Client_3_Enabled'])) $ntrip_status[] = "Client";
+       if (!empty($row['NTRIP_Server_1_Enabled']) || !empty($row['NTRIP_Server_2_Enabled']) || !empty($row['NTRIP_Server_3_Enabled'])) $ntrip_status[] = "Server";
+       if (!empty($row['NTRIP_Caster_1_Enabled']) || !empty($row['NTRIP_Caster_2_Enabled']) || !empty($row['NTRIP_Caster_3_Enabled'])) $ntrip_status[] = "Caster";
+
+       $ntrip_str = empty($ntrip_status) ? "Disabled" : implode("/", $ntrip_status);
+       echo "\n<td> ".$ntrip_str." </td>";
        echo "\n<td> ".($row["NTRIP_Enabled"] ? 'True' : 'False') ." </td>";
-       echo "\n<td> ".($row["IBSS_Enabled"] ? 'True' : 'False') ." </td>";
        echo "\n<td> ".($row["GLN"] ? 'True' : 'False') ." </td>";
        echo "\n<td> ".($row["GAL"] ? 'True' : 'False')." </td>";
        echo "\n<td> ".($row["BDS"] ? 'True' : 'False')." </td>";

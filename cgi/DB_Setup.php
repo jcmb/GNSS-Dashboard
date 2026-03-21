@@ -65,8 +65,9 @@
       TIMED_MAX_DELTA NUMERIC,
       RadioEnabled BOOLEAN,
       RadioOnOffState BOOLEAN,
-      RadioMode TEXT
-
+      RadioMode TEXT,
+      DynDNS_Enabled BOOLEAN,
+      DynDNS_Host TEXT
       )');
 
 $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
@@ -155,7 +156,9 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       Radio TEXT,
       Radio_Valid BOOLEAN,
       BASEFOLLOW NUMERIC,
-      BaseFollowValid BOOLEAN
+      BaseFollowValid BOOLEAN,
+      DynDNS_Valid BOOLEAN,
+      DynDNS_Value STRING
       )');
 
 

@@ -136,6 +136,35 @@ class DB_Class:
         self.Email_To = row["Email_To"]
         self.Auth = row["Auth"]
 
+        # --- BEGIN NTRIP ADDITIONS ---
+        self.NTRIP_Client_1_Enabled = row["NTRIP_Client_1_Enabled"] == 1
+        self.NTRIP_Client_1_Mount = row["NTRIP_Client_1_Mount"]
+        self.NTRIP_Client_2_Enabled = row["NTRIP_Client_2_Enabled"] == 1
+        self.NTRIP_Client_2_Mount = row["NTRIP_Client_2_Mount"]
+        self.NTRIP_Client_3_Enabled = row["NTRIP_Client_3_Enabled"] == 1
+        self.NTRIP_Client_3_Mount = row["NTRIP_Client_3_Mount"]
+
+        self.NTRIP_Server_1_Enabled = row["NTRIP_Server_1_Enabled"] == 1
+        self.NTRIP_Server_1_Mount = row["NTRIP_Server_1_Mount"]
+        self.NTRIP_Server_1_Format = row["NTRIP_Server_1_Format"]
+        self.NTRIP_Server_2_Enabled = row["NTRIP_Server_2_Enabled"] == 1
+        self.NTRIP_Server_2_Mount = row["NTRIP_Server_2_Mount"]
+        self.NTRIP_Server_2_Format = row["NTRIP_Server_2_Format"]
+        self.NTRIP_Server_3_Enabled = row["NTRIP_Server_3_Enabled"] == 1
+        self.NTRIP_Server_3_Mount = row["NTRIP_Server_3_Mount"]
+        self.NTRIP_Server_3_Format = row["NTRIP_Server_3_Format"]
+
+        self.NTRIP_Caster_1_Enabled = row["NTRIP_Caster_1_Enabled"] == 1
+        self.NTRIP_Caster_1_Mount = row["NTRIP_Caster_1_Mount"]
+        self.NTRIP_Caster_1_Format = row["NTRIP_Caster_1_Format"]
+        self.NTRIP_Caster_2_Enabled = row["NTRIP_Caster_2_Enabled"] == 1
+        self.NTRIP_Caster_2_Mount = row["NTRIP_Caster_2_Mount"]
+        self.NTRIP_Caster_2_Format = row["NTRIP_Caster_2_Format"]
+        self.NTRIP_Caster_3_Enabled = row["NTRIP_Caster_3_Enabled"] == 1
+        self.NTRIP_Caster_3_Mount = row["NTRIP_Caster_3_Mount"]
+        self.NTRIP_Caster_3_Format = row["NTRIP_Caster_3_Format"]
+        # --- END NTRIP ADDITIONS ---
+
         self.Frequencies = row["Frequencies"]
         self.GPS = row["GPS"]
         self.GLN = row["GLN"] == 1
@@ -866,6 +895,70 @@ def check_FTP(GNSS_ID, DB, HTTP):
         DB.STATUS.execute("UPDATE STATUS SET FTP_Enabled=?, FTP_Valid=? where id=?", (FTP_Enabled, FTP_Valid, GNSS_ID))
         DB.conn.commit()
     return(FTP_Valid, Message)
+
+
+
+def check_NTRIP(GNSS_ID, DB, HTTP):
+    NTRIP_Valid = True
+    Message = ""
+
+    # Placeholder URL - adjust to the actual path your device uses for NTRIP XML data
+    (reply, result) = HTTP.get("/xml/dynamic/ntrip.xml")
+
+    if result != 200 or not reply:
+        NTRIP_Valid = False
+        Message = "Could not get NTRIP status from receiver\n"
+        return (NTRIP_Valid, Message)
+
+    try:
+        root = ET.fromstring(reply)
+
+        # --- XML PARSING PLACEHOLDER ---
+        # Retrieve actual values from the XML root here. Example:
+        # actual_client_1_enabled = root.find('.//client[1]/enabled').text == "1"
+        # actual_client_1_mount = root.find('.//client[1]/mount').text
+        #
+        # Compare actuals with expected (e.g., DB.NTRIP_Client_1_Enabled).
+        # If there are mismatches, set NTRIP_Valid = False and append details to Message.
+        #
+        # if not (actual_client_1_enabled == DB.NTRIP_Client_1_Enabled):
+        #     NTRIP_Valid = False
+        #     Message += f"Client 1 Enabled is {actual_client_1_enabled}, expected {DB.NTRIP_Client_1_Enabled}\n"
+        # -------------------------------
+
+        # Update the STATUS table with the expected DB configuration (or actual parsed state if preferred)
+        DB.STATUS.execute("""
+            UPDATE STATUS SET
+                NTRIP_Client_1_Enabled=?, NTRIP_Client_1_Mount=?,
+                NTRIP_Client_2_Enabled=?, NTRIP_Client_2_Mount=?,
+                NTRIP_Client_3_Enabled=?, NTRIP_Client_3_Mount=?,
+                NTRIP_Server_1_Enabled=?, NTRIP_Server_1_Mount=?, NTRIP_Server_1_Format=?,
+                NTRIP_Server_2_Enabled=?, NTRIP_Server_2_Mount=?, NTRIP_Server_2_Format=?,
+                NTRIP_Server_3_Enabled=?, NTRIP_Server_3_Mount=?, NTRIP_Server_3_Format=?,
+                NTRIP_Caster_1_Enabled=?, NTRIP_Caster_1_Mount=?, NTRIP_Caster_1_Format=?,
+                NTRIP_Caster_2_Enabled=?, NTRIP_Caster_2_Mount=?, NTRIP_Caster_2_Format=?,
+                NTRIP_Caster_3_Enabled=?, NTRIP_Caster_3_Mount=?, NTRIP_Caster_3_Format=?
+            WHERE id=?
+        """, (
+            DB.NTRIP_Client_1_Enabled, DB.NTRIP_Client_1_Mount,
+            DB.NTRIP_Client_2_Enabled, DB.NTRIP_Client_2_Mount,
+            DB.NTRIP_Client_3_Enabled, DB.NTRIP_Client_3_Mount,
+            DB.NTRIP_Server_1_Enabled, DB.NTRIP_Server_1_Mount, DB.NTRIP_Server_1_Format,
+            DB.NTRIP_Server_2_Enabled, DB.NTRIP_Server_2_Mount, DB.NTRIP_Server_2_Format,
+            DB.NTRIP_Server_3_Enabled, DB.NTRIP_Server_3_Mount, DB.NTRIP_Server_3_Format,
+            DB.NTRIP_Caster_1_Enabled, DB.NTRIP_Caster_1_Mount, DB.NTRIP_Caster_1_Format,
+            DB.NTRIP_Caster_2_Enabled, DB.NTRIP_Caster_2_Mount, DB.NTRIP_Caster_2_Format,
+            DB.NTRIP_Caster_3_Enabled, DB.NTRIP_Caster_3_Mount, DB.NTRIP_Caster_3_Format,
+            GNSS_ID
+        ))
+        DB.conn.commit()
+
+    except ET.ParseError:
+        NTRIP_Valid = False
+        Message += "NTRIP XML reply was invalid\n"
+
+    return (NTRIP_Valid, Message)
+
 
 def check_Power(GNSS_ID, DB, HTTP):
 
@@ -1977,6 +2070,16 @@ if not Success:
     Result_String += Message
 
 OK = OK and Success
+
+
+# --- BEGIN NTRIP CHECK EXECUTION ---
+(Success, Message) = check_NTRIP(args.GNSS_ID, DB, HTTP)
+if not Success:
+    Result_String += Message
+
+OK = OK and Success
+logger.debug(DB.Address + ":" + str(DB.Port) + " After NTRIP: " + str(Success) + ":::" + str(OK) + " :: " + Message)
+# --- END NTRIP CHECK EXECUTION ---
 
 (Success, Message) = check_Power(args.GNSS_ID, DB, HTTP)
 if not Success:
