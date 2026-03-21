@@ -9,7 +9,20 @@ import subprocess
 import logging
 import logging.handlers
 from pprint import pprint
+import time
 
+def trigger_nagios_restart(cmd_file="/usr/local/nagios/var/rw/nagios.cmd"):
+    now = int(time.time())
+    # Format: [<timestamp>] RESTART_PROGRAM
+    command = f"[{now}] RESTART_PROGRAM\n"
+    
+    try:
+        with open(cmd_file, 'w') as f:
+            f.write(command)
+        print("Restart command sent to Nagios pipe.")
+    except IOError as e:
+        print(f"Error writing to Nagios pipe: {e}")
+        
 # Setup Logging
 logger = logging.getLogger('Do_Edit_GNSS')
 logger.setLevel(logging.INFO)
@@ -504,6 +517,7 @@ if Enabled:
 
         Nagios_File.write("\n")
         Nagios_File.write("define host {\n")
+        Nagios_File.write("   use  generic-host" + "\n")
         Nagios_File.write("   host_name " + Name + "\n")
         Nagios_File.write("   alias " + Name + "\n")
         Nagios_File.write("   address " + Address + "\n")
@@ -623,6 +637,7 @@ print("<a href=\"/Dashboard/Receiver_List.php?User_ID=" + str(User_ID) + "\">Rec
 
 print("<br/><pre>")
 logger.info("/usr/lib/cgi-bin/Dashboard/Status_Update.py " + str(GNSS_ID))
+trigger_nagios_restart()
 
 subprocess.Popen(["/usr/lib/cgi-bin/Dashboard/Status_Update.py", str(GNSS_ID)], stdin=None, stdout=None, stderr=None, close_fds=True)
 logger.info("Finished")
