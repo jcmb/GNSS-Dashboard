@@ -135,19 +135,6 @@ class DB_Class:
         self.Email_Enabled = row["Email_Enabled"] == 1
         self.Email_To = row["Email_To"]
         self.Auth = row["Auth"]
-        self.NTRIP_Enabled = row["NTRIP_Enabled"] == 1
-        self.NTRIP_1_Mount = row["NTRIP_1_Mount"]
-        self.NTRIP_1_Type = row["NTRIP_1_Type"]
-        self.NTRIP_2_Mount = row["NTRIP_2_Mount"]
-        self.NTRIP_2_Type = row["NTRIP_2_Type"]
-        self.NTRIP_3_Mount = row["NTRIP_3_Mount"]
-        self.NTRIP_3_Type = row["NTRIP_3_Type"]
-        self.IBSS_Enabled = row["IBSS_Enabled"] == 1
-        self.IBSS_Org = row["IBSS_Org"]
-        self.IBSS_Test_User = row["IBSS_Test_User"]
-        self.IBSS_Test_Password = row["IBSS_Test_Password"]
-        self.IBSS_1_Mount = row["IBSS_1_Mount"]
-        self.IBSS_1_Type = row["IBSS_1_Type"]
 
         self.Frequencies = row["Frequencies"]
         self.GPS = row["GPS"]
@@ -294,7 +281,7 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
 
     firmwareValid = True
     Message = ""
-    firmwareType = 0
+    firmwareType = 1 # Everything is Titian now
 
     if (DB.Reciever_Type == "162"):
         firmwareType = 1
@@ -407,8 +394,13 @@ def check_motion_type(GNSS_ID, DB, HTTP):
 
     # print(reply)
     if reply:
-        m = re.search(r'RtkControls mode=(.*) motion=(.*)', reply)
+        m = re.search(r'RtkControls mode=(.*) motion=(.*) ionoguard=(.*)', reply)
+        if not m:
+            m = re.search(r'RtkControls mode=(.*) motion=(.*)', reply)
+            ionoguard=None
+
         if m:
+
             Message = ""
             LowLatency = m.group(1) == "lowLatency"
             Motion = m.group(2) == "static"
@@ -2006,28 +1998,26 @@ if not Success:
 
 OK = OK and Success
 
-(Success, Message) = check_testMode(args.GNSS_ID, DB, HTTP)
+#(Success, Message) = check_testMode(args.GNSS_ID, DB, HTTP)
+#
+#if not Success:
+#    Result_String += Message
+#logger.debug(DB.Address + ":" + str(DB.Port) + " After TESTMODE: " + str(Success) + ":::" + str(OK) + " :: " + Message)
 
-if not Success:
-    Result_String += Message
-
-logger.debug(DB.Address + ":" + str(DB.Port) + " After TESTMODE: " + str(Success) + ":::" + str(OK) + " :: " + Message)
-
-OK = OK and Success
+#OK = OK and Success
 # pprint(DB.Firmware)
 
-if DB.Firmware != "EOL":
-    (Success, Message) = check_errors(args.GNSS_ID, DB, HTTP)
-
-    if not Success:
-        Result_String += Message
-
-    logger.debug(DB.Address + ":" + str(DB.Port) + " After Check Errors: " + str(Success) + ":::" + str(OK) + " :: " + Message)
-
-    OK = OK and Success
-
-
-(Success, Message) = check_timed(args.GNSS_ID, DB, HTTP)
+#if DB.Firmware != "EOL":
+#    (Success, Message) = check_errors(args.GNSS_ID, DB, HTTP)
+#
+#    if not Success:
+#        Result_String += Message
+#
+#    logger.debug(DB.Address + ":" + str(DB.Port) + " After Check Errors: " + str(Success) + ":::" + str(OK) + " :: " + Message)
+#
+#    OK = OK and Success
+#
+# (Success, Message) = check_timed(args.GNSS_ID, DB, HTTP)
 
 if not Success:
     Result_String += Message
