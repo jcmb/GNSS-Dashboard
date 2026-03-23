@@ -376,8 +376,34 @@ print("<br/>")
 
 # Pass the ID if updating, otherwise pass None to trigger SQLite Autoincrement
 upsert_id = GNSS_ID if Update else None
+# 1. Store all your data in a tuple first
+data_values = (
+    upsert_id,
+    User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Receiver_Type,
+    Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
+    Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
+    FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
+    Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
+    Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, Timed_Enabled,
+    Timed_Minimum, Timed_Maximum, Radio_Enabled, Radio_OnOffState, Radio_Mode,
+    BaseFollow,
+    ntrip_data["NTRIP_Client_1_Enabled"], ntrip_data["NTRIP_Client_1_Mount"],
+    ntrip_data["NTRIP_Client_2_Enabled"], ntrip_data["NTRIP_Client_2_Mount"],
+    ntrip_data["NTRIP_Client_3_Enabled"], ntrip_data["NTRIP_Client_3_Mount"],
+    ntrip_data["NTRIP_Server_1_Enabled"], ntrip_data["NTRIP_Server_1_Mount"], ntrip_data["NTRIP_Server_1_Format"],
+    ntrip_data["NTRIP_Server_2_Enabled"], ntrip_data["NTRIP_Server_2_Mount"], ntrip_data["NTRIP_Server_2_Format"],
+    ntrip_data["NTRIP_Server_3_Enabled"], ntrip_data["NTRIP_Server_3_Mount"], ntrip_data["NTRIP_Server_3_Format"],
+    ntrip_data["NTRIP_Caster_1_Enabled"], ntrip_data["NTRIP_Caster_1_Mount"], ntrip_data["NTRIP_Caster_1_Format"],
+    ntrip_data["NTRIP_Caster_2_Enabled"], ntrip_data["NTRIP_Caster_2_Mount"], ntrip_data["NTRIP_Caster_2_Format"],
+    ntrip_data["NTRIP_Caster_3_Enabled"], ntrip_data["NTRIP_Caster_3_Mount"], ntrip_data["NTRIP_Caster_3_Format"],
+    DynDNS_Enabled, DynDNS_Host
+)
 
-cursor.execute('''
+# 2. Automatically generate the correct number of placeholders (?, ?, ?...)
+placeholders = ', '.join(['?'] * len(data_values))
+
+# 3. Use an f-string to inject the placeholders into your SQL command
+sql_query = f'''
     INSERT INTO GNSS (
         id, User_ID, Enabled, name, Firmware, Loc_Group, Address, Port, Reciever_Type,
         Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
@@ -398,8 +424,7 @@ cursor.execute('''
         NTRIP_Caster_3_Enabled, NTRIP_Caster_3_Mount, NTRIP_Caster_3_Format,
         DynDNS_Enabled, DynDNS_Host
     ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        {placeholders}
     )
     ON CONFLICT(id) DO UPDATE SET
         User_ID=excluded.User_ID,
@@ -474,27 +499,11 @@ cursor.execute('''
         NTRIP_Caster_3_Format=excluded.NTRIP_Caster_3_Format,
         DynDNS_Enabled=excluded.DynDNS_Enabled,
         DynDNS_Host=excluded.DynDNS_Host;
-''', (
-    upsert_id,
-    User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Receiver_Type,
-    Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
-    Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
-    FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
-    Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
-    Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, Timed_Enabled,
-    Timed_Minimum, Timed_Maximum, Radio_Enabled, Radio_OnOffState, Radio_Mode,
-    BaseFollow,
-    ntrip_data["NTRIP_Client_1_Enabled"], ntrip_data["NTRIP_Client_1_Mount"],
-    ntrip_data["NTRIP_Client_2_Enabled"], ntrip_data["NTRIP_Client_2_Mount"],
-    ntrip_data["NTRIP_Client_3_Enabled"], ntrip_data["NTRIP_Client_3_Mount"],
-    ntrip_data["NTRIP_Server_1_Enabled"], ntrip_data["NTRIP_Server_1_Mount"], ntrip_data["NTRIP_Server_1_Format"],
-    ntrip_data["NTRIP_Server_2_Enabled"], ntrip_data["NTRIP_Server_2_Mount"], ntrip_data["NTRIP_Server_2_Format"],
-    ntrip_data["NTRIP_Server_3_Enabled"], ntrip_data["NTRIP_Server_3_Mount"], ntrip_data["NTRIP_Server_3_Format"],
-    ntrip_data["NTRIP_Caster_1_Enabled"], ntrip_data["NTRIP_Caster_1_Mount"], ntrip_data["NTRIP_Caster_1_Format"],
-    ntrip_data["NTRIP_Caster_2_Enabled"], ntrip_data["NTRIP_Caster_2_Mount"], ntrip_data["NTRIP_Caster_2_Format"],
-    ntrip_data["NTRIP_Caster_3_Enabled"], ntrip_data["NTRIP_Caster_3_Mount"], ntrip_data["NTRIP_Caster_3_Format"],
-    DynDNS_Enabled, DynDNS_Host
-))
+'''
+
+# 4. Execute the query using the generated string and your tuple of data
+cursor.execute(sql_query, data_values)
+
 conn.commit()
 
 # Provide user feedback and capture ID if it was newly created

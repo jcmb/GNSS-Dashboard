@@ -192,7 +192,11 @@ class DB_Class:
         self.RadioEnabled = row["RadioEnabled"]
         self.RadioOnOffState = row["RadioOnOffState"]
         self.RadioMode = row["RadioMode"]
+        self.DynDNS_Enabled = row["DynDNS_Enabled"]
+        self.DynDNS_Host = row["DynDNS_Host"]
 
+        if self.DynDNS_Enabled is None:
+            self.DynDNS_Enabled=False
 
 class HTTP_Class:
     def __init__(self, Host, Port, User_Name, Password, TimeOut):
@@ -896,6 +900,120 @@ def check_FTP(GNSS_ID, DB, HTTP):
         DB.conn.commit()
     return(FTP_Valid, Message)
 
+# --- Example Usage ---
+# Assuming 'xml_data' contains your XML string:
+# results = parse_ntrip_status(xml_data, target_mountpoint="BERTHOUD_2011")
+#
+# for r in results:
+#     status_text = "ERROR" if r['has_error'] else "OK"
+#     print(f"[{status_text}] {r['operation_type']} (ID: {r['stream_id']}) | Mount: {r['mountpoint']} | Fmt: {r['format']}")
+
+def parse_ntrip_status(root, target_mountpoint=None):
+    """
+    Parses Trimble XML for NTRIP stream statuses.
+
+    :param xml_string: The raw XML data string.
+    :param target_mountpoint: Optional string. If provided, evaluates if the
+                              stream's mountpoint matches this value.
+    :return: A list of dictionaries containing the parsed status of each stream.
+    """
+    ntrip_streams =  {
+    "NTripClient": {
+        30: {'enabled': False,
+            'has_error' : False},
+        37: {'enabled': False,
+            'has_error' : False},
+        38: {'enabled': False,
+            'has_error' : False}
+    },
+    "NTripServer": {
+        31: {},
+        39: {},
+        40: {}
+    },
+    "NTripCaster": {
+        32: {},
+        33: {},
+        34: {}
+    }
+}
+
+# Example of how to access or update a specific connection:
+# connection_template["server"][2] = "Connected: 192.168.1.50"
+
+    # Find all streams anywhere in the XML
+    for stream in root.findall('.//stream'):
+        type_elem = stream.find('type')
+        if type_elem is None or type_elem.text not in ['NTripClient', 'NTripServer', 'NTripCaster']:
+            continue
+
+        stream_type = type_elem.text
+        stream_id = int(stream.get('id', 0))
+
+
+        # Extract Mountpoint
+        casterNum_elem = stream.find('casterNum')
+        casterNum = casterNum_elem.text.strip() if casterNum_elem is not None and casterNum_elem.text else ""
+
+        mountpoint_elem = stream.find('mountPoint')
+        mountpoint = mountpoint_elem.text.strip() if mountpoint_elem is not None and mountpoint_elem.text else ""
+
+        # Extract Connection Status
+        connected_elem = stream.find('connected')
+        is_connected = connected_elem is not None and connected_elem.text == '1'
+
+        # Extract ntripEnable Status
+        ntripEnable_elem = stream.find('ntripEnable')
+        ntripEnable = ntripEnable_elem is not None and ntripEnable_elem.text == '1'
+
+        # Determine Error State
+        # If it's a client or server, connected must be 1. Otherwise, it's an error.
+        has_error = not is_connected
+
+        # Validate Mountpoint (if a target is specified)
+        mountpoint_match = True
+        if target_mountpoint is not None and mountpoint != target_mountpoint:
+            mountpoint_match = False
+            has_error = True # Flag as error if checking against a specific mountpoint and it misses
+
+        # Extract Format (CMR, CMRp, CMRx, RTCM_V3)
+        stream_format = "Unknown"
+        # NTRIP configurations often house output format in the <io> block
+        for io_elem in stream.findall('io'):
+            output_elem = io_elem.find('output')
+            if output_elem is not None and output_elem.text:
+                out_text = output_elem.text.strip()
+
+                if out_text == "CMR":
+                    io_type_elem = io_elem.find('type')
+                    io_type = io_type_elem.text.strip() if io_type_elem is not None and io_type_elem.text else ""
+
+                    if io_type == "1":
+                        stream_format = "CMRp"
+                    elif io_type == "6":
+                        stream_format = "CMRx"
+                    else:
+                        stream_format = "CMR"
+                elif out_text == "RTCM_V3":
+                    stream_format = "RTCM_V3"
+                else:
+                    stream_format = out_text # Captures NMEA or other outputs
+                break # Found the primary output format, exit loop
+
+        ntrip_streams[stream_type][stream_id]={
+            'stream_id': stream_id,
+            'operation_type': stream_type,
+            'mountpoint': mountpoint,
+            'is_connected': is_connected,
+            'format': stream_format,
+            'has_error': has_error,
+            'mountpoint_match': mountpoint_match,
+            'casterNum': casterNum,
+            'enabled' : ntripEnable
+        }
+
+    return ntrip_streams
+
 
 
 def check_NTRIP(GNSS_ID, DB, HTTP):
@@ -903,7 +1021,7 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
     Message = ""
 
     # Placeholder URL - adjust to the actual path your device uses for NTRIP XML data
-    (reply, result) = HTTP.get("/xml/dynamic/ntrip.xml")
+    (reply, result) = HTTP.get("/xml/dynamic/merge.xml?ioConfig=")
 
     if result != 200 or not reply:
         NTRIP_Valid = False
@@ -912,6 +1030,119 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
 
     try:
         root = ET.fromstring(reply)
+        ET.indent(root, space="    ", level=0)
+
+        # Convert back to string and print
+        pretty_xml = ET.tostring(root, encoding="unicode")
+#        print(pretty_xml)
+
+        NTRIP=parse_ntrip_status(root)
+#        pprint(NTRIP)
+
+        if DB.NTRIP_Caster_1_Enabled:
+            if NTRIP["NTripCaster"][32]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 1 is not enabled when it should be\n"
+            elif NTRIP["NTripCaster"][32]["mountpoint"] != DB.NTRIP_Caster_1_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 1 mountpoint is {} expected {}\n".format(NTRIP["NTripCaster"][32]["mountpoint"],DB.NTRIP_Caster_1_Mount)
+            elif NTRIP["NTripCaster"][32]["format"] != DB.NTRIP_Caster_1_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 1 format is {} expected {}\n".format(NTRIP["NTripCaster"][32]["format"],DB.NTRIP_Caster_1_Format)
+
+        if DB.NTRIP_Caster_2_Enabled:
+            if NTRIP["NTripCaster"][33]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 2 is not enabled when it should be\n"
+            elif NTRIP["NTripCaster"][33]["mountpoint"] != DB.NTRIP_Caster_2_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 2 mountpoint is {} expected {}\n".format(NTRIP["NTripCaster"][33]["mountpoint"],DB.NTRIP_Caster_2_Mount)
+            elif NTRIP["NTripCaster"][33]["format"] != DB.NTRIP_Caster_2_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 2 format is {} expected {}\n".format(NTRIP["NTripCaster"][33]["format"],DB.NTRIP_Caster_2_Format)
+
+
+        if DB.NTRIP_Caster_3_Enabled:
+            if NTRIP["NTripCaster"][34]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 3 is not enabled when it should be\n"
+            elif NTRIP["NTripCaster"][34]["mountpoint"] != DB.NTRIP_Caster_3_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 3 mountpoint is {} expected {}\n".format(NTRIP["NTripCaster"][34]["mountpoint"],DB.NTRIP_Caster_3_Mount)
+            elif NTRIP["NTripCaster"][34]["format"] != DB.NTRIP_Caster_3_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Caster 3 format is {} expected {}\n".format(NTRIP["NTripCaster"][34]["format"],DB.NTRIP_Caster_3_Format)
+
+
+        if DB.NTRIP_Client_1_Enabled:
+            if NTRIP["NTripClient"][30]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 1 is not enabled when it should be\n"
+            elif NTRIP["NTripClient"][30]["mountpoint"] != DB.NTRIP_Client_1_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 1 mountpoint is {} expected {}\n".format(NTRIP["NTripClient"][30]["mountpoint"],DB.NTRIP_Client_1_Mount)
+            elif NTRIP["NTripClient"][30]["has_error"] == True:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 1 has errors\n"
+
+        if DB.NTRIP_Client_2_Enabled:
+            if NTRIP["NTripClient"][37]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 2 is not enabled when it should be\n"
+            elif NTRIP["NTripClient"][37]["mountpoint"] != DB.NTRIP_Client_2_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 2 mountpoint is {} expected {}\n".format(NTRIP["NTripClient"][37]["mountpoint"],DB.NTRIP_Client_2_Mount)
+            elif NTRIP["NTripClient"][37]["has_error"] == True:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 2 has errors\n"
+
+
+        if DB.NTRIP_Client_3_Enabled:
+            if NTRIP["NTripClient"][38]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 3 is not enabled when it should be\n"
+            elif NTRIP["NTripClient"][38]["mountpoint"] != DB.NTRIP_Client_3_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 3 mountpoint is {} expected {}\n".format(NTRIP["NTripClient"][38]["mountpoint"],DB.NTRIP_Client_3_Mount)
+            elif NTRIP["NTripClient"][38]["has_error"] == True:
+                NTRIP_Valid=False
+                Message += "NTRIP Client 3 has errors\n"
+
+
+        if DB.NTRIP_Server_1_Enabled:
+            if NTRIP["NTripServer"][31]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 1 is not enabled when it should be\n"
+            elif NTRIP["NTripServer"][31]["mountpoint"] != DB.NTRIP_Server_1_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 1 mountpoint is {} expected {}\n".format(NTRIP["NTripServer"][31]["mountpoint"],DB.NTRIP_Server_1_Mount)
+            elif NTRIP["NTripServer"][31]["format"] != DB.NTRIP_Server_1_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 1 format is {} expected {}\n".format(NTRIP["NTripServer"][31]["format"],DB.NTRIP_Server_1_Format)
+
+        if DB.NTRIP_Server_2_Enabled:
+            if NTRIP["NTripServer"][39]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 2 is not enabled when it should be\n"
+            elif NTRIP["NTripServer"][39]["mountpoint"] != DB.NTRIP_Server_2_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 2 mountpoint is {} expected {}\n".format(NTRIP["NTripServer"][39]["mountpoint"],DB.NTRIP_Server_2_Mount)
+            elif NTRIP["NTripServer"][39]["format"] != DB.NTRIP_Server_2_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 2 format is {} expected {}\n".format(NTRIP["NTripServer"][39]["format"],DB.NTRIP_Server_2_Format)
+
+
+        if DB.NTRIP_Server_3_Enabled:
+            if NTRIP["NTripServer"][40]["enabled"] == False:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 3 is not enabled when it should be\n"
+            elif NTRIP["NTripServer"][40]["mountpoint"] != DB.NTRIP_Server_3_Mount:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 3 mountpoint is {} expected {}\n".format(NTRIP["NTripServer"][40]["mountpoint"],DB.NTRIP_Server_3_Mount)
+            elif NTRIP["NTripServer"][40]["format"] != DB.NTRIP_Server_3_Format:
+                NTRIP_Valid=False
+                Message += "NTRIP Server 3 format is {} expected {}\n".format(NTRIP["NTripServer"][40]["format"],DB.NTRIP_Server_3_Format)
+
 
         # --- XML PARSING PLACEHOLDER ---
         # Retrieve actual values from the XML root here. Example:
@@ -1079,8 +1310,9 @@ def check_Radio(GNSS_ID, DB, HTTP):
             Radio_Valid = False
 
         if DB.RadioMode != radioMode:
-            Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
-            Radio_Valid = False
+            if not (DB.RadioMode == "RadioModeBase" and radioMode == "RadioModeBaseW4Repeater"):
+                Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
+                Radio_Valid = False
 
 
         Radio_Str = RadioOnOffState + ":" + radioMode
@@ -1097,6 +1329,63 @@ def check_Radio(GNSS_ID, DB, HTTP):
     else:
         return (False, Message)
 
+
+def check_Dyndns(GNSS_ID, DB, HTTP):
+
+    (reply, result) = HTTP.get("/xml/dynamic/ddns_status.xml")
+
+    # print(reply)
+    if result != 200:
+        DynDNS_Valid = False
+        Message = "Could not get Dyndns XML\n"
+        return(DynDNS_Valid, Message)
+
+    root = ET.fromstring(reply)
+    # Indent the tree (adds whitespace to the tree itself in-place)
+    ET.indent(root, space="    ", level=0)
+
+    # Convert back to string and print
+    pretty_xml = ET.tostring(root, encoding="unicode")
+
+    DynDNS_Valid = True
+    Message = ""
+    try:
+        DynDNS_Enabled_Node = root.find("./config/ddnsEnable")
+        if DynDNS_Enabled_Node is None:
+            DynDNS_Enabled = False
+        else:
+            DynDNS_Enabled = DynDNS_Enabled_Node.text =="1"
+
+    except AttributeError:
+#        print("Error Determining DynDns")
+        DynDNS_Enabled = False
+
+    if not (DynDNS_Enabled == DB.DynDNS_Enabled):
+        DynDNS_Valid = False
+        Message += "DynDns is " + str(DynDNS_Enabled) + " expected " + str(DB.DynDNS_Enabled) + "\n"
+        logger.debug(DB.Address + ":" + str(DB.Port) + " Dyndns Enabled: " + str(DynDNS_Enabled) + ", Expected Enabled: " + str(DB.DynDNS_Enabled) + ', Valid: ' + str(DynDNS_Valid))
+        DB.STATUS.execute("UPDATE STATUS SET DynDNS_Valid=? , DynDNS_Value=? where id=?", (DynDNS_Valid, "N/A", GNSS_ID))
+        DB.conn.commit()
+    else:
+        if DynDNS_Enabled:
+            DynDNS_Value = root.find("./config/ddnsClientName").text.lower()
+            if not(DynDNS_Value == DB.DynDNS_Host.lower()):
+                DynDNS_Valid = False
+                Message += "DynDns host is " + str(DynDNS_Value) + " expected " + DB.DynDNS_Host + "\n"
+                logger.debug(DB.Address + ":" + str(DB.Port) + " DynDns Host: " + str(DynDNS_Value) + ", Expected To: " + str(DB.DynDNS_Host) + ', Valid: ' + str(DynDNS_Valid))
+
+
+            if (root.find('./config/ddnsUpdateStatus').text != "ddnsStateSuccess") and (root.find('./config/ddnsUpdateStatus').text != "PosNAStr"):
+                DynDNS_Valid = False
+                Message += "DynDns result is {} should be ddnsStateSuccess\n".format(root.find('ddnsUpdateStatus').text)
+
+            DB.STATUS.execute("UPDATE STATUS SET DynDNS_Valid=?, DynDNS_Value=? where id=?", (DynDNS_Valid, DynDNS_Value, GNSS_ID))
+            DB.conn.commit()
+        else:
+            DB.STATUS.execute("UPDATE STATUS SET DynDNS_Valid=?, DynDNS_Value=?  where id=?", (DynDNS_Valid, "", GNSS_ID))
+            DB.conn.commit()
+
+    return(DynDNS_Valid, Message)
 
 
 def check_clock(GNSS_ID, DB, HTTP):
@@ -1964,6 +2253,13 @@ if not Success:
 
 OK = OK and Success
 
+
+(Success, Message) = check_Dyndns(args.GNSS_ID, DB, HTTP)
+if not Success:
+    Result_String += Message
+OK = OK and Success
+
+
 (Success, Message) = check_Radio(args.GNSS_ID, DB, HTTP)
 if not Success:
     Result_String += Message
@@ -2070,6 +2366,7 @@ if not Success:
     Result_String += Message
 
 OK = OK and Success
+
 
 
 # --- BEGIN NTRIP CHECK EXECUTION ---

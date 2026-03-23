@@ -148,6 +148,7 @@ Receiver:
 </td><td>
 <select required name=Receiver_Type>
   <option value="162" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>Alloy</option>
+  <option value="112" <?php echo ($row["Reciever_Type"]=="112")?"selected":"" ?>>AgGPS_542</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
   <option value="164" <?php echo ($row["Reciever_Type"]=="164")?"selected":"" ?>>BX992-INS</option>
   <option value="508" <?php echo ($row["Reciever_Type"]=="508")?"selected":"" ?>>BX992-MS</option>
@@ -547,10 +548,11 @@ Mountpoint <?php echo $i; ?>:
 Format <?php echo $i; ?>:
 </td><td>
 <select name="NTRIP_Server_<?php echo $i; ?>_Format">
-  <option value="CMR" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMR")?"selected":"" ?>>CMR</option>
-  <option value="CMRp" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMRp")?"selected":"" ?>>CMRp</option>
   <option value="CMRx" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMRx")?"selected":"" ?>>CMRx</option>
-  <option value="RTCM" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM</option>
+  <option value="CMR" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMR")?"selected":"" ?>>CMR</option>
+  <option value="CMRp" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="CMRp")?"selected":"" ?>>CMR+</option>
+  <option value="RTCM" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM V2</option>
+  <option value="RTCM_V3" <?php echo (isset($row["NTRIP_Server_${i}_Format"]) && $row["NTRIP_Server_${i}_Format"]=="RTCM_V3")?"selected":"" ?>>RTCM V3</option>
 </select>
 </td></tr>
 <?php } ?>
@@ -574,10 +576,11 @@ Mountpoint <?php echo $i; ?>:
 Format <?php echo $i; ?>:
 </td><td>
 <select name="NTRIP_Caster_<?php echo $i; ?>_Format">
+  <option value="CMRx" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMRx")?"selected":"" ?>>CMRx</option>
   <option value="CMR" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMR")?"selected":"" ?>>CMR</option>
   <option value="CMRp" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMRp")?"selected":"" ?>>CMR+</option>
-  <option value="CMRx" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="CMRx")?"selected":"" ?>>CMRx</option>
-  <option value="RTCM" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM V3</option>
+  <option value="RTCM" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="RTCM")?"selected":"" ?>>RTCM V2</option>
+  <option value="RTCM_V3" <?php echo (isset($row["NTRIP_Caster_${i}_Format"]) && $row["NTRIP_Caster_${i}_Format"]=="RTCM_V3")?"selected":"" ?>>RTCM V3</option>
 </select>
 </td></tr>
 <?php } ?>
