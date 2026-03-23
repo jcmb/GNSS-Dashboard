@@ -98,7 +98,6 @@ else {
           "\n<th>UPS</th>" .
           "\n<th>Clock</th>" .
           "\n<th>Everest</th>" .
-          "\n<th>Test Mode</th>" .
           "\n<th>Ref Name</th>" .
           "\n<th>Latitude</th>" .
           "\n<th>Longitude</th>" .
@@ -329,7 +328,6 @@ else {
        echo "\n<td " . ($row["UPS_Valid"]?"":"class=\"Issue\"") . "> ".($row["UPS"] ? 'Enabled' : 'Disabled')." </td>";
        echo "\n<td " . ($row["Clock_Valid"]?"":"class=\"Issue\"") . "> ".($row["Clock"] ? 'Steered' : 'Unsteered')." </td>";
        echo "\n<td " . ($row["MultipathReject_Valid"]?"":"class=\"Issue\"") . "> ".($row["MultipathReject"] ? 'Enabled' : 'Disabled')." </td>";
-       echo "\n<td " . ($row["testMode_Valid"]?"":"class=\"Issue\"") . "> ".($row["testMode"] ? 'Enabled' : 'Disabled')." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Name"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Lat"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Long"] ." </td>";
