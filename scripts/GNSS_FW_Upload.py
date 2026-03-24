@@ -50,7 +50,28 @@ def get_version_from_files(files):
 
             # Join them back together
             return f"{formatted_part1}-{formatted_part2}"
+
+    pattern = re.compile(r"V(\d+_V\d+)\.(timg|img)$", re.IGNORECASE)
+    for f in files:
+        match = pattern.search(f)
+        if match:
+            s=match.group(1).replace("_", "-")
+            part1, part2 = s.split('-')
+
+            # Format the first part: insert '.' after the first character
+            # e.g., "660" -> "6.60"
+            formatted_part1 = f"{part1[0]}.{part1[1:]}"
+#            print(formatted_part1)
+
+            # Format the second part: remove leading zeros by converting to int
+            # e.g., "023" -> "23"
+#            formatted_part2 = str(int(part2))
+
+            # Join them back together
+            return f"{formatted_part1}"
+
     return None
+
 
 def find_file_for_field(field_keyword, files):
     for f in files:
@@ -95,7 +116,7 @@ def main():
     data = {
         "User_ID": user_id,
         "Firmware": fw_type,
-        "Titianversion": version
+        "Titanversion": version
     }
 
     files_payload = {}
@@ -109,7 +130,7 @@ def main():
             missing_files.append(field_name)
 
     if missing_files:
-        print(f"Warning: Missing files for: {', '.join(missing_files)}")
+        print(f<"Warning: Missing files for: {', '.join(missing_files)}")
         if input("Continue anyway? (y/n): ").lower() != 'y':
             sys.exit("Aborted.")
 
