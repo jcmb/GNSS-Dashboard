@@ -53,7 +53,7 @@ else:
 # Fetch firmware filenames
 # Note: The original code does not select 'AlloyFile' in this query,
 # but tries to use it later. Ensure AlloyFile is defined in db_inc.py or add it to this query.
-query = 'SELECT Titian_Version, AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, KryptonFile, LancetFile FROM Firmware where type=?'
+query = 'SELECT Titan_Version, AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, KryptonFile, LancetFile FROM Firmware where type=?'
 cursor.execute(query, (Firmware_ID,))
 
 rows = cursor.fetchone()

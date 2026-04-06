@@ -89,7 +89,7 @@ class DB_Class:
         while (row != None):
             # pprint(row)
             # pprint(tuple(row))
-            vers[row["Type"]] = (row["Version"], row["Titian_Version"])
+            vers[row["Type"]] = (row["Version"], row["Titan_Version"])
             row = self.FIRMWARE.fetchone()
         # pprint(vers)
         return(vers)
@@ -314,7 +314,7 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
 
     firmwareValid = True
     Message = ""
-    firmwareType = 1 # Everything is Titian now
+    firmwareType = 1 # Everything is Titan now
 
     if (DB.Reciever_Type == "162"):
         firmwareType = 1
@@ -686,7 +686,7 @@ def check_logging(GNSS_ID, DB, HTTP):
            logger.info(DB.Address + ":" + str(DB.Port) + " logCorrection could not be found:")
 
 
-        
+
 
         (reply, result) = HTTP.get("/xml/dynamic/dataLogger.xml")
 
@@ -696,7 +696,7 @@ def check_logging(GNSS_ID, DB, HTTP):
 
 #        print(reply)
         root = ET.fromstring(reply)
-        
+
         # logger_active = session.find('enabled').text=="1"
         AutoDelete_Enabled=False
         try:

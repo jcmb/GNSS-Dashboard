@@ -166,7 +166,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
   $db->exec('CREATE TABLE IF NOT EXISTS Firmware (
       Type TEXT PRIMARY KEY,
       Version TEXT,
-      Titian_Version TEXT,
+      Titan_Version TEXT,
       AlloyFile TEXT,
       BarracudaFile TEXT,
       ClarkFile TEXT,
