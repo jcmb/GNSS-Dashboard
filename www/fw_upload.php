@@ -34,8 +34,6 @@ function check_file(file_control,name) {
    return true
    }
 
- , AlloyFile TEXT, LancetFile TEXT, ClarkFile TEXT
-
 
   function check_files() {
   return check_file("AlloyUpload","Alloy") &&
@@ -74,7 +72,7 @@ Firmware Level:
 <td>
 ProPoint Version:
 </td><td>
-<input name="Titianversion" type="text"><br/>
+<input name="Titanversion" type="text"><br/>
 </td>
 </tr>
 </table>

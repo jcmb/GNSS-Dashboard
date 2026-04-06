@@ -16,8 +16,8 @@ CONFIG_FILE = Path.home() / ".gnss_upload_config"
 FILE_MAPPING = {
     "AlloyUpload": "alloy",
     "BarracudaUpload": "bcuda",
-    "ChinstrapUpload": "chinstrap",
     "ClarkUpload": "clark",
+    "ChinstrapUpload": "chinstrap",
     "LancetUpload": "lancet",
     "KryptonUpload": "krypton_titan"
 }
