@@ -85,9 +85,9 @@ if ($Firmware=="") {
     exit ("Internal Error: Firmware Type not provided");
     }
 
-$TitianVersion=$_REQUEST["Titianversion"];
-$TitianVersion=clean($TitianVersion,strlen($TitianVersion));
-if ($TitianVersion=="") {
+$TitanVersion=$_REQUEST["Titanversion"];
+$TitanVersion=clean($TitanVersion,strlen($TitanVersion));
+if ($TitanVersion=="") {
     echo "Titan Firmware Version must not be blank";
     quit(100);
     }
@@ -224,15 +224,15 @@ $db->exec("PRAGMA busy_timeout=5000");
 
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
-#  echo "UPDATE Firmware SET Version=\"$Version\",    Titian_Version=\"$TitianVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\",  TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
+#  echo "UPDATE Firmware SET Version=\"$Version\",    Titan_Version=\"$TitanVersion\", BCudaFile=\"$BCudaName\", BrewsterFile=\"$BrewsterName\", ChinstrapFile=\"$ChinstrapName\", GamelFile=\"$GamelName\", RockyFile=\"$RockyName\",  TennisBallFile=\"$TennisBallName\", ZeppelinFile=\"$ZeppelinName\" WHERE Type=\"$Firmware\"";
 
-echo "UPDATE Firmware SET    Titian_Version=\"$TitianVersion\",    AlloyFile=\"$AlloyName\",   BarracudaFile=\"$BCudaName\",   ClarkFile=\"$ClarkName\",   ChinstrapFile=\"$ChinstrapName\",   LancetFile=\"$LancetName\",   KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"";
+echo "UPDATE Firmware SET    Titan_Version=\"$TitanVersion\",    AlloyFile=\"$AlloyName\",   BarracudaFile=\"$BCudaName\",   ClarkFile=\"$ClarkName\",   ChinstrapFile=\"$ChinstrapName\",   LancetFile=\"$LancetName\",   KryptonFile=\"$KryptonName\" WHERE Type=\"$Firmware\"";
 
 
 
 
 $db->exec("UPDATE Firmware SET
-   Titian_Version=\"$TitianVersion\",
+   Titan_Version=\"$TitanVersion\",
    AlloyFile=\"$AlloyName\",
    BarracudaFile=\"$BCudaName\",
    ClarkFile=\"$ClarkName\",
@@ -242,7 +242,7 @@ $db->exec("UPDATE Firmware SET
 
 if ( $Firmware == "Beta" or $Firmware == "Released" ) {
    $db->exec("UPDATE Firmware SET
-      Titian_Version=\"$TitianVersion\",
+      Titan_Version=\"$TitanVersion\",
       AlloyFile=\"$AlloyName\",
       BarracudaFile=\"$BCudaName\",
       ClarkFile=\"$ClarkName\",
@@ -253,7 +253,7 @@ if ( $Firmware == "Beta" or $Firmware == "Released" ) {
 
 if ( $Firmware == "Released" ) {
    $db->exec("UPDATE Firmware SET
-      Titian_Version=\"$TitianVersion\",
+      Titan_Version=\"$TitanVersion\",
       AlloyFile=\"$AlloyName\",
       BarracudaFile=\"$BCudaName\",
       ClarkFile=\"$ClarkName\",
