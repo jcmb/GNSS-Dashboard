@@ -686,6 +686,28 @@ def check_logging(GNSS_ID, DB, HTTP):
            logger.info(DB.Address + ":" + str(DB.Port) + " logCorrection could not be found:")
 
 
+        
+
+        (reply, result) = HTTP.get("/xml/dynamic/dataLogger.xml")
+
+        if result != 200:
+            Message = "Could not determine AutoDelete"
+            return(False, Message)
+
+#        print(reply)
+        root = ET.fromstring(reply)
+        
+        # logger_active = session.find('enabled').text=="1"
+        AutoDelete_Enabled=False
+        try:
+#            print(root.find('fileSystem/autoDelete').text)
+            AutoDelete_Enabled = root.find('fileSystem/autoDelete').text == "1"
+        except:
+            pass
+
+        if not AutoDelete_Enabled:
+            Logging_Valid = False
+            Message += "Auto Delete is not enabled\n"
 
 
         logger.debug(DB.Address + ":" + str(DB.Port) + " Logging:: Enabled: " + str(Logging_Enabled) + " Duration: " + str(Logging_Duration) + " Measurement: " + str(Logging_measInterval) + " Position: " + str(Logging_posInterval) + " Volt/Temp: " + str(Logging_voltTempInterval) + " Valid: " + str(Logging_Valid))
