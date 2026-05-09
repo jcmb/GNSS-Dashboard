@@ -130,6 +130,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       NTRIP_Caster_1_Enabled BOOLEAN, NTRIP_Caster_1_Mount TEXT, NTRIP_Caster_1_Format TEXT,
       NTRIP_Caster_2_Enabled BOOLEAN, NTRIP_Caster_2_Mount TEXT, NTRIP_Caster_2_Format TEXT,
       NTRIP_Caster_3_Enabled BOOLEAN, NTRIP_Caster_3_Mount TEXT, NTRIP_Caster_3_Format TEXT,
+      NTRIP_Valid BOOLEAN,
       GPS BOOLEAN,
       GPS_Valid BOOLEAN,
       GLN BOOLEAN,
