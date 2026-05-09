@@ -1038,6 +1038,60 @@ def parse_ntrip_status(root, target_mountpoint=None):
 
 
 
+def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid):
+    try:
+        DB.STATUS.execute("ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN")
+        DB.conn.commit()
+    except sqlite3.OperationalError as err:
+        if "duplicate column name" not in str(err).lower():
+            raise
+    DB.STATUS.execute(
+        """
+            UPDATE STATUS SET
+                NTRIP_Client_1_Enabled=?, NTRIP_Client_1_Mount=?,
+                NTRIP_Client_2_Enabled=?, NTRIP_Client_2_Mount=?,
+                NTRIP_Client_3_Enabled=?, NTRIP_Client_3_Mount=?,
+                NTRIP_Server_1_Enabled=?, NTRIP_Server_1_Mount=?, NTRIP_Server_1_Format=?,
+                NTRIP_Server_2_Enabled=?, NTRIP_Server_2_Mount=?, NTRIP_Server_2_Format=?,
+                NTRIP_Server_3_Enabled=?, NTRIP_Server_3_Mount=?, NTRIP_Server_3_Format=?,
+                NTRIP_Caster_1_Enabled=?, NTRIP_Caster_1_Mount=?, NTRIP_Caster_1_Format=?,
+                NTRIP_Caster_2_Enabled=?, NTRIP_Caster_2_Mount=?, NTRIP_Caster_2_Format=?,
+                NTRIP_Caster_3_Enabled=?, NTRIP_Caster_3_Mount=?, NTRIP_Caster_3_Format=?,
+                NTRIP_Valid=?
+            WHERE id=?
+        """,
+        (
+            DB.NTRIP_Client_1_Enabled,
+            DB.NTRIP_Client_1_Mount,
+            DB.NTRIP_Client_2_Enabled,
+            DB.NTRIP_Client_2_Mount,
+            DB.NTRIP_Client_3_Enabled,
+            DB.NTRIP_Client_3_Mount,
+            DB.NTRIP_Server_1_Enabled,
+            DB.NTRIP_Server_1_Mount,
+            DB.NTRIP_Server_1_Format,
+            DB.NTRIP_Server_2_Enabled,
+            DB.NTRIP_Server_2_Mount,
+            DB.NTRIP_Server_2_Format,
+            DB.NTRIP_Server_3_Enabled,
+            DB.NTRIP_Server_3_Mount,
+            DB.NTRIP_Server_3_Format,
+            DB.NTRIP_Caster_1_Enabled,
+            DB.NTRIP_Caster_1_Mount,
+            DB.NTRIP_Caster_1_Format,
+            DB.NTRIP_Caster_2_Enabled,
+            DB.NTRIP_Caster_2_Mount,
+            DB.NTRIP_Caster_2_Format,
+            DB.NTRIP_Caster_3_Enabled,
+            DB.NTRIP_Caster_3_Mount,
+            DB.NTRIP_Caster_3_Format,
+            NTRIP_Valid,
+            GNSS_ID,
+        ),
+    )
+    DB.conn.commit()
+
+
 def check_NTRIP(GNSS_ID, DB, HTTP):
     NTRIP_Valid = True
     Message = ""
@@ -1048,6 +1102,7 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
     if result != 200 or not reply:
         NTRIP_Valid = False
         Message = "Could not get NTRIP status from receiver\n"
+        persist_ntrip_status(GNSS_ID, DB, False)
         return (NTRIP_Valid, Message)
 
     try:
@@ -1180,35 +1235,12 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
         # -------------------------------
 
         # Update the STATUS table with the expected DB configuration (or actual parsed state if preferred)
-        DB.STATUS.execute("""
-            UPDATE STATUS SET
-                NTRIP_Client_1_Enabled=?, NTRIP_Client_1_Mount=?,
-                NTRIP_Client_2_Enabled=?, NTRIP_Client_2_Mount=?,
-                NTRIP_Client_3_Enabled=?, NTRIP_Client_3_Mount=?,
-                NTRIP_Server_1_Enabled=?, NTRIP_Server_1_Mount=?, NTRIP_Server_1_Format=?,
-                NTRIP_Server_2_Enabled=?, NTRIP_Server_2_Mount=?, NTRIP_Server_2_Format=?,
-                NTRIP_Server_3_Enabled=?, NTRIP_Server_3_Mount=?, NTRIP_Server_3_Format=?,
-                NTRIP_Caster_1_Enabled=?, NTRIP_Caster_1_Mount=?, NTRIP_Caster_1_Format=?,
-                NTRIP_Caster_2_Enabled=?, NTRIP_Caster_2_Mount=?, NTRIP_Caster_2_Format=?,
-                NTRIP_Caster_3_Enabled=?, NTRIP_Caster_3_Mount=?, NTRIP_Caster_3_Format=?
-            WHERE id=?
-        """, (
-            DB.NTRIP_Client_1_Enabled, DB.NTRIP_Client_1_Mount,
-            DB.NTRIP_Client_2_Enabled, DB.NTRIP_Client_2_Mount,
-            DB.NTRIP_Client_3_Enabled, DB.NTRIP_Client_3_Mount,
-            DB.NTRIP_Server_1_Enabled, DB.NTRIP_Server_1_Mount, DB.NTRIP_Server_1_Format,
-            DB.NTRIP_Server_2_Enabled, DB.NTRIP_Server_2_Mount, DB.NTRIP_Server_2_Format,
-            DB.NTRIP_Server_3_Enabled, DB.NTRIP_Server_3_Mount, DB.NTRIP_Server_3_Format,
-            DB.NTRIP_Caster_1_Enabled, DB.NTRIP_Caster_1_Mount, DB.NTRIP_Caster_1_Format,
-            DB.NTRIP_Caster_2_Enabled, DB.NTRIP_Caster_2_Mount, DB.NTRIP_Caster_2_Format,
-            DB.NTRIP_Caster_3_Enabled, DB.NTRIP_Caster_3_Mount, DB.NTRIP_Caster_3_Format,
-            GNSS_ID
-        ))
-        DB.conn.commit()
+        persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid)
 
     except ET.ParseError:
         NTRIP_Valid = False
         Message += "NTRIP XML reply was invalid\n"
+        persist_ntrip_status(GNSS_ID, DB, False)
 
     return (NTRIP_Valid, Message)
 

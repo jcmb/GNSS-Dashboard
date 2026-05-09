@@ -24,6 +24,9 @@
 table.tablesorter tbody td.Issue {
     color: red;
 }
+table.tablesorter tbody td.ntrip-ok {
+    color: #000;
+}
 </style>
 <script>
 $(document).ready(function()
@@ -52,6 +55,70 @@ else {
    error_reporting(E_ALL);
    include 'error.php.inc';
    include 'db.inc.php';
+
+
+   function ntrip_summary_html($row)
+   {
+       $parts = array();
+       if ((int)$row["NTRIP_Client_1_Enabled"]) {
+           $m = isset($row["NTRIP_Client_1_Mount"]) ? $row["NTRIP_Client_1_Mount"] : "";
+           $parts[] = "Cl1: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8");
+       }
+       if ((int)$row["NTRIP_Client_2_Enabled"]) {
+           $m = isset($row["NTRIP_Client_2_Mount"]) ? $row["NTRIP_Client_2_Mount"] : "";
+           $parts[] = "Cl2: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8");
+       }
+       if ((int)$row["NTRIP_Client_3_Enabled"]) {
+           $m = isset($row["NTRIP_Client_3_Mount"]) ? $row["NTRIP_Client_3_Mount"] : "";
+           $parts[] = "Cl3: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8");
+       }
+       if ((int)$row["NTRIP_Server_1_Enabled"]) {
+           $m = isset($row["NTRIP_Server_1_Mount"]) ? $row["NTRIP_Server_1_Mount"] : "";
+           $f = isset($row["NTRIP_Server_1_Format"]) ? $row["NTRIP_Server_1_Format"] : "";
+           $parts[] = "Sv1: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if ((int)$row["NTRIP_Server_2_Enabled"]) {
+           $m = isset($row["NTRIP_Server_2_Mount"]) ? $row["NTRIP_Server_2_Mount"] : "";
+           $f = isset($row["NTRIP_Server_2_Format"]) ? $row["NTRIP_Server_2_Format"] : "";
+           $parts[] = "Sv2: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if ((int)$row["NTRIP_Server_3_Enabled"]) {
+           $m = isset($row["NTRIP_Server_3_Mount"]) ? $row["NTRIP_Server_3_Mount"] : "";
+           $f = isset($row["NTRIP_Server_3_Format"]) ? $row["NTRIP_Server_3_Format"] : "";
+           $parts[] = "Sv3: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if ((int)$row["NTRIP_Caster_1_Enabled"]) {
+           $m = isset($row["NTRIP_Caster_1_Mount"]) ? $row["NTRIP_Caster_1_Mount"] : "";
+           $f = isset($row["NTRIP_Caster_1_Format"]) ? $row["NTRIP_Caster_1_Format"] : "";
+           $parts[] = "Ca1: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if ((int)$row["NTRIP_Caster_2_Enabled"]) {
+           $m = isset($row["NTRIP_Caster_2_Mount"]) ? $row["NTRIP_Caster_2_Mount"] : "";
+           $f = isset($row["NTRIP_Caster_2_Format"]) ? $row["NTRIP_Caster_2_Format"] : "";
+           $parts[] = "Ca2: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if ((int)$row["NTRIP_Caster_3_Enabled"]) {
+           $m = isset($row["NTRIP_Caster_3_Mount"]) ? $row["NTRIP_Caster_3_Mount"] : "";
+           $f = isset($row["NTRIP_Caster_3_Format"]) ? $row["NTRIP_Caster_3_Format"] : "";
+           $parts[] = "Ca3: " . htmlspecialchars((string)$m, ENT_QUOTES, "UTF-8") . " (" . htmlspecialchars((string)$f, ENT_QUOTES, "UTF-8") . ")";
+       }
+       if (count($parts) === 0) {
+           return "Disabled";
+       }
+       return implode("; ", $parts);
+   }
+
+
+   function ntrip_cell_classes($row)
+   {
+       if (!array_key_exists("NTRIP_Valid", $row) || $row["NTRIP_Valid"] === null) {
+           return "";
+       }
+       if ((int)$row["NTRIP_Valid"] === 1) {
+           return ' class="ntrip-ok"';
+       }
+       return ' class="Issue"';
+   }
 
 
    function displayStatus($result)
@@ -86,7 +153,7 @@ else {
           "\n<th>Logging</th>" .
           "\n<th>Email</th>" .
           "\n<th>FTP</th>" .
-//          "\n<th>NTRIP</th>" .
+          "\n<th>NTRIP</th>" .
 //          "\n<th>IBSS</th>" .
           "\n<th>Freq</th>" .
           "\n<th>GPS</th>" .
@@ -315,8 +382,7 @@ else {
            echo "\n<td " . ($row["FTP_Valid"]?"":"class=\"Issue\"") . " > ".$row["FTP_To"]." </td>";
            }
 
-//       echo "\n<td> ".($row["NTRIP_Enabled"] ? 'True' : 'False') ." </td>";
-//       echo "\n<td> ".($row["IBSS_Enabled"] ? 'True' : 'False') ." </td>";
+       echo "\n<td" . ntrip_cell_classes($row) . "> " . ntrip_summary_html($row) . " </td>";
 
        echo "\n<td " . ($row["Frequencies_Valid"]?"":"class=\"Issue\"") . " > ".$row["Frequencies"] ." </td>";
        echo "\n<td " . ($row["GPS_Valid"]?"":"class=\"Issue\"") . " > ".($row["GPS"] ? 'Enabled' : 'Disabled') ." </td>";
@@ -351,6 +417,20 @@ $db = new SQLite3($databaseFile);
 if (! $db) {
    die ("Failed to open GNSS.db");
    }
+
+$pragma_cols = $db->query("PRAGMA table_info(STATUS)");
+$have_ntrip_valid_col = false;
+if ($pragma_cols) {
+    while ($col = $pragma_cols->fetchArray(SQLITE3_ASSOC)) {
+        if ($col["name"] === "NTRIP_Valid") {
+            $have_ntrip_valid_col = true;
+            break;
+        }
+    }
+}
+if (!$have_ntrip_valid_col) {
+    $db->exec("ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN");
+}
 //$handle = sqlite_open($db) or die("Could not open database");
 //if (!(mysql_select_db($databaseName, $connection)))
 //  showerror();
