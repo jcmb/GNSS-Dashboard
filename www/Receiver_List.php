@@ -57,7 +57,7 @@ else {
    {
        // Start a table, with column headers
 
-      echo "\n<table border='1' id=\"Receivers\" class='tablesorter'>\n<tr>\n" .
+      echo "\n<table border='1' id=\"Receivers\" class='tablesorter'>\n<thead>\n<tr>\n" .
           "\n<th>EDIT</th>".
           "\n<th>DUP</th>".
           "\n<th>Name</th>" .
@@ -80,7 +80,7 @@ else {
           "\n<th>BDS</th>" .
           "\n<th>QZSS</th>" .
           "\n<th>DEL</th>" .
-          "\n</tr>";
+          "\n</tr>\n</thead>\n<tbody>\n";
 
      // Until there are no rows in the result set,
      // fetch a row into the $row array and ...
@@ -207,7 +207,6 @@ else {
 
        $ntrip_str = empty($ntrip_status) ? "Disabled" : implode("/", $ntrip_status);
        echo "\n<td> ".$ntrip_str." </td>";
-       echo "\n<td> ".($row["NTRIP_Enabled"] ? 'True' : 'False') ." </td>";
        echo "\n<td> ".($row["GLN"] ? 'True' : 'False') ." </td>";
        echo "\n<td> ".($row["GAL"] ? 'True' : 'False')." </td>";
        echo "\n<td> ".($row["BDS"] ? 'True' : 'False')." </td>";
@@ -219,7 +218,7 @@ else {
      }
 
      // Then, finish the table
-     echo "\n</table>\n";
+     echo "\n</tbody>\n</table>\n";
      echo "<p>\n";
   }
 

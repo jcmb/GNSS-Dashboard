@@ -121,6 +121,22 @@ else {
    }
 
 
+   /** Must match the number of <th> cells in the status table header row. */
+   function status_table_column_count()
+   {
+       return 41;
+   }
+
+
+   function status_row_pad_columns($emitted_cell_count)
+   {
+       $need = status_table_column_count() - $emitted_cell_count;
+       if ($need > 0) {
+           echo str_repeat("\n<td>&nbsp;</td>", $need);
+       }
+   }
+
+
    function displayStatus($result)
    {
        // Start a table, with column headers
@@ -201,12 +217,14 @@ else {
           echo "\n<td> Disabled </td>";
           }
        if (! $row["Checked"]) {
+          status_row_pad_columns(7);
           echo "\n</tr>";
           continue;
       }
 
        echo "\n<td ". ($row["Alive"]?"":"class=\"Issue\"") ."> ".($row["Alive"]?"Up":"Down")." </td>";
        if (! $row["Alive"]) {
+          status_row_pad_columns(8);
           echo "\n</tr>";
           continue;
       }
