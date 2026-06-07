@@ -5,6 +5,8 @@ if [ "$(id -u)" -ne 0 ]; then
    exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 WWW=/var/www/html/Dashboard
 CGI=/usr/lib/cgi-bin/Dashboard
 WWW_USER=www-data
@@ -37,7 +39,16 @@ if [ ! -f $CGI/secret_key ]; then
 fi
 
 if command -v pip3 >/dev/null; then
-    pip3 install -r "$(dirname "$0")/requirements.txt" || true
+    REQ="$SCRIPT_DIR/requirements.txt"
+    if [ ! -f "$REQ" ]; then
+        echo "Warning: requirements file not found: $REQ" >&2
+    else
+        PIP3=(pip3 install -r "$REQ")
+        if pip3 install --help 2>&1 | grep -q break-system-packages; then
+            PIP3=(pip3 install --break-system-packages -r "$REQ")
+        fi
+        "${PIP3[@]}" || true
+    fi
 fi
 
 

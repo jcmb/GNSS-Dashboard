@@ -151,7 +151,7 @@ Receiver:
 </td><td>
 <select required name=Receiver_Type>
   <option value="162" <?php echo ($row["Reciever_Type"]=="138")?"selected":"" ?>>Alloy</option>
-  <option value="112" <?php echo ($row["Reciever_Type"]=="112")?"selected":"" ?>>AgGPS_542</option>
+  <option value="112" <?php echo ($row["Reciever_Type"]=="112")?"selected":"" ?>>Ag542</option>
   <option value="240" <?php echo ($row["Reciever_Type"]=="240")?"selected":"" ?>>BD935</option>
   <option value="164" <?php echo ($row["Reciever_Type"]=="164")?"selected":"" ?>>BX992-INS</option>
   <option value="508" <?php echo ($row["Reciever_Type"]=="508")?"selected":"" ?>>BX992-MS</option>

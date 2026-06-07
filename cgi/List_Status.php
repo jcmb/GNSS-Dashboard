@@ -41,21 +41,17 @@ $(document).ready(function()
 <H1>GNSS Receivers</H1>
 
 <?php
-if ($_REQUEST["User_ID"]) {
-    $user_id = gnss_require_user_id(new SQLite3($databaseFile));
-    echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
-    }
-else {
-    die ("Internal Error: Missing User ID");
-   }
-?>
-
-
-<?php
    error_reporting(E_ALL);
    include 'error.php.inc';
    include 'db.inc.php';
    include 'security.inc.php';
+
+   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+?>
+
+
+<?php
 
 
    function ntrip_summary_html($row)
@@ -238,7 +234,7 @@ else {
        echo "\n<td> ".$row["Uptime"] ." </td>";
        echo "\n<td " . ($row["Auth_Valid"]?"":"class=\"Issue\"") . " > ".$row["Auth"]." </td>";
        echo "\n<td> ".$row["Serial_Number"]." </td>";
-       echo "\n<td> ".$row["Firmware_Version"]." </td>";
+       echo "\n<td " . ($row["Firmware_Valid"]?"":"class=\"Issue\"") . " > ".$row["Firmware_Version"]." </td>";
 
        echo "\n<td ". ($row["Reciever_Type_Valid"]?"":"class=\"Issue\"")." > ";
        switch ($row["Reciever_Type"]) {
@@ -265,6 +261,9 @@ else {
             break;
           case "138":
             echo "SPS356";
+            break;
+          case "112":
+            echo "Ag542";
             break;
           case "162":
             echo "Alloy";
@@ -364,6 +363,9 @@ else {
             break;
           case "570":
             echo "Zephyr 3 Base";
+            break;
+          case "758":
+            echo "R780-2";
             break;
 
           default:

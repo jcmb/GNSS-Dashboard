@@ -291,6 +291,7 @@ def check_firmware_and_password(GNSS_ID, DB, HTTP):
         return False
 
 RECEIVER_FIRMWARE_COLUMNS = {
+    "112": "GamelFile",
     "162": "AlloyFile",
     "169": "ChinstrapFile",
     "188": "BarracudaFile",
@@ -325,6 +326,8 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
             + " Skipping firmware version check: no firmware file configured for receiver type "
             + str(DB.Reciever_Type)
         )
+        DB.STATUS.execute("UPDATE STATUS SET Firmware_Valid=? where id=?", (True, GNSS_ID))
+        DB.conn.commit()
         return (True, "")
 
     Firmware_Version_Base = 0.0
@@ -347,6 +350,9 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
     firmwareValid = True
     Message = ""
     firmwareType = 1 # Everything is Titan now
+
+    if (DB.Reciever_Type == "112"):
+        firmwareType = 0
 
     if (DB.Reciever_Type == "162"):
         firmwareType = 1
@@ -374,6 +380,8 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
         firmwareValid = Firmware_Version == FirmwareVersions[DB.Firmware][firmwareType]
         Message = "Receiver Firmware is " + Firmware_Version + " Should be " + FirmwareVersions[DB.Firmware][firmwareType] + " Ring " + DB.Firmware + "\n"
 
+    DB.STATUS.execute("UPDATE STATUS SET Firmware_Valid=? where id=?", (firmwareValid, GNSS_ID))
+    DB.conn.commit()
     return(firmwareValid, Message)
 
 
