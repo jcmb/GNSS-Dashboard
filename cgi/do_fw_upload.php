@@ -92,135 +92,68 @@ if ($TitanVersion=="") {
     quit(100);
     }
 
-if ($_FILES['AlloyUpload'] ) {
-   echo "Alloy File: " , $_FILES['AlloyUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No Alloy File");
-    }
+$allowMissing = !empty($_REQUEST['AllowMissing']);
 
-$error=$_FILES["AlloyUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name =  $_FILES['AlloyUpload']["tmp_name"];
-   $AlloyName = $_FILES['AlloyUpload']["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$AlloyName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
+$uploadFields = array(
+   array('field' => 'AlloyUpload', 'nameVar' => 'AlloyName', 'label' => 'Alloy', 'errorLabel' => 'Alloy', 'dbCol' => 'AlloyFile'),
+   array('field' => 'BarracudaUpload', 'nameVar' => 'BCudaName', 'label' => 'Barra', 'errorLabel' => 'Barra', 'dbCol' => 'BarracudaFile'),
+   array('field' => 'ChinstrapUpload', 'nameVar' => 'ChinstrapName', 'label' => 'SPS986', 'errorLabel' => 'SPS986', 'dbCol' => 'ChinstrapFile'),
+   array('field' => 'ClarkUpload', 'nameVar' => 'ClarkName', 'label' => 'R780-2', 'errorLabel' => 'R780-2', 'dbCol' => 'ClarkFile'),
+   array('field' => 'LancetUpload', 'nameVar' => 'LancetName', 'label' => 'Lancet', 'errorLabel' => 'Lancet', 'dbCol' => 'LancetFile'),
+   array('field' => 'KryptonUpload', 'nameVar' => 'KryptonName', 'label' => 'BD992', 'errorLabel' => 'BD992', 'dbCol' => 'KryptonFile'),
+);
 
-echo "<br/>\n";
-
-if ($_FILES['BarracudaUpload'] ) {
-   echo "Barra File: " , $_FILES['BarracudaUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No Barra File");
-    }
-
-$error=$_FILES["BarracudaUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name =  $_FILES['BarracudaUpload']["tmp_name"];
-   $BCudaName = $_FILES['BarracudaUpload']["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$BCudaName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
-
-if ($_FILES['ChinstrapUpload'] ) {
-   echo "SPS986 File: " , $_FILES['ChinstrapUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No SPS986 File");
-    }
-
-$error=$_FILES["ChinstrapUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["ChinstrapUpload"]["tmp_name"];
-   $ChinstrapName = $_FILES["ChinstrapUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$ChinstrapName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
-$error=$_FILES["ClarkUpload"]["error"];
-if ($_FILES['ClarkUpload'] ) {
-   echo "R780-2 File: " , $_FILES['ClarkUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No R780-2 File");
-    }
-
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["ClarkUpload"]["tmp_name"];
-   $ClarkName = $_FILES["ClarkUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$ClarkName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
-if ($_FILES['LancetUpload'] ) {
-   echo "Lancet File: " , $_FILES['LancetUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No Lancet File");
-    }
-
-$error=$_FILES["LancetUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["LancetUpload"]["tmp_name"];
-   $LancetName = $_FILES["LancetUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$LancetName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
-
-if ($_FILES['KryptonUpload'] ) {
-   echo "BD992 File: " , $_FILES['KryptonUpload']['name'] , ", ";
-   }
-else {
-    exit ("Internal Error: No BD992 File");
-    }
-
-$error=$_FILES["KryptonUpload"]["error"];
-if ($error == UPLOAD_ERR_OK) {
-   $tmp_name = $_FILES["KryptonUpload"]["tmp_name"];
-   $KryptonName = $_FILES["KryptonUpload"]["name"];
-   move_uploaded_file($tmp_name, "$firmwareLocation/$KryptonName");
-   echo "uploaded";
-   }
-else {
-   echo "Upload Error";
-   quit(101);
-   }
-
-echo "<br/>\n";
+$AlloyName = '';
+$BCudaName = '';
+$ChinstrapName = '';
+$ClarkName = '';
+$LancetName = '';
+$KryptonName = '';
 
 $db = new SQLite3($databaseFile);
 $db->exec("PRAGMA busy_timeout=5000");
+
+if ($allowMissing) {
+   echo "Partial upload: missing platform files will keep existing filenames.<br/>\n";
+   $result = $db->query("SELECT AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, LancetFile, KryptonFile FROM Firmware WHERE Type=\"$Firmware\"");
+   $existing = $result->fetchArray(SQLITE3_ASSOC);
+   if ($existing) {
+      $AlloyName = $existing['AlloyFile'];
+      $BCudaName = $existing['BarracudaFile'];
+      $ChinstrapName = $existing['ChinstrapFile'];
+      $ClarkName = $existing['ClarkFile'];
+      $LancetName = $existing['LancetFile'];
+      $KryptonName = $existing['KryptonFile'];
+      }
+   }
+
+foreach ($uploadFields as $upload) {
+   $field = $upload['field'];
+   $nameVar = $upload['nameVar'];
+
+   if (isset($_FILES[$field]) && $_FILES[$field]['error'] != UPLOAD_ERR_NO_FILE && $_FILES[$field]['name'] != '') {
+      echo $upload['label'] , " File: " , $_FILES[$field]['name'] , ", ";
+      $error = $_FILES[$field]['error'];
+      if ($error == UPLOAD_ERR_OK) {
+         $tmp_name = $_FILES[$field]['tmp_name'];
+         $$nameVar = $_FILES[$field]['name'];
+         move_uploaded_file($tmp_name, "$firmwareLocation/" . $$nameVar);
+         echo "uploaded";
+         }
+      else {
+         echo "Upload Error";
+         quit(101);
+         }
+      }
+   elseif ($allowMissing) {
+      echo $upload['label'] , ": not provided, keeping existing file";
+      }
+   else {
+      exit ("Internal Error: No " . $upload['errorLabel'] . " File");
+      }
+
+   echo "<br/>\n";
+   }
 
 #echo "Datbase file " , $databaseFile, " opened<br/>";
 
