@@ -16,6 +16,20 @@ from pprint import pprint
 
 import logging
 logging.basicConfig(level=logging.WARNING)
+
+
+def parse_user_credentials(user_cred):
+    if ":" in user_cred:
+        username, password = user_cred.split(":", 1)
+    else:
+        username, password = user_cred, ""
+    return username, password
+
+
+def receiver_url(ip, path):
+    if not path.startswith("/"):
+        path = "/" + path
+    return "http://{}{}".format(ip, path)
 # Replacement for the upgrade with Clone script.
 #
 # Better understandability, logging, status and error reporting are the primary goals of the rewrite
@@ -107,7 +121,10 @@ def Get_Version (IP,USER):
    Version=None
    r=None
    try:
-      r = requests.get('http://{}@{}/xml/dynamic/merge.xml?sysData='.format(USER,IP))
+      r = requests.get(
+         receiver_url(IP, "/xml/dynamic/merge.xml?sysData="),
+         auth=parse_user_credentials(USER),
+      )
    except:
       pass
 
@@ -154,8 +171,15 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=WCO.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=Test&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on&cloneAllAppfilesEnable=on
 #  http://sps855.com/CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&cloneFileName=TEST3.xml&csibFileName=17021201.T02&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=TEST4&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on
 #  GET              /CACHEDIR2212516474/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=3&csibFileName=17021203.T0B&Year=2016&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName=WEB_TEST&cloneSecurityEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneAlmEnable=on&cloneMiscellaneousEnable=on HTTP/1.1
-      r = requests.get('http://{0}@{1}/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=1&cloneFileName={2}.xml&Year=2010&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName={2}&cloneSecurityEnable=on&cloneWiFiEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneMiscellaneousEnable=on&missingPasswordDefault='.
-          format(USER,IP,Clone_Short_Name))
+      r = requests.get(
+         receiver_url(
+            IP,
+            "/cgi-bin/app_fileUpdate.xml?operation=8&fileNumber=1&cloneFileName={0}.xml&Year=2010&Month=1&Day=1&Hour=0&Minute=0&RepeatMin=0&newAppFileName=&newCloneFileName={0}&cloneSecurityEnable=on&cloneWiFiEnable=on&cloneTcpUdpPortEnable=on&cloneEtherBootEnable=on&cloneHttpEnable=on&cloneEmailFtpNtpEnable=on&cloneDataLoggerEnable=on&clonePositionEnable=on&cloneMiscellaneousEnable=on&missingPasswordDefault=".format(
+               Clone_Short_Name
+            ),
+         ),
+         auth=parse_user_credentials(USER),
+      )
    except:
       pass
 
@@ -172,8 +196,10 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
    Count=0
 
    while Clone_In_Process:
-      r = requests.get('http://{}@{}/xml/dynamic/cloneFileStatus.xml'.
-            format(USER,IP))
+      r = requests.get(
+         receiver_url(IP, "/xml/dynamic/cloneFileStatus.xml"),
+         auth=parse_user_credentials(USER),
+      )
 
       if (r.status_code == 200) :
 #        print r.text
@@ -199,8 +225,10 @@ def Create_Clone(IP,USER,Version,Clone_Short_Name):
 def Get_Clone(IP,USER,Clone_Short_Name,Clone_Dir,Clone_Date):
    r=None
    try:
-      r = requests.get('http://{0}@{1}/clone_file/{2}.xml?gzipFlag=false'.
-         format(USER,IP,Clone_Short_Name))
+      r = requests.get(
+         receiver_url(IP, "/clone_file/{0}.xml?gzipFlag=false".format(Clone_Short_Name)),
+         auth=parse_user_credentials(USER),
+      )
    except:
       pass
 
@@ -240,7 +268,11 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
 
    try:
       files = {'myfile': open(FIRMWARE_FILE, 'rb')}
-      r = requests.post("http://{0}@{1}/prog/Upload?FirmwareFile&failsafe=yes".format(USER,IP), files=files)
+      r = requests.post(
+         receiver_url(IP, "/prog/Upload?FirmwareFile&failsafe=yes"),
+         auth=parse_user_credentials(USER),
+         files=files,
+      )
 
    except:
       pass
@@ -259,8 +291,10 @@ def Upgrade_Firmware(IP,USER,FIRMWARE_FILE):
    Count=0
    Last_State=None
    while Upgrade_In_Process:
-      r = requests.get("http://{0}@{1}/xml/dynamic/merge.xml?firmware_status=".
-            format(USER,IP))
+      r = requests.get(
+         receiver_url(IP, "/xml/dynamic/merge.xml?firmware_status="),
+         auth=parse_user_credentials(USER),
+      )
 
       if (r.status_code == 200) :
 #        print r.text
@@ -296,7 +330,14 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
    r=None
    files = {'myfile': (Clone_Short_Name+'.xml', Clone_Data)}
 
-   r = requests.post("http://{0}@{1}/cgi-bin/clone_fileUpload.html?cloneUploadName=&installCloneFile=true&installStaticIpAddr=true&clearBeforeInstallCloneFile=true&installSecurityRecords=true&missingPasswordDefault=Bad_Passw&installWiFiSpecific=true".format(USER,IP), files=files)
+   r = requests.post(
+      receiver_url(
+         IP,
+         "/cgi-bin/clone_fileUpload.html?cloneUploadName=&installCloneFile=true&installStaticIpAddr=true&clearBeforeInstallCloneFile=true&installSecurityRecords=true&missingPasswordDefault=Bad_Passw&installWiFiSpecific=true",
+      ),
+      auth=parse_user_credentials(USER),
+      files=files,
+   )
    try:
       pass
    except:
@@ -310,7 +351,10 @@ def Send_Clone(IP,USER,Clone_Short_Name,Clone_Data):
       logging.error("Error Connecting to receiver at {} Error Code: {} sending clone {}".format(IP,r.status_code,Clone_Short_Name))
       sys.exit("Error Connecting to receiver at {} Error Code: {} sending clone {} ".format(IP,r.status_code,Clone_Short_Name))
 
-   r = requests.get("http://{0}@{1}/cgi-bin/resetPage.xml?doReset=1".format(USER,IP))
+   r = requests.get(
+      receiver_url(IP, "/cgi-bin/resetPage.xml?doReset=1"),
+      auth=parse_user_credentials(USER),
+   )
 
 #pprint(sys.argv,stream=sys.stderr)
 (IP,USER,VERBOSE,CLONE_FILE,CLONE_DIR,CLONE_DATE,FIRMWARE_FILE,NO_UPGRADE,UPGRADE_ONLY) = process_arguments()

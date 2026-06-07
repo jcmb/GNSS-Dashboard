@@ -40,7 +40,7 @@ function check_file(file_control,name) {
          check_file("BarracudaUpload","R750") &&
          check_file("ClarkUpload","R780-2") &&
          check_file("ChinstrapUpload","SPS986") &&
-         check_file("LancetUpload","R750-2") &&
+         check_file("LancetUpload","R750-2 / MPS566-2") &&
          check_file("KryptonUpload","BD992");
   }
 </script>
@@ -119,7 +119,7 @@ R780-2: (Clark)
 
 <tr>
 <td width="33%">
-R750-2: (Lancet)
+R750-2 / MPS566-2: (Lancet)
 </td>
 <td width="67%">
 <input size="60" type="file" name="LancetUpload" id="LancetUpload" accept=".timg" required/></br>

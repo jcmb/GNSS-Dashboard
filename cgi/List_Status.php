@@ -491,13 +491,6 @@ if ($user_id) {
     }
 ?>
 
-<br>
-<?php
-if ($user_id) {
-    echo 'View <a href="/Dashboard/Error_List.php?User_ID='.h($user_id).'">Errors and Warnings</a>';
-    }
-?>
-
 </form>
 
 </div>

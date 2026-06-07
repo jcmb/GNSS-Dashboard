@@ -136,6 +136,9 @@ for row in rows:
       elif Reciever_Type == 191:
          print("R750-2 ", end=" ")
          firmware_file = LancetFile
+      elif Reciever_Type == 193:
+         print("MPS566-2 ", end=" ")
+         firmware_file = LancetFile
       elif Reciever_Type == 327:
          print("R780 ", end=" ")
          firmware_file = ChinstrapFile
