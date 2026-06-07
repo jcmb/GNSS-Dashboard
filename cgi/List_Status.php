@@ -42,11 +42,11 @@ $(document).ready(function()
 
 <?php
 if ($_REQUEST["User_ID"]) {
-    echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
+    $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+    echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
     }
 else {
     die ("Internal Error: Missing User ID");
-//    $_REQUEST["User_ID"]="1";
    }
 ?>
 
@@ -55,6 +55,7 @@ else {
    error_reporting(E_ALL);
    include 'error.php.inc';
    include 'db.inc.php';
+   include 'security.inc.php';
 
 
    function ntrip_summary_html($row)
@@ -137,7 +138,7 @@ else {
    }
 
 
-   function displayStatus($result)
+   function displayStatus($result, $user_id)
    {
        // Start a table, with column headers
 
@@ -203,9 +204,9 @@ else {
 
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
-       echo '<td><a target="_blank" href="/Dashboard/Edit_GNSS.php?GNSS_ID='.$row["id"].'&User_ID='. $_REQUEST["User_ID"].'">Edit</a></td>';
-       echo "\n<td> ".$row["id"]." </td>";
-       echo "\n<td> ".$row["name"]." </td>";
+       echo '<td><a target="_blank" href="/Dashboard/Edit_GNSS.php?GNSS_ID='.h($row["id"]).'&User_ID='. h($user_id).'">Edit</a></td>';
+       echo "\n<td> ".h($row["id"])." </td>";
+       echo "\n<td> ".h($row["name"])." </td>";
        echo "\n<td> ".$row["SystemName"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
        echo "\n<td> <a target=\"_blank\" href=\"http://".$row["Address"].":".$row["Port"]."\"> ".$row["Address"].":".$row["Port"]." </a></td>";
@@ -456,10 +457,9 @@ if (!$have_ntrip_valid_col) {
 // Run the query on the connection
 
 //$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-  $query = "SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port FROM STATUS INNER JOIN GNSS ON GNSS.id == STATUS.id WHERE  User_ID=" . $_REQUEST["User_ID"]. " order by GNSS.Name";
-
-
-$result = $db->query($query);
+  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
+  $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+  $result = $stmt->execute();
 
 if (!($result))
   {
@@ -467,7 +467,7 @@ if (!($result))
   }
 
    // Display the results
-displayStatus($result);
+displayStatus($result, $user_id);
 
 
   // Close the connection
@@ -480,21 +480,14 @@ if (!($db->close()))
 <p/>
 
 <?php
-if ($_REQUEST["User_ID"]) {
-    echo 'View <a href="/Dashboard/Receiver_List.php?User_ID='.$_REQUEST["User_ID"] . '">Receiver List</a>';
+if ($user_id) {
+    echo 'View <a href="/Dashboard/Receiver_List.php?User_ID='.h($user_id).'">Receiver List</a>';
     }
 ?>
 <br>
 <?php
-if ($_REQUEST["User_ID"]) {
-    echo 'View <a href="/Dashboard/Receiver_Upgrade.php?User_ID='.$_REQUEST["User_ID"] . '">Upgrade Firmware</a>';
-    }
-?>
-
-<br>
-<?php
-if ($_REQUEST["User_ID"]) {
-    echo 'View <a href="/Dashboard/Error_List.php?User_ID='.$_REQUEST["User_ID"] . '">Errors and Warnings</a>';
+if ($user_id) {
+    echo 'View <a href="/Dashboard/Receiver_Upgrade.php?User_ID='.h($user_id).'">Upgrade Firmware</a>';
     }
 ?>
 

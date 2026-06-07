@@ -48,7 +48,6 @@ case 'K':
 if (30000000 > $filemax) {
    echo "The firmware files are to large to upload. It must be possible to upload at least 30Mb files";
    echo "<br/>Contact your admin";
-   phpinfo();
    exit(100);
    }
 
@@ -59,7 +58,6 @@ if (30000000 > $filemax) {
 
 if ($_SERVER['CONTENT_LENGTH'] > $max) {
    echo "The combined firmware files are to large to upload. If the files are valid then contact your admin to adjust the server settings";
-   phpinfo();
    exit(100);
    }
 
@@ -78,6 +76,23 @@ $User_ID=$_REQUEST["User_ID"];
 if ($User_ID=="") {
     exit ("Internal Error: No User ID");
     }
+
+$userCheckDb = new SQLite3($databaseFile);
+$userStmt = $userCheckDb->prepare('SELECT id FROM Users WHERE id=?');
+$userStmt->bindValue(1, (int)$User_ID, SQLITE3_INTEGER);
+$userResult = $userStmt->execute();
+if (!$userResult || !$userResult->fetchArray()) {
+    exit("Invalid User ID");
+    }
+$userCheckDb->close();
+
+function sanitize_firmware_filename($name) {
+   $name = basename($name);
+   if (!preg_match('/^[A-Za-z0-9._-]+\.(timg|img)$/', $name)) {
+      exit("Invalid firmware filename");
+      }
+   return $name;
+   }
 
 $Firmware=$_REQUEST["Firmware"];
 $Firmware=clean($Firmware,strlen($Firmware));
@@ -136,7 +151,7 @@ foreach ($uploadFields as $upload) {
       $error = $_FILES[$field]['error'];
       if ($error == UPLOAD_ERR_OK) {
          $tmp_name = $_FILES[$field]['tmp_name'];
-         $$nameVar = $_FILES[$field]['name'];
+         $$nameVar = sanitize_firmware_filename($_FILES[$field]['name']);
          move_uploaded_file($tmp_name, "$firmwareLocation/" . $$nameVar);
          echo "uploaded";
          }

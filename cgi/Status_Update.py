@@ -55,7 +55,7 @@ else:
     # Assuming databaseFile() is defined in that file.
     pass
 
-# print(databaseFile())
+from gnss_security import decrypt_receiver_password
 
 class DB_Class:
 
@@ -86,18 +86,17 @@ class DB_Class:
         self.FIRMWARE.execute(query)
         row = self.FIRMWARE.fetchone()
         vers = {}
+        self.firmware_rows = {}
         while (row != None):
-            # pprint(row)
-            # pprint(tuple(row))
             vers[row["Type"]] = (row["Version"], row["Titan_Version"])
+            self.firmware_rows[row["Type"]] = row
             row = self.FIRMWARE.fetchone()
-        # pprint(vers)
         return(vers)
 
 
     def read_GNSS_configuration(self, GNSS_ID):
-        query = 'SELECT * FROM GNSS where id="' + str(GNSS_ID) + '"'
-        self.GNSS.execute(query)
+        query = 'SELECT * FROM GNSS where id=?'
+        self.GNSS.execute(query, (str(GNSS_ID),))
 
         row = self.GNSS.fetchone()
         # pprint(row.keys())
@@ -109,15 +108,13 @@ class DB_Class:
         self.User_Name = "admin"
         self.Enabled = row["Enabled"]
         self.GNSS_ID = row["id"]
-        self.Password = row["Password"]
+        self.Password = decrypt_receiver_password(row["Password"])
         self.Address = row["Address"]
         self.Port = row["Port"]
-        self.Enabled = row["Enabled"]
         self.User_ID = row["User_ID"]
         self.name = row["name"]
         self.Firmware = row["Firmware"]
         self.Reciever_Type = row["Reciever_Type"]
-        self.Password = row["Password"]
         self.Pos_Type = row["Pos_Type"]
         self.Static = row["Static"]
         self.LowLatency = row["LowLatency"]
@@ -293,7 +290,42 @@ def check_firmware_and_password(GNSS_ID, DB, HTTP):
         DB.conn.commit()
         return False
 
+RECEIVER_FIRMWARE_COLUMNS = {
+    "162": "AlloyFile",
+    "169": "ChinstrapFile",
+    "188": "BarracudaFile",
+    "191": "LancetFile",
+    "193": "LancetFile",
+    "327": "ChinstrapFile",
+    "329": "ClarkFile",
+    "508": "KryptonFile",
+    "509": "KryptonFile",
+    "164": "KryptonFile",
+    "330": "KryptonFile",
+    "331": "KryptonFile",
+}
+
+
+def configured_firmware_file(firmware_row, receiver_type):
+    column = RECEIVER_FIRMWARE_COLUMNS.get(str(receiver_type))
+    if column is None or firmware_row is None:
+        return None
+    filename = firmware_row[column]
+    if filename is None or str(filename).strip() == "":
+        return None
+    return str(filename).strip()
+
+
 def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
+
+    firmware_row = DB.firmware_rows.get(DB.Firmware)
+    if configured_firmware_file(firmware_row, DB.Reciever_Type) is None:
+        logger.info(
+            DB.Address + ":" + str(DB.Port)
+            + " Skipping firmware version check: no firmware file configured for receiver type "
+            + str(DB.Reciever_Type)
+        )
+        return (True, "")
 
     Firmware_Version_Base = 0.0
     (reply, result) = HTTP.get("/prog/show?firmwareVersion")

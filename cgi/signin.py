@@ -9,11 +9,9 @@ import stat
 from hashlib import pbkdf2_hmac
 
 from db_inc import *
-#execfile("db.inc.py")
-
 
 from pprint import pprint
-cgitb.enable()
+#cgitb.enable()
 
 print ("Content-Type: text/html")     # HTML is following
 print ()                              # blank line, end of headers
@@ -90,41 +88,16 @@ our_app_iters = 1000  # Application specific. It is on a Pi2...
 dk = pbkdf2_hmac('sha256', str.encode(Password), salt, our_app_iters)
 hashed=dk.hex()
 
-
-#print "User_ID: "
-#print(User_ID)
-#print "<br/>"
-
-#print "Password: "
-#pprint(Password)
-#print "<br/>"
-
-#print "salt: "
-#print(salt)
-#print "<br/>"
-
-#print "PWHash: "
-#print(PWHash)
-#print "<br/>"
-
-
-#print "Hashed: "
-#print(hashed)
-#print "<br/>"
-
 if str(hashed) != str(PWHash):
    print ("Password or User Name incorrect:")
    print ('<a href="/Dashboard">Try Again</a>')
    print ('<a href="/Dashboard/reset_password.html">Reset Password</a>')
 else:
-   print ("Logged in, ")
-   print ("<p/>")
-   print ("You might now of course think that you are secure, but the login screen is the only place that checks your password in the rest of the system:-(")
+   print ("Logged in.")
    print ("<p/>")
    print ("You can now:<ul>")
    print ('<li><a href="/cgi-bin/Dashboard/List_Status.php?User_ID='+User_ID+'">Receiver Dashboard</a>')
    print ('<li><a href="/Dashboard/Receiver_List.php?User_ID='+User_ID+'">View and edit receivers</a>')
-   print ('<li><a href="/Dashboard/Error_List.php?User_ID='+User_ID+'">View Errors and Warnings receivers</a>')
    print ('<li><a href="/Dashboard/Receiver_Upgrade.php?User_ID='+User_ID+'">Update Reciever Firmware</a>')
    print ('<li><a href="/Dashboard/fw_upload.php?User_ID='+User_ID+'">Upload firmware</a>')
    print ('<li><a href="/Dashboard/Edit_User.php?User_ID='+User_ID+'">Edit your user details</a>')

@@ -48,9 +48,14 @@ except FileNotFoundError:
     print("Error: db.inc.py not found.")
     sys.exit(1)
 
-# from db.inc import databaseFile # (Implicitly imported via exec above)
+from gnss_security import (
+    encrypt_receiver_password,
+    require_csrf,
+    verify_gnss_owner,
+    verify_user_exists,
+)
 
-cgitb.enable()
+#cgitb.enable()
 
 print("Content-Type: text/html")     # HTML is following
 print()                              # blank line, end of headers
@@ -81,6 +86,8 @@ if user_details is None:
     print("User ID invalid")
     sys.exit(90)
 
+require_csrf(form, User_ID)
+
 User_Name = str(user_details[1])
 User_Email = str(user_details[4])
 
@@ -92,6 +99,7 @@ if "GNSS_ID" not in form:
 else:
     Update = True
     GNSS_ID = form["GNSS_ID"].value
+    verify_gnss_owner(cursor, GNSS_ID, User_ID)
 
 if "Name" not in form:
     print("Name must be entered")
@@ -129,10 +137,25 @@ else:
     Receiver_Type = form["Receiver_Type"].value
 
 if "Password" not in form:
+    Password = ""
+else:
+    Password = form["Password"].value
+
+if Update:
+    if Password == "":
+        cursor.execute('SELECT Password FROM GNSS WHERE id=? AND User_ID=?', (GNSS_ID, User_ID))
+        existing = cursor.fetchone()
+        if existing is None:
+            print("Access denied<br/>")
+            sys.exit(403)
+        Password = existing[0]
+    else:
+        Password = encrypt_receiver_password(Password)
+elif Password == "":
     print("Password must be entered")
     sys.exit(100)
 else:
-    Password = form["Password"].value
+    Password = encrypt_receiver_password(Password)
 
 if "Pos_Type" not in form:
     print("Pos_Type must be entered")

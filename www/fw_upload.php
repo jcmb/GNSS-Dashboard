@@ -40,7 +40,7 @@ function check_file(file_control,name) {
          check_file("BarracudaUpload","R750") &&
          check_file("ClarkUpload","R780-2") &&
          check_file("ChinstrapUpload","SPS986") &&
-         check_file("LancetUpload","R750-2") &&
+         check_file("LancetUpload","R750-2 / MPS566-2") &&
          check_file("KryptonUpload","BD992");
   }
 </script>
@@ -49,9 +49,11 @@ function check_file(file_control,name) {
 <p><strong>Firmware Information:</strong> <br>
 
 <?php
-//var_dump($row);
-
-echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
+include 'db.inc.php';
+include 'security.inc.php';
+$user_id = gnss_require_user_id(new SQLite3($databaseFile));
+echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+echo gnss_csrf_field((string)$user_id);
 ?>
 
 <table>
@@ -77,13 +79,6 @@ ProPoint Version:
 </tr>
 </table>
 
-<?php
-$User_ID=$_REQUEST["User_ID"];
-if ($User_ID=="") {
-    exit ("Internal Error: No User ID");
-    }
-
-?>
 
 <p><strong>Upload Files:</strong> <br>
 
@@ -124,7 +119,7 @@ R780-2: (Clark)
 
 <tr>
 <td width="33%">
-R750-2: (Lancet)
+R750-2 / MPS566-2: (Lancet)
 </td>
 <td width="67%">
 <input size="60" type="file" name="LancetUpload" id="LancetUpload" accept=".timg" required/></br>

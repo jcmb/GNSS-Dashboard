@@ -42,6 +42,9 @@ else {
 #   error_reporting(E_ALL);
 #   include 'error.php.inc';
    include 'db.inc.php';
+   include 'security.inc.php';
+
+   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
 
    if ($_REQUEST["GNSS_ID"]) {
       if ($DUP) {
@@ -51,11 +54,10 @@ else {
          echo "Edit GNSS Receiver";
          }
       $db = new SQLite3($databaseFile);
-
-     // create a new table in the file
-      $query="SELECT * FROM GNSS WHERE id='".$_REQUEST["GNSS_ID"]."'";
-   //   echo $query;
-      $result = $db->query($query);
+      $gnss_id = gnss_verify_gnss_owner($db, $_REQUEST["GNSS_ID"], $user_id);
+      $stmt = $db->prepare('SELECT * FROM GNSS WHERE id=?');
+      $stmt->bindValue(1, $gnss_id, SQLITE3_INTEGER);
+      $result = $stmt->execute();
 
       if (!($result))
         {
@@ -77,20 +79,21 @@ else {
 
 </H1>
 
-<form name="input" action="/cgi-bin/Dashboard/Do_Edit_GNSS.py" method="get">
+<form name="input" action="/cgi-bin/Dashboard/Do_Edit_GNSS.py" method="post">
 
 <?php
 //var_dump($row);
 
-echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
+echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+echo gnss_csrf_field((string)$user_id);
 
-$User_ID=$_REQUEST["User_ID"];
+$User_ID=$user_id;
 if ($User_ID=="") {
     exit ("Internal Error: No User ID");
     }
 
 if ($Editing && !$DUP) {
-   echo '<input name="GNSS_ID" type="hidden" value="'.$_REQUEST["GNSS_ID"] . '">';
+   echo '<input name="GNSS_ID" type="hidden" value="'.h($gnss_id).'">';
    }
 
 ?>
@@ -176,7 +179,7 @@ Receiver:
 <tr><td>
 Admin password:
 </td><td>
-<input name="Password" type="text" value="<?php echo $row["Password"]?$row["Password"]:"password" ?>"/>
+<input name="Password" type="password" value="" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
 </td></tr>
 
 <tr><td>
