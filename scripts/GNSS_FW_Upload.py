@@ -86,6 +86,8 @@ def main():
     parser.add_argument("--user", help="User ID")
     parser.add_argument("--type", choices=['release', 'beta', 'branch', 'trunk'],
                         default='branch', help="Release type (default: branch)")
+    parser.add_argument("--allow-missing", action="store_true",
+                        help="Continue upload when some platform files are missing")
 
     args = parser.parse_args()
     config = load_config()
@@ -130,9 +132,11 @@ def main():
             missing_files.append(field_name)
 
     if missing_files:
-        print(f<"Warning: Missing files for: {', '.join(missing_files)}")
-        if input("Continue anyway? (y/n): ").lower() != 'y':
-            sys.exit("Aborted.")
+        print(f"Warning: Missing files for: {', '.join(missing_files)}")
+        if not args.allow_missing:
+            if input("Continue anyway? (y/n): ").lower() != 'y':
+                sys.exit("Aborted.")
+        data["AllowMissing"] = "1"
 
     # 4. Upload
     try:
