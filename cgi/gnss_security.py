@@ -5,7 +5,6 @@ import hmac
 import os
 import re
 import time
-from hashlib import pbkdf2_hmac
 
 try:
     from cryptography.fernet import Fernet, InvalidToken
@@ -13,7 +12,7 @@ except ImportError:
     Fernet = None
     InvalidToken = Exception
 
-PBKDF2_ITERATIONS = 600_000
+
 _ENCRYPTED_PREFIX = "enc:"
 
 
@@ -142,20 +141,6 @@ def sanitize_upload_filename(name):
 def validate_prog_command(cmd):
     if not re.match(r"^[A-Za-z0-9_]+$", cmd or ""):
         raise ValueError("Invalid programmatic command")
-
-
-def verify_user_password(password, salt, stored_hash):
-    """Verify password, accepting legacy iteration counts."""
-    for iters in (PBKDF2_ITERATIONS, 1000):
-        dk = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iters)
-        if dk.hex() == str(stored_hash):
-            return True, iters
-    return False, None
-
-
-def hash_user_password(password, salt):
-    dk = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS)
-    return dk.hex()
 
 
 def validate_prog_params(params):

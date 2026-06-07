@@ -8,7 +8,7 @@ from hashlib import pbkdf2_hmac
 
 # Ensure db_inc.py is in the same directory or python path
 from db_inc import *
-from gnss_security import PBKDF2_ITERATIONS, hash_user_password, require_csrf, verify_user_exists
+from gnss_security import require_csrf, verify_user_exists
 
 #cgitb.enable()
 
@@ -59,6 +59,8 @@ if "Password" not in form:
 else:
    Password = form["Password"].value
 
+our_app_iters = 1000  # Application specific.
+
 if Update:
     if Password == "":
        cursor.execute('''UPDATE Users SET
@@ -78,7 +80,8 @@ if Update:
        if result:
            salt = result[0]
 
-           hashed = hash_user_password(Password, salt)
+           dk = pbkdf2_hmac('sha256', Password.encode('utf-8'), salt, our_app_iters)
+           hashed = dk.hex()
 
            cursor.execute('''UPDATE Users SET
              Name=?,
@@ -97,7 +100,8 @@ else:
     # Generate new salt (bytes)
     salt = os.urandom(16)
 
-    hashed = hash_user_password(Password, salt)
+    dk = pbkdf2_hmac('sha256', Password.encode('utf-8'), salt, our_app_iters)
+    hashed = dk.hex()
 
     cursor.execute('''INSERT INTO Users (
       Name,
