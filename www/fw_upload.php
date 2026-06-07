@@ -49,9 +49,11 @@ function check_file(file_control,name) {
 <p><strong>Firmware Information:</strong> <br>
 
 <?php
-//var_dump($row);
-
-echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
+include 'db.inc.php';
+include 'security.inc.php';
+$user_id = gnss_require_user_id(new SQLite3($databaseFile));
+echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+echo gnss_csrf_field((string)$user_id);
 ?>
 
 <table>
@@ -77,13 +79,6 @@ ProPoint Version:
 </tr>
 </table>
 
-<?php
-$User_ID=$_REQUEST["User_ID"];
-if ($User_ID=="") {
-    exit ("Internal Error: No User ID");
-    }
-
-?>
 
 <p><strong>Upload Files:</strong> <br>
 

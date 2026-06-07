@@ -16,7 +16,9 @@ except ImportError:
     print("Error: db_inc.py not found.")
     sys.exit(1)
 
-cgitb.enable()
+from gnss_security import decrypt_receiver_password, require_csrf, verify_user_exists
+
+#cgitb.enable()
 
 print("Content-Type: text/html")     # HTML is following
 print()                               # blank line, end of headers
@@ -43,6 +45,9 @@ if "User_ID" not in form:
     sys.exit(100)
 else:
     User_ID = form["User_ID"].value
+
+verify_user_exists(cursor, User_ID)
+require_csrf(form, User_ID)
 
 if "Firmware" not in form:
     print("Internal Error: Firmware not provided<br/>")
@@ -157,21 +162,22 @@ for row in rows:
       else:
          print("Upgrading")
 
-         # Construct the command
-         cmd = "./upgrade_with_clone.py" +\
-            " -p admin:" + str(row["Password"]) +\
-            " -c GPS_"+ str(row["id"]) +\
-            " -d /var/www/html/Dashboard/Clones"  +\
-            " -i " +  str(row["Address"]) + ":" + str(row["Port"])  +\
-            " -f " + firmwareLocation() + '/' + firmware_file +\
-            " -u"
+         receiver_password = decrypt_receiver_password(row["Password"])
+         clone_dir = wwwDir() + "Clones"
+         firmware_path = firmwareLocation() + '/' + firmware_file
+         cmd = [
+            os.path.join(cgiDir(), "upgrade_with_clone.py"),
+            "-p", "admin:" + receiver_password,
+            "-c", "GPS_" + str(row["id"]),
+            "-d", clone_dir,
+            "-i", str(row["Address"]) + ":" + str(row["Port"]),
+            "-f", firmware_path,
+            "-u",
+         ]
 
-         print(cmd)
+         print("Starting upgrade for " + row["name"])
 
-         # Execute subprocess
-         # Popen in Py3 behaves similarly, strictly separating bytes/str in streams if piped.
-         # Shell=True allows the string command to run.
-         proc = Popen(cmd, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
+         proc = Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
          pprint(proc)
          time.sleep(2)
 

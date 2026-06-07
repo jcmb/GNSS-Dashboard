@@ -4,13 +4,13 @@ import cgitb
 import sqlite3
 import os
 import sys
-import stat
 from hashlib import pbkdf2_hmac
 
 # Ensure db_inc.py is in the same directory or python path
 from db_inc import *
+from gnss_security import PBKDF2_ITERATIONS, hash_user_password, require_csrf, verify_user_exists
 
-cgitb.enable()
+#cgitb.enable()
 
 print("Content-Type: text/html")     # HTML is following
 print()                               # blank line, end of headers
@@ -31,10 +31,13 @@ print("</head><body>")
 if "User_ID" not in form:
     Update = False
     print("Adding a new User<br/>")
+    require_csrf(form, "new")
 else:
     print("Editing User<br/>")
     Update = True
     User_ID = form["User_ID"].value
+    verify_user_exists(cursor, User_ID)
+    require_csrf(form, User_ID)
 
 if "Name" not in form:
    print("Name must be entered")
@@ -56,8 +59,6 @@ if "Password" not in form:
 else:
    Password = form["Password"].value
 
-our_app_iters = 1000  # Application specific.
-
 if Update:
     if Password == "":
        cursor.execute('''UPDATE Users SET
@@ -77,9 +78,7 @@ if Update:
        if result:
            salt = result[0]
 
-           # Password must be bytes, salt must be bytes
-           dk = pbkdf2_hmac('sha256', Password.encode('utf-8'), salt, our_app_iters)
-           hashed = dk.hex() # Converts hash bytes to hex string for storage
+           hashed = hash_user_password(Password, salt)
 
            cursor.execute('''UPDATE Users SET
              Name=?,
@@ -98,9 +97,7 @@ else:
     # Generate new salt (bytes)
     salt = os.urandom(16)
 
-    # Password must be bytes, salt must be bytes
-    dk = pbkdf2_hmac('sha256', Password.encode('utf-8'), salt, our_app_iters)
-    hashed = dk.hex()
+    hashed = hash_user_password(Password, salt)
 
     cursor.execute('''INSERT INTO Users (
       Name,

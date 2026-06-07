@@ -6,3 +6,5 @@ cgi/Programmatic_Backup.py
 cgi/GNSS.db
 *.pyc
 cgi/email_to
+cgi/secret_key
+secret_key

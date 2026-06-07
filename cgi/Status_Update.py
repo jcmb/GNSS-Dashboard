@@ -55,7 +55,7 @@ else:
     # Assuming databaseFile() is defined in that file.
     pass
 
-# print(databaseFile())
+from gnss_security import decrypt_receiver_password
 
 class DB_Class:
 
@@ -96,8 +96,8 @@ class DB_Class:
 
 
     def read_GNSS_configuration(self, GNSS_ID):
-        query = 'SELECT * FROM GNSS where id="' + str(GNSS_ID) + '"'
-        self.GNSS.execute(query)
+        query = 'SELECT * FROM GNSS where id=?'
+        self.GNSS.execute(query, (str(GNSS_ID),))
 
         row = self.GNSS.fetchone()
         # pprint(row.keys())
@@ -109,15 +109,13 @@ class DB_Class:
         self.User_Name = "admin"
         self.Enabled = row["Enabled"]
         self.GNSS_ID = row["id"]
-        self.Password = row["Password"]
+        self.Password = decrypt_receiver_password(row["Password"])
         self.Address = row["Address"]
         self.Port = row["Port"]
-        self.Enabled = row["Enabled"]
         self.User_ID = row["User_ID"]
         self.name = row["name"]
         self.Firmware = row["Firmware"]
         self.Reciever_Type = row["Reciever_Type"]
-        self.Password = row["Password"]
         self.Pos_Type = row["Pos_Type"]
         self.Static = row["Static"]
         self.LowLatency = row["LowLatency"]

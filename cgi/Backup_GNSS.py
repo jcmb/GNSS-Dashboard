@@ -9,6 +9,7 @@ import datetime
 from subprocess import Popen
 
 from db_inc import *
+from gnss_security import decrypt_receiver_password
 
 from pprint import pprint
 
@@ -63,12 +64,13 @@ for row in rows:
          except:
             pass
 
+         receiver_password = decrypt_receiver_password(row["Password"])
          cmd=[
             cgiDir() + "upgrade_with_clone.py",
             "--no_upgrade",
             "--clonedate",
             "--clonedir", wwwDir()+ "Clones/"+str(row["name"]),
-            "-padmin:" + row["Password"],
+            "-padmin:" + receiver_password,
             "-c" + "GPS_"+ str(row["id"]),
             "-i" + row["Address"]+":"+str(row["Port"]) ,
             ]
@@ -82,7 +84,7 @@ for row in rows:
             cgiDir() + "Programmatic_Backup.py",
             "--Output", wwwDir()+ "PI/"+str(row["name"]+"/"+datetime.datetime.now().strftime("%Y-%m-%d")+".PI"),
             "--User", "admin",
-            "--Password",  row["Password"],
+            "--Password",  receiver_password,
             "--Host" , row["Address"],
             "--Port", str(row["Port"]),
             ]

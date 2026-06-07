@@ -41,21 +41,15 @@ $(document).ready(function()
 <H1>GNSS Receivers Errors and Warnings</H1>
 
 <?php
-if ($_REQUEST["User_ID"]) {
-    echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
-    }
-else {
-    die ("Internal Error: Missing User ID");
-   }
-?>
-
-<?php
    error_reporting(E_ALL);
    include 'error.php.inc';
    include 'db.inc.php';
+   include 'security.inc.php';
+   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+?>
 
 
-   function displayGNSSErrors($result)
+   function displayGNSSErrors($result, $user_id)
    {
        // Start a table, with column headers
 
@@ -93,11 +87,12 @@ else {
 
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
-       echo "\n<td> ".$row["id"]." </td>";
-       echo '<td><a href="/cgi-bin/Dashboard/View_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">View</a>';
-       echo '<td><a href="/cgi-bin/Dashboard/Download_Error?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Download</a>';
-       echo '<td><a href="/cgi-bin/Dashboard/Download_Clone?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"].'">Clone</a>';
-       echo "\n<td> ".$row["name"]." </td>";
+       $action_base = '/cgi-bin/Dashboard/Do_Receiver_Errors.py?User_ID=' . urlencode((string)$user_id) . '&GNSS_ID=' . urlencode((string)$row["id"]);
+       echo "\n<td> ".h($row["id"])." </td>";
+       echo '<td><a href="' . h($action_base . '&action=view') . '">View</a>';
+       echo '<td><a href="' . h($action_base . '&action=download') . '">Download</a>';
+       echo '<td><a href="' . h($action_base . '&action=clone') . '">Clone</a>';
+       echo "\n<td> ".h($row["name"])." </td>";
        echo "\n<td> ".$row["Firmware"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
        echo "\n<td> ".$row["Address"]." </td>";
@@ -157,10 +152,17 @@ else {
             echo "Unknown ID ". $row["Reciever_Type"];
        }
        echo " </td>";
-       echo "\n<td> ".$row["Password"]." </td>";
-       echo "\n<td> ".$row["Errors"]." </td>";
-       echo "\n<td> ".$row["Warnings"]." </td>";
-       echo "\n".'<td><a target="_blank" href="/cgi-bin/Dashboard/Delete_Errors?HOST='.$row["Address"]."&PORT=".$row["Port"]."&USER=admin&PASS=".$row["Password"]."&NAME=".$row["name"]."&ID=".$row["id"].'">Delete</a>';
+       echo "\n<td> ".h(gnss_display_receiver_password($row["Password"]))." </td>";
+       echo "\n<td> ".h($row["Errors"])." </td>";
+       echo "\n<td> ".h($row["Warnings"])." </td>";
+       echo "\n<td>";
+       echo '<form style="display:inline" method="post" action="/cgi-bin/Dashboard/Do_Receiver_Errors.py">';
+       echo '<input type="hidden" name="User_ID" value="'.h($user_id).'">';
+       echo '<input type="hidden" name="GNSS_ID" value="'.h($row["id"]).'">';
+       echo '<input type="hidden" name="action" value="clear">';
+       echo gnss_csrf_field((string)$user_id);
+       echo '<input type="submit" value="Clear">';
+       echo '</form></td>';
 
        echo "\n</tr>";
 
@@ -185,17 +187,16 @@ if (! $db) {
 
 // Run the query on the connection
 
-$query = "SELECT * FROM GNSS JOIN STATUS on GNSS.id = STATUS.id WHERE User_ID=" . $_REQUEST["User_ID"];
-
-$result = $db->query($query);
+$stmt = $db->prepare('SELECT * FROM GNSS JOIN STATUS on GNSS.id = STATUS.id WHERE User_ID=?');
+$stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+$result = $stmt->execute();
 
 if (!($result))
   {
   showerror();
   }
 
-   // Display the results
-displayGNSSErrors($result);
+displayGNSSErrors($result, $user_id);
 
 
   // Close the connection

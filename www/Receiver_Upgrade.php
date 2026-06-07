@@ -53,23 +53,19 @@ function AllOn() {
 </head>
 <body>
 <H1>GNSS Receivers</H1>
-<form name="input" action="/cgi-bin/Dashboard/Upgrade_GNSS.py" method="get">
-
-<?php
-if ($_REQUEST["User_ID"]) {
-    echo '<input name="User_ID" type="hidden" value="'.$_REQUEST["User_ID"] . '">';
-    }
-else {
-    die ("Internal Error: Missing User ID");
-   }
-?>
+<form name="input" action="/cgi-bin/Dashboard/Upgrade_GNSS.py" method="post">
 
 <?php
    error_reporting(E_ALL);
    include 'error.php.inc';
    include 'db.inc.php';
+   include 'security.inc.php';
+   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+   echo gnss_csrf_field((string)$user_id);
+?>
 
-
+<?php
    // Connect to sqlite
 
    $db = new SQLite3($databaseFile);
@@ -157,10 +153,9 @@ Upgrade To:
 
 // Run the query on the connection
 
-$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"]. " ORDER BY Loc_Group";
-
-
-$result = $db->query($query);
+$stmt = $db->prepare('SELECT * FROM GNSS WHERE User_ID=? ORDER BY Loc_Group');
+$stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+$result = $stmt->execute();
 
 if (!($result))
   {
@@ -200,12 +195,9 @@ $( document).ready(function() {
 <br/>
 
 <?php
-if ($_REQUEST["User_ID"]) {
-    echo '<a href="fw_upload.php?User_ID='.$_REQUEST["User_ID"].'">Upload Firmware</a>';
+if ($user_id) {
+    echo '<a href="fw_upload.php?User_ID='.h($user_id).'">Upload Firmware</a>';
     }
-else {
-    die ("Internal Error: Missing User ID");
-   }
 ?>
 
 
