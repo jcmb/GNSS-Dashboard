@@ -37,7 +37,12 @@ if [ ! -f $CGI/secret_key ]; then
 fi
 
 if command -v pip3 >/dev/null; then
-    pip3 install -r "$(dirname "$0")/requirements.txt" || true
+    REQ="$(dirname "$0")/requirements.txt"
+    PIP3=(pip3 install -r "$REQ")
+    if pip3 install --help 2>&1 | grep -q break-system-packages; then
+        PIP3=(pip3 install --break-system-packages -r "$REQ")
+    fi
+    "${PIP3[@]}" || true
 fi
 
 
