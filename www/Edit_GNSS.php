@@ -294,7 +294,7 @@ Type:
   <option value="147" <?php echo ($row["Antenna"]=="147"?"selected":""); ?>>SPS985</option>
   <option value="569" <?php echo ($row["Antenna"]=="569"?"selected":""); ?>>SPS986</option>
   <option value="569" <?php echo ($row["Antenna"]=="146"?"selected":""); ?>>R10</option>
-  <option value="721" <?php echo ($row["Antenna"]=="751"?"selected":""); ?>>R780</option>
+  <option value="721" <?php echo ($row["Antenna"]=="721"?"selected":""); ?>>R780</option>
   <option value="758" <?php echo ($row["Antenna"]=="758"?"selected":""); ?>>R780-2</option>
   <option value="184" <?php echo ($row["Antenna"]=="184"?"selected":""); ?>>Zephyr 2</option>
   <option value="185" <?php echo ($row["Antenna"]=="185"?"selected":""); ?>>Zephyr Geodetic 2</option>
