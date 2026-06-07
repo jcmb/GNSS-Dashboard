@@ -299,7 +299,7 @@ $(document).ready(function()
             echo "R780-2";
             break;
           case "330":
-            echo "MP1086";
+            echo "MP86";
             break;
           case "331":
             echo "MS1086";
@@ -332,7 +332,7 @@ $(document).ready(function()
             echo "GA830";
             break;
           case "784":
-            echo "MP1086";
+            echo "MP86";
             break;
           case "146":
             echo "R10";
@@ -366,6 +366,9 @@ $(document).ready(function()
             break;
           case "758":
             echo "R780-2";
+            break;
+          case "721":
+            echo "R780";
             break;
 
           default:
