@@ -1,5 +1,10 @@
 #!/bin/bash -x
 
+if [ "$(id -u)" -ne 0 ]; then
+   echo "This script must be run as root (e.g. sudo setup.sh)" >&2
+   exit 1
+fi
+
 WWW=/var/www/html/Dashboard
 CGI=/usr/lib/cgi-bin/Dashboard
 WWW_USER=www-data
