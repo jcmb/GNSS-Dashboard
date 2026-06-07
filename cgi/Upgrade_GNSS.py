@@ -58,7 +58,7 @@ else:
 # Fetch firmware filenames
 # Note: The original code does not select 'AlloyFile' in this query,
 # but tries to use it later. Ensure AlloyFile is defined in db_inc.py or add it to this query.
-query = 'SELECT Titan_Version, AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, KryptonFile, LancetFile FROM Firmware where type=?'
+query = 'SELECT Titan_Version, AlloyFile, BarracudaFile, ChinstrapFile, ClarkFile, KryptonFile, LancetFile, GamelFile FROM Firmware where type=?'
 cursor.execute(query, (Firmware_ID,))
 
 rows = cursor.fetchone()
@@ -74,6 +74,7 @@ ChinstrapFile = rows[3]
 ClarkFile = rows[4]
 KryptonFile = rows[5]
 LancetFile = rows[6]
+GamelFile = rows[7]
 
 print("Upgrading to firmware V" + str(Firmware) + "<br/>")
 
@@ -124,6 +125,9 @@ for row in rows:
       elif Reciever_Type == 101:
          print("SPS985 ", end=" ")
          print("Not Supported")
+      elif Reciever_Type == 112:
+         print("Ag542 ", end=" ")
+         firmware_file = GamelFile
       elif Reciever_Type == 162:
          print("Alloy ", end=" ")
          firmware_file = AlloyFile

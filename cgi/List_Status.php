@@ -234,7 +234,7 @@ $(document).ready(function()
        echo "\n<td> ".$row["Uptime"] ." </td>";
        echo "\n<td " . ($row["Auth_Valid"]?"":"class=\"Issue\"") . " > ".$row["Auth"]." </td>";
        echo "\n<td> ".$row["Serial_Number"]." </td>";
-       echo "\n<td> ".$row["Firmware_Version"]." </td>";
+       echo "\n<td " . ($row["Firmware_Valid"]?"":"class=\"Issue\"") . " > ".$row["Firmware_Version"]." </td>";
 
        echo "\n<td ". ($row["Reciever_Type_Valid"]?"":"class=\"Issue\"")." > ";
        switch ($row["Reciever_Type"]) {
@@ -261,6 +261,9 @@ $(document).ready(function()
             break;
           case "138":
             echo "SPS356";
+            break;
+          case "112":
+            echo "Ag542";
             break;
           case "162":
             echo "Alloy";
@@ -360,6 +363,9 @@ $(document).ready(function()
             break;
           case "570":
             echo "Zephyr 3 Base";
+            break;
+          case "758":
+            echo "R780-2";
             break;
 
           default:

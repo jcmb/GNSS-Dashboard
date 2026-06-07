@@ -99,6 +99,9 @@ $(document).ready(function()
        echo "\n<td> ".$row["Port"]." </td>";
        echo "\n<td> ";
        switch ($row["Reciever_Type"]) {
+          case "112":
+            echo "Ag542";
+            break;
           case "162":
             echo "Alloy";
             break;
