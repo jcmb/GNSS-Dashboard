@@ -38,15 +38,16 @@ $(document).ready(function()
 <form name="input" action="Edit_GNSS.php" method="get">
 
 <?php
-$user_id = gnss_require_user_id(new SQLite3($databaseFile));
-echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
+   include 'error.php.inc';
+   include 'db.inc.php';
+   include 'security.inc.php';
+
+   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
 ?>
 
 
 <?php
-   include 'error.php.inc';
-   include 'db.inc.php';
-   include 'security.inc.php';
 
 
    function displayGNSS($result, $user_id)
