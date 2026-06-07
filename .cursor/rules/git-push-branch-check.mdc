@@ -1,0 +1,35 @@
+---
+description: Before git push, verify remote branch exists; recreate with a new review branch if deleted
+alwaysApply: true
+---
+
+# Git push — remote branch check
+
+Before any `git push`, verify the current branch still exists on the remote.
+
+## Pre-push check
+
+1. Fetch remotes: `git fetch origin --prune`
+2. Check whether the upstream branch exists:
+   - `git rev-parse --verify origin/<current-branch>` (success = exists)
+   - Or: `git ls-remote --heads origin <current-branch>`
+
+## If the remote branch was deleted
+
+Do **not** push to the old branch name expecting it to work silently.
+
+1. Create a new review branch from the current HEAD using the `cursor/` prefix and a short descriptive slug, e.g. `cursor/fix-status-include-order-v2` or `cursor/mp86-antenna-labels`.
+2. Tell the user explicitly:
+   - that the previous remote branch was deleted
+   - the **new branch name** proposed for review
+3. Push the new branch: `git push -u origin <new-branch-name>`
+4. If updating a PR, note that a new PR may be needed (or retarget) for the new branch.
+
+## If the remote branch exists
+
+Push normally: `git push origin <current-branch>` (or `-u` when setting upstream).
+
+## Branch naming
+
+- Prefer `cursor/<short-description>` for agent/work-in-progress branches.
+- When recreating after deletion, append a suffix (`-v2`, `-retry`, or a tighter slug) so the new branch is clearly distinct from the deleted one.
