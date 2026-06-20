@@ -941,14 +941,35 @@ def check_FTP(GNSS_ID, DB, HTTP):
             FTP_Valid = False
             Message += "NotPushedFileCount is {} it should be 0\n".format(FTP_Not_Pushed)
 
-        for log in root.findall('log'):
-            status = log.find('status').text
+        latest_log = None
+        latest_time = -1
+        latest_order = -1
+        for idx, log in enumerate(root.findall('log')):
+            status_node = log.find('status')
+            status = status_node.text if status_node is not None else ""
+            if status == "inProg":
+                continue
 
-            if status == "FTPTestBadLogin":
+            time_node = log.find('time')
+            try:
+                log_time = int(time_node.text) if time_node is not None else -1
+            except (TypeError, ValueError):
+                log_time = -1
+
+            if (log_time > latest_time) or (log_time == latest_time and idx > latest_order):
+                latest_log = log
+                latest_time = log_time
+                latest_order = idx
+
+        if latest_log is not None:
+            latest_status_node = latest_log.find('status')
+            latest_status = latest_status_node.text if latest_status_node is not None else ""
+
+            if latest_status == "FTPTestBadLogin":
                 FTP_Valid = False
                 Message = "FTP Has a Bad login\n"
 
-            if status == "FTPTestBadDir":
+            if latest_status == "FTPTestBadDir":
                 FTP_Valid = False
                 Message = "FTP Has a Bad remote directory\n"
 
