@@ -6,6 +6,20 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RUN_INSTALL=0
+
+if [ "${1:-}" = "--install" ]; then
+    RUN_INSTALL=1
+elif [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    echo "Usage: $0 [--install]"
+    echo "  (default)   Copy Dashboard files only"
+    echo "  --install   Copy files and run install/setup steps"
+    exit 0
+elif [ -n "${1:-}" ]; then
+    echo "Unknown option: $1" >&2
+    echo "Usage: $0 [--install]" >&2
+    exit 1
+fi
 
 WWW=/var/www/html/Dashboard
 CGI=/usr/lib/cgi-bin/Dashboard
@@ -27,45 +41,50 @@ cp  www/* $WWW
 cp  cgi/* $CGI
 cp  User/* $CGI/User
 
-cd $CGI
-chown $WWW_USER $WWW/*
-chown $WWW_USER $CGI/*
-chmod +x $CGI/*.py $CGI/Do_* $CGI/View_Error $CGI/Download_* $CGI/Delete_Errors 2>/dev/null || true
+if [ "$RUN_INSTALL" -eq 1 ]; then
+    cd $CGI
+    chown $WWW_USER $WWW/*
+    chown $WWW_USER $CGI/*
+    chmod +x $CGI/*.py $CGI/Do_* $CGI/View_Error $CGI/Download_* $CGI/Delete_Errors 2>/dev/null || true
 
-if [ ! -f $CGI/secret_key ]; then
-    python3 -c "import secrets; print(secrets.token_urlsafe(32))" > $CGI/secret_key
-    chmod 600 $CGI/secret_key
-    chown $WWW_USER $CGI/secret_key
-fi
-
-if command -v pip3 >/dev/null; then
-    REQ="$SCRIPT_DIR/requirements.txt"
-    if [ ! -f "$REQ" ]; then
-        echo "Warning: requirements file not found: $REQ" >&2
-    else
-        PIP3=(pip3 install -r "$REQ")
-        if pip3 install --help 2>&1 | grep -q break-system-packages; then
-            PIP3=(pip3 install --break-system-packages -r "$REQ")
-        fi
-        "${PIP3[@]}" || true
+    if [ ! -f $CGI/secret_key ]; then
+        python3 -c "import secrets; print(secrets.token_urlsafe(32))" > $CGI/secret_key
+        chmod 600 $CGI/secret_key
+        chown $WWW_USER $CGI/secret_key
     fi
+
+    if command -v pip3 >/dev/null; then
+        REQ="$SCRIPT_DIR/requirements.txt"
+        if [ ! -f "$REQ" ]; then
+            echo "Warning: requirements file not found: $REQ" >&2
+        else
+            PIP3=(pip3 install -r "$REQ")
+            if pip3 install --help 2>&1 | grep -q break-system-packages; then
+                PIP3=(pip3 install --break-system-packages -r "$REQ")
+            fi
+            "${PIP3[@]}" || true
+        fi
+    fi
+
+    chown $WWW_USER $WWW $WWW/Firmware $WWW/Clones $CGI
+
+    cd $CGI
+
+    sudo php ./DB_Setup.php
+
+    if [ ! -f GNSS.db ]
+    then
+        echo "Error: GNSS.db not created. PHP installed?"
+        exit 1
+    fi
+
+    chown $WWW_USER GNSS.db
+    chgrp $NAGIOS_USER GNSS.db
+    chmod 0770 GNSS.db
 fi
 
-
-
-chown $WWW_USER $WWW $WWW/Firmware $WWW/Clones $CGI
-
-cd $CGI
-
-sudo php ./DB_Setup.php
-
-if [ ! -f GNSS.db ]
-then
-    echo "Error: GNSS.db not created. PHP installed?"
-    exit 1
+echo "Dashboard files copied."
+if [ "$RUN_INSTALL" -eq 0 ]; then
+    echo "Install steps skipped (default). Run '$0 --install' to run full setup."
 fi
-
-chown $WWW_USER GNSS.db
-chgrp $NAGIOS_USER GNSS.db
-chmod 0770 GNSS.db
 
