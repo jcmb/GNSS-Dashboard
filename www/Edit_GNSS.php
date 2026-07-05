@@ -562,7 +562,7 @@ Wireless Mode (450 MHz):
 </td><td>
 <select name="RadioWirelessMode">
 <?php foreach ($radio_wireless_modes as $mode_id => $mode_label) { ?>
-  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id)?"selected":""); ?>><?php echo h($mode_id . " - " . $mode_label); ?></option>
+  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id?"selected":""); ?>><?php echo h($mode_id . " - " . $mode_label); ?></option>
 <?php } ?>
 </select>
 </td></tr>
