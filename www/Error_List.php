@@ -9,7 +9,6 @@
         <img src="/Dashboard/trimble-logo.png" alt="Trimble Logo" id="logo"> </a>
       </div>
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">
