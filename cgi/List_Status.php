@@ -120,7 +120,7 @@ $(document).ready(function()
    /** Must match the number of <th> cells in the status table header row. */
    function status_table_column_count()
    {
-       return 49;
+       return 47;
    }
 
 
@@ -179,21 +179,71 @@ $(document).ready(function()
 
    function radio_band_value($row)
    {
-       if (!empty($row["RadioBand"])) {
-           return $row["RadioBand"];
+       $band = !empty($row["RadioBand"]) ? $row["RadioBand"] : "900";
+       if ($band === "450" || $band === "900") {
+           return $band;
+       }
+       if (!empty($row["Radio"])) {
+           if (strpos($row["Radio"], "(450)") !== false) {
+               return "450";
+           }
+           if (strpos($row["Radio"], "(900)") !== false) {
+               return "900";
+           }
+       }
+       if (!empty($row["RadioFrequency"])) {
+           return "450";
+       }
+       if (!empty($row["RadioNetworkNumber"])) {
+           return "900";
        }
        return "900";
    }
 
 
-   function radio_wireless_display($mode_id, $modes)
+   function radio_channel_display($row, $band)
+   {
+       if ($band === "900") {
+           $net = isset($row["RadioNetworkNumber"]) ? $row["RadioNetworkNumber"] : "";
+           return ($net !== "" && $net !== null) ? (string)$net : "";
+       }
+       if ($band === "450") {
+           $freq = isset($row["RadioFrequency"]) ? $row["RadioFrequency"] : "";
+           return ($freq !== "" && $freq !== null) ? $freq . " MHz" : "";
+       }
+       return "";
+   }
+
+
+   function gnss_radio_wireless_mode_xml_names()
+   {
+       $paths = array(
+           '/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json',
+           __DIR__ . '/radio_wireless_mode_xml_names.json',
+       );
+       foreach ($paths as $path) {
+           if (is_readable($path)) {
+               $raw = json_decode(file_get_contents($path), true);
+               if (is_array($raw)) {
+                   return $raw;
+               }
+           }
+       }
+       return array();
+   }
+
+
+   function radio_wireless_display($mode_id, $modes, $xml_names = array())
    {
        if ($mode_id === null || $mode_id === "") {
            return "";
        }
        $key = (string)(int)$mode_id;
+       if (!empty($xml_names) && isset($xml_names[$key])) {
+           return $xml_names[$key];
+       }
        if (isset($modes[$key])) {
-           return $key . " - " . $modes[$key];
+           return $modes[$key];
        }
        return (string)$mode_id;
    }
@@ -207,12 +257,10 @@ $(document).ready(function()
        echo "\n<td>&nbsp;</td>";
        echo "\n<td>&nbsp;</td>";
        echo "\n<td>&nbsp;</td>";
-       echo "\n<td>&nbsp;</td>";
-       echo "\n<td>&nbsp;</td>";
    }
 
 
-   function radio_status_cells($row, $wireless_modes)
+   function radio_status_cells($row, $wireless_modes, $wireless_xml_names)
    {
        $issue = radio_issue_class($row);
        $band = radio_band_value($row);
@@ -221,24 +269,11 @@ $(document).ready(function()
        echo "\n<td" . $issue . "> " . h($band) . " </td>";
        echo "\n<td" . $issue . "> " . h(radio_mode_display(isset($row["RadioMode"]) ? $row["RadioMode"] : "")) . " </td>";
        echo "\n<td" . $issue . "> " . (!empty($row["RadioOnOffState"]) ? "On" : "Off") . " </td>";
+       echo "\n<td" . $issue . "> " . h(radio_channel_display($row, $band)) . " </td>";
 
-       if ($band === "900" || $band === "combo") {
-           echo "\n<td" . $issue . "> " . h(isset($row["RadioNetworkNumber"]) ? $row["RadioNetworkNumber"] : "") . " </td>";
+       if ($band === "450") {
+           echo "\n<td" . $issue . "> " . h(radio_wireless_display(isset($row["RadioWirelessMode"]) ? $row["RadioWirelessMode"] : "", $wireless_modes, $wireless_xml_names)) . " </td>";
        } else {
-           echo "\n<td>&nbsp;</td>";
-       }
-
-       if ($band === "450" || $band === "combo") {
-           echo "\n<td" . $issue . "> " . h(isset($row["RadioFrequency"]) ? $row["RadioFrequency"] : "") . " </td>";
-           $spacing = isset($row["RadioActiveChanSpacing"]) ? $row["RadioActiveChanSpacing"] : "";
-           if ($spacing !== "" && $spacing !== null) {
-               $spacing = rtrim(rtrim((string)$spacing, "0"), ".") . " kHz";
-           }
-           echo "\n<td" . $issue . "> " . h($spacing) . " </td>";
-           echo "\n<td" . $issue . "> " . h(radio_wireless_display(isset($row["RadioWirelessMode"]) ? $row["RadioWirelessMode"] : "", $wireless_modes)) . " </td>";
-       } else {
-           echo "\n<td>&nbsp;</td>";
-           echo "\n<td>&nbsp;</td>";
            echo "\n<td>&nbsp;</td>";
        }
    }
@@ -256,6 +291,7 @@ $(document).ready(function()
    function displayStatus($result, $user_id)
    {
        $wireless_modes = gnss_radio_wireless_modes();
+       $wireless_xml_names = gnss_radio_wireless_mode_xml_names();
 
        // Start a table, with column headers
 
@@ -291,9 +327,7 @@ $(document).ready(function()
           "\n<th>Band</th>" .
           "\n<th>Radio Mode</th>" .
           "\n<th>Radio On</th>" .
-          "\n<th>Net #</th>" .
-          "\n<th>MHz</th>" .
-          "\n<th>Spacing</th>" .
+          "\n<th>Net / MHz</th>" .
           "\n<th>Wireless</th>" .
           "\n<th>NTRIP</th>" .
 //          "\n<th>IBSS</th>" .
@@ -538,7 +572,7 @@ $(document).ready(function()
        if (empty($row["RadioEnabled"])) {
            radio_disabled_cells();
        } else {
-           radio_status_cells($row, $wireless_modes);
+           radio_status_cells($row, $wireless_modes, $wireless_xml_names);
        }
 
        echo "\n<td" . ntrip_cell_classes($row) . "> " . ntrip_summary_html($row) . " </td>";
@@ -597,7 +631,7 @@ if (!$have_ntrip_valid_col) {
 // Run the query on the connection
 
 //$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode, GNSS.RadioActiveChanSpacing FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
+  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
   $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
   $result = $stmt->execute();
 

@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import sqlite3
 
 
@@ -33,6 +34,67 @@ def load_radio_wireless_modes():
 def wireless_mode_label(mode):
     modes = load_radio_wireless_modes()
     return modes.get(int(mode), "Unknown wireless mode {}".format(mode))
+
+
+def wireless_mode_xml_names_path():
+    paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "radio_wireless_mode_xml_names.json"),
+        "/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json",
+    ]
+    for path in paths:
+        if os.path.isfile(path):
+            return path
+    return paths[0]
+
+
+def load_wireless_mode_xml_names():
+    path = wireless_mode_xml_names_path()
+    if not os.path.isfile(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as handle:
+        raw = json.load(handle)
+    return {int(key): value for key, value in raw.items()}
+
+
+def wireless_mode_display_name(mode):
+    mode_id = int(mode)
+    xml_names = load_wireless_mode_xml_names()
+    if mode_id in xml_names:
+        return xml_names[mode_id]
+    return wireless_mode_label(mode_id)
+
+
+def normalize_wireless_mode_text(text):
+    return re.sub(r"\s+", " ", str(text).strip().lower())
+
+
+def wireless_mode_match_names(mode_id):
+    mode_id = int(mode_id)
+    names = []
+    xml_names = load_wireless_mode_xml_names()
+    modes = load_radio_wireless_modes()
+    if mode_id in xml_names:
+        names.append(xml_names[mode_id])
+    if mode_id in modes:
+        names.append(modes[mode_id])
+    deduped = []
+    seen = set()
+    for name in names:
+        key = normalize_wireless_mode_text(name)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(name)
+    return deduped
+
+
+def wireless_mode_long_matches(mode_id, actual_long):
+    if actual_long is None:
+        return False
+    norm_actual = normalize_wireless_mode_text(actual_long)
+    for name in wireless_mode_match_names(mode_id):
+        if normalize_wireless_mode_text(name) == norm_actual:
+            return True
+    return False
 
 
 def ensure_gnss_radio_columns(conn):

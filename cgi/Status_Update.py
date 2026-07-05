@@ -62,6 +62,8 @@ from radio_config import (
     radio_modes_match,
     normalize_radio_mode,
     wireless_mode_label,
+    wireless_mode_display_name,
+    wireless_mode_long_matches,
     xml_find_text,
     channel_spacing_matches,
     radio_summary_root,
@@ -1511,12 +1513,9 @@ def check_Radio(GNSS_ID, DB, HTTP):
                 root,
                 "type450/activeChanSpacing",
             )
-            wireless_mode = xml_find_text(
+            wireless_mode_long = xml_find_text(
                 root,
-                "type450/curWirelessMode",
-                "type450/wirelessMode",
-                "general/wirelessMode",
-                "general/wirelessModeID",
+                "type450/curWirelessModeLong",
             )
             if DB.RadioFrequency is not None:
                 if frequency is None:
@@ -1541,19 +1540,18 @@ def check_Radio(GNSS_ID, DB, HTTP):
                 else:
                     radio_details.append("{}kHz".format(active_chan_spacing))
             if DB.RadioWirelessMode is not None:
-                if wireless_mode is None:
+                if wireless_mode_long is None:
                     Message += "Radio wireless mode could not be determined\n"
                     Radio_Valid = False
-                elif int(wireless_mode) != int(DB.RadioWirelessMode):
-                    Message += "Radio wireless mode is {} ({}), Expected {} ({})\n".format(
-                        wireless_mode,
-                        wireless_mode_label(wireless_mode),
+                elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
+                    Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
+                        wireless_mode_long,
                         DB.RadioWirelessMode,
-                        wireless_mode_label(DB.RadioWirelessMode),
+                        wireless_mode_display_name(DB.RadioWirelessMode),
                     )
                     Radio_Valid = False
                 else:
-                    radio_details.append("mode{}".format(wireless_mode))
+                    radio_details.append(wireless_mode_long)
 
         Radio_Str = RadioOnOffState + ":" + radioMode + ":" + (DB.RadioBand if DB.RadioBand else "900")
         if DB.RadioBand == "combo" and radio_band in ("450", "900"):

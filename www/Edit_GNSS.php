@@ -82,6 +82,33 @@ else {
       return array();
    }
 
+   function gnss_radio_wireless_mode_xml_names() {
+      $paths = array(
+         '/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json',
+         dirname(__DIR__) . '/cgi/radio_wireless_mode_xml_names.json',
+      );
+      foreach ($paths as $path) {
+         if (is_readable($path)) {
+            $raw = json_decode(file_get_contents($path), true);
+            if (is_array($raw)) {
+               return $raw;
+            }
+         }
+      }
+      return array();
+   }
+
+   function gnss_radio_wireless_mode_display_name($mode_id, $modes, $xml_names) {
+      $key = (string)(int)$mode_id;
+      if (isset($xml_names[$key])) {
+         return $xml_names[$key];
+      }
+      if (isset($modes[$key])) {
+         return $modes[$key];
+      }
+      return (string)$mode_id;
+   }
+
    $user_id = gnss_require_user_id(new SQLite3($databaseFile));
 
    if ($_REQUEST["GNSS_ID"]) {
@@ -115,6 +142,7 @@ else {
       }
 
    $radio_wireless_modes = gnss_radio_wireless_modes();
+   $radio_wireless_xml_names = gnss_radio_wireless_mode_xml_names();
    $radio_band = (!empty($row) && !empty($row["RadioBand"])) ? $row["RadioBand"] : "900";
    $radio_network_number = (!empty($row) && $row["RadioNetworkNumber"] !== null && $row["RadioNetworkNumber"] !== "") ? $row["RadioNetworkNumber"] : "1";
    $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
@@ -560,8 +588,10 @@ Active Channel Spacing (450 MHz):
 Wireless Mode (450 MHz):
 </td><td>
 <select name="RadioWirelessMode">
-<?php foreach ($radio_wireless_modes as $mode_id => $mode_label) { ?>
-  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id?"selected":""); ?>><?php echo h($mode_id . " - " . $mode_label); ?></option>
+<?php foreach ($radio_wireless_modes as $mode_id => $mode_label) {
+   $mode_display = gnss_radio_wireless_mode_display_name($mode_id, $radio_wireless_modes, $radio_wireless_xml_names);
+?>
+  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id?"selected":""); ?>><?php echo h($mode_display); ?></option>
 <?php } ?>
 </select>
 </td></tr>
