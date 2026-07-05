@@ -54,6 +54,7 @@ from gnss_security import (
     verify_gnss_owner,
     verify_user_exists,
 )
+from radio_config import ensure_gnss_radio_columns, load_radio_wireless_modes, normalize_channel_spacing, RADIO_CHANNEL_SPACINGS
 
 #cgitb.enable()
 
@@ -66,6 +67,8 @@ try:
 except sqlite3.Error:
     print("Error opening db. " + str(databaseFile()) + "\n")
     sys.exit()
+
+ensure_gnss_radio_columns(conn)
 
 cursor = conn.cursor()
 form = cgi.FieldStorage()
@@ -336,6 +339,69 @@ if "RadioMode" not in form:
 else:
     Radio_Mode = form["RadioMode"].value
 
+if Radio_Mode == "RadioModeBase":
+    Radio_Mode = "RadioModeBaseW4Repeater"
+
+Radio_Band = form.getvalue("RadioBand", "900")
+Radio_Network_Number = None
+Radio_Frequency = None
+Radio_Wireless_Mode = None
+Radio_Active_Chan_Spacing = None
+
+if Radio_Enabled:
+    if Radio_Band not in ("450", "900", "combo"):
+        print("RadioBand must be 450, 900, or combo when radio checking is enabled.<br>")
+        sys.exit(100)
+
+    if Radio_Band in ("900", "combo"):
+        if "RadioNetworkNumber" not in form:
+            print("RadioNetworkNumber must be entered for 900 MHz radios.<br>")
+            sys.exit(100)
+        try:
+            Radio_Network_Number = int(form["RadioNetworkNumber"].value)
+        except ValueError:
+            print("RadioNetworkNumber must be a whole number between 1 and 40.<br>")
+            sys.exit(100)
+        if Radio_Network_Number < 1 or Radio_Network_Number > 40:
+            print("RadioNetworkNumber must be between 1 and 40.<br>")
+            sys.exit(100)
+
+    if Radio_Band in ("450", "combo"):
+        if "RadioFrequency" not in form:
+            print("RadioFrequency must be entered for 450 MHz radios.<br>")
+            sys.exit(100)
+        if "RadioWirelessMode" not in form:
+            print("RadioWirelessMode must be entered for 450 MHz radios.<br>")
+            sys.exit(100)
+        if "RadioActiveChanSpacing" not in form:
+            print("RadioActiveChanSpacing must be entered for 450 MHz radios.<br>")
+            sys.exit(100)
+        try:
+            Radio_Frequency = float(form["RadioFrequency"].value)
+        except ValueError:
+            print("RadioFrequency must be a number between 403 and 473 MHz.<br>")
+            sys.exit(100)
+        if Radio_Frequency < 403 or Radio_Frequency > 473:
+            print("RadioFrequency must be between 403 and 473 MHz.<br>")
+            sys.exit(100)
+        try:
+            Radio_Wireless_Mode = int(form["RadioWirelessMode"].value)
+        except ValueError:
+            print("RadioWirelessMode must be a whole number.<br>")
+            sys.exit(100)
+        valid_modes = load_radio_wireless_modes()
+        if Radio_Wireless_Mode not in valid_modes:
+            print("RadioWirelessMode is not a supported wireless mode.<br>")
+            sys.exit(100)
+        try:
+            Radio_Active_Chan_Spacing = normalize_channel_spacing(form["RadioActiveChanSpacing"].value)
+        except ValueError:
+            print("RadioActiveChanSpacing must be 12.5 or 25 kHz.<br>")
+            sys.exit(100)
+        if Radio_Active_Chan_Spacing not in RADIO_CHANNEL_SPACINGS:
+            print("RadioActiveChanSpacing must be 12.5 or 25 kHz.<br>")
+            sys.exit(100)
+
 # --- NTRIP Processing and Validation ---
 
 ntrip_data = {}
@@ -409,6 +475,7 @@ data_values = (
     Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
     Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, Timed_Enabled,
     Timed_Minimum, Timed_Maximum, Radio_Enabled, Radio_OnOffState, Radio_Mode,
+    Radio_Band, Radio_Network_Number, Radio_Frequency, Radio_Wireless_Mode, Radio_Active_Chan_Spacing,
     BaseFollow,
     ntrip_data["NTRIP_Client_1_Enabled"], ntrip_data["NTRIP_Client_1_Mount"],
     ntrip_data["NTRIP_Client_2_Enabled"], ntrip_data["NTRIP_Client_2_Mount"],
@@ -435,6 +502,7 @@ sql_query = f'''
         Ref_Code, Ref_Lat, Ref_Long, Ref_Height, Email_Enabled, Email_To, Auth,
         Frequencies, GPS, GLN, GAL, BDS, QZSS, SBAS, NAGIOS, TIMED_ACTIVE,
         TIMED_MIN_DELTA, TIMED_MAX_DELTA, RadioEnabled, RadioOnOffState, RadioMode,
+        RadioBand, RadioNetworkNumber, RadioFrequency, RadioWirelessMode, RadioActiveChanSpacing,
         BASEFOLLOW,
         NTRIP_Client_1_Enabled, NTRIP_Client_1_Mount,
         NTRIP_Client_2_Enabled, NTRIP_Client_2_Mount,
@@ -495,6 +563,11 @@ sql_query = f'''
         RadioEnabled=excluded.RadioEnabled,
         RadioOnOffState=excluded.RadioOnOffState,
         RadioMode=excluded.RadioMode,
+        RadioBand=excluded.RadioBand,
+        RadioNetworkNumber=excluded.RadioNetworkNumber,
+        RadioFrequency=excluded.RadioFrequency,
+        RadioWirelessMode=excluded.RadioWirelessMode,
+        RadioActiveChanSpacing=excluded.RadioActiveChanSpacing,
         BASEFOLLOW=excluded.BASEFOLLOW,
         NTRIP_Client_1_Enabled=excluded.NTRIP_Client_1_Enabled,
         NTRIP_Client_1_Mount=excluded.NTRIP_Client_1_Mount,

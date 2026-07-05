@@ -5,6 +5,8 @@ import requests
 import argparse
 import time
 from lxml import etree
+
+from gnss_security import receiver_login_locked
 from pprint import pprint
 from zipfile import ZipFile
 import os
@@ -114,6 +116,10 @@ def Login(IPAddr,user,password, verbose=False ,proxies={}, timeout=10, secure=Fa
     else:
       # HTTPS request (without validating the certificate)
       r = requests.get(url_str, auth=(user,password), proxies=proxies, timeout=timeout, verify=False)
+
+    if receiver_login_locked(r.text):
+        sys.stderr.write("Receiver login is locked out\n")
+        sys.exit(2)
 
     d = etree.fromstring( r.text )
     cookie = d.find('cookie').text

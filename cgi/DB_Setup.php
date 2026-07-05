@@ -66,6 +66,11 @@
       RadioEnabled BOOLEAN,
       RadioOnOffState BOOLEAN,
       RadioMode TEXT,
+      RadioBand TEXT,
+      RadioNetworkNumber INTEGER,
+      RadioFrequency NUMERIC,
+      RadioWirelessMode INTEGER,
+      RadioActiveChanSpacing NUMERIC,
       DynDNS_Enabled BOOLEAN,
       DynDNS_Host TEXT
       )');

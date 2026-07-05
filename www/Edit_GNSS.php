@@ -44,6 +44,45 @@ else {
    include 'db.inc.php';
    include 'security.inc.php';
 
+   function gnss_ensure_radio_columns($db) {
+      $existing = array();
+      $pragma = $db->query('PRAGMA table_info(GNSS)');
+      if ($pragma) {
+         while ($col = $pragma->fetchArray(SQLITE3_ASSOC)) {
+            $existing[$col['name']] = true;
+         }
+      }
+      $columns = array(
+         'RadioBand' => 'TEXT',
+         'RadioNetworkNumber' => 'INTEGER',
+         'RadioFrequency' => 'NUMERIC',
+         'RadioWirelessMode' => 'INTEGER',
+         'RadioActiveChanSpacing' => 'NUMERIC',
+      );
+      foreach ($columns as $name => $type) {
+         if (!isset($existing[$name])) {
+            $db->exec('ALTER TABLE GNSS ADD COLUMN ' . $name . ' ' . $type);
+         }
+      }
+   }
+
+   function gnss_radio_wireless_modes() {
+      $paths = array(
+         '/usr/lib/cgi-bin/Dashboard/radio_wireless_modes.json',
+         dirname(__DIR__) . '/cgi/radio_wireless_modes.json',
+      );
+      foreach ($paths as $path) {
+         if (is_readable($path)) {
+            $raw = json_decode(file_get_contents($path), true);
+            if (is_array($raw)) {
+               ksort($raw, SORT_NUMERIC);
+               return $raw;
+            }
+         }
+      }
+      return array();
+   }
+
    $user_id = gnss_require_user_id(new SQLite3($databaseFile));
 
    if ($_REQUEST["GNSS_ID"]) {
@@ -54,6 +93,7 @@ else {
          echo "Edit GNSS Receiver";
          }
       $db = new SQLite3($databaseFile);
+      gnss_ensure_radio_columns($db);
       $gnss_id = gnss_verify_gnss_owner($db, $_REQUEST["GNSS_ID"], $user_id);
       $stmt = $db->prepare('SELECT * FROM GNSS WHERE id=?');
       $stmt->bindValue(1, $gnss_id, SQLITE3_INTEGER);
@@ -74,6 +114,13 @@ else {
       echo "Add GNSS Receiver";
       $Editing=FALSE;
       }
+
+   $radio_wireless_modes = gnss_radio_wireless_modes();
+   $radio_band = (!empty($row) && !empty($row["RadioBand"])) ? $row["RadioBand"] : "900";
+   $radio_network_number = (!empty($row) && $row["RadioNetworkNumber"] !== null && $row["RadioNetworkNumber"] !== "") ? $row["RadioNetworkNumber"] : "1";
+   $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
+   $radio_wireless_mode = (!empty($row) && $row["RadioWirelessMode"] !== null && $row["RadioWirelessMode"] !== "") ? $row["RadioWirelessMode"] : "0";
+   $radio_active_chan_spacing = (!empty($row) && $row["RadioActiveChanSpacing"] !== null && $row["RadioActiveChanSpacing"] !== "") ? $row["RadioActiveChanSpacing"] : "12.5";
 
 ?>
 
@@ -466,21 +513,73 @@ Operation Mode:
 </td><td>
 
 <select required name="RadioMode">
-  <option value="RadioModeBase" <?php echo ($row["RadioMode"]=="RadioModeBase"?"selected":""); ?>>Base 900MHz</option>
-  <option value="RadioModeBaseW0Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW0Repeater"?"selected":""); ?>>Base with 0 Repeaters</option>
-  <option value="RadioModeBaseW1Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
-  <option value="RadioModeBaseW2Repeater" <?php echo ($row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
-  <option value="RadioModeRover" <?php echo ($row["RadioMode"]=="RadioModeRover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
-  <option value="RadioModeRepeater1" <?php echo ($row["RadioMode"]=="RadioModeRepeater1"?"selected":""); ?>>Repeater 1</option>
-  <option value="RadioModeRepeater2" <?php echo ($row["RadioMode"]=="RadioModeRepeater2"?"selected":""); ?>>Repeater 2</option>
-  <option value="RadioModeRepeater3" <?php echo ($row["RadioMode"]=="RadioModeRepeater3"?"selected":""); ?>>Repeater 3</option>
-  <option value="RadioModeRepeater4" <?php echo ($row["RadioMode"]=="RadioModeRepeater4"?"selected":""); ?>>Repeater 4</option>
+  <option value="RadioModeBaseW4Repeater" <?php echo (!empty($row) && in_array($row["RadioMode"], array("RadioModeBaseW4Repeater", "RadioModeBase"), true)?"selected":""); ?>>Base with 4 Repeaters</option>
+  <option value="RadioModeBaseW0Repeater" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeBaseW0Repeater"?"selected":""); ?>>Base with 0 Repeaters</option>
+  <option value="RadioModeBaseW1Repeater" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeBaseW1Repeater"?"selected":""); ?>>Base with 1 Repeaters</option>
+  <option value="RadioModeBaseW2Repeater" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeBaseW2Repeater"?"selected":""); ?>>Base with 2 Repeaters</option>
+  <option value="RadioModeRover" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRover"?"selected":""); echo ($Editing?"":"selected") ?>>Rover</option>
+  <option value="RadioModeRepeater1" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRepeater1"?"selected":""); ?>>Repeater 1</option>
+  <option value="RadioModeRepeater2" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRepeater2"?"selected":""); ?>>Repeater 2</option>
+  <option value="RadioModeRepeater3" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRepeater3"?"selected":""); ?>>Repeater 3</option>
+  <option value="RadioModeRepeater4" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRepeater4"?"selected":""); ?>>Repeater 4</option>
 </select>
 
 </td></tr>
+
+<tr><td>
+Radio Band:
+</td><td>
+<select required name="RadioBand" id="RadioBand">
+  <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
+  <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
+  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
+</select>
+</td></tr>
+
+<tr class="radio-900-field"><td>
+Network Number (900 MHz):
+</td><td>
+<input name="RadioNetworkNumber" type="number" min="1" max="40" step="1" value="<?php echo h($radio_network_number); ?>">
+</td></tr>
+
+<tr class="radio-450-field"><td>
+Frequency (450 MHz):
+</td><td>
+<input name="RadioFrequency" type="number" min="403" max="473" step="0.001" value="<?php echo h($radio_frequency); ?>">
+</td></tr>
+
+<tr class="radio-450-field"><td>
+Active Channel Spacing (450 MHz):
+</td><td>
+<select name="RadioActiveChanSpacing">
+  <option value="12.5" <?php echo ((string)$radio_active_chan_spacing === "12.5"?"selected":""); ?>>12.5 kHz</option>
+  <option value="25" <?php echo ((string)$radio_active_chan_spacing === "25" || (string)$radio_active_chan_spacing === "25.0"?"selected":""); ?>>25 kHz</option>
+</select>
+</td></tr>
+
+<tr class="radio-450-field"><td>
+Wireless Mode (450 MHz):
+</td><td>
+<select name="RadioWirelessMode">
+<?php foreach ($radio_wireless_modes as $mode_id => $mode_label) { ?>
+  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id)?"selected":""); ?>><?php echo h($mode_id . " - " . $mode_label); ?></option>
+<?php } ?>
+</select>
+</td></tr>
 </table>
 
-<p/>
+<script>
+$(function() {
+   function updateRadioBandFields() {
+      var band = $("#RadioBand").val();
+      $(".radio-900-field").toggle(band === "900" || band === "combo");
+      $(".radio-450-field").toggle(band === "450" || band === "combo");
+   }
+   $("#RadioBand").on("change", updateRadioBandFields);
+   updateRadioBandFields();
+});
+</script>
+
 <table>
 <tr><caption>Base Follow</caption>
 <tr><td>

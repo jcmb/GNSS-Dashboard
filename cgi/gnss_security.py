@@ -5,6 +5,7 @@ import hmac
 import os
 import re
 import time
+import xml.etree.ElementTree as ET
 
 try:
     from cryptography.fernet import Fernet, InvalidToken
@@ -65,6 +66,19 @@ def encrypt_receiver_password(plain):
         return plain
     token = fernet.encrypt(str(plain).encode("utf-8")).decode("ascii")
     return _ENCRYPTED_PREFIX + token
+
+
+def receiver_login_locked(xml_text):
+    """Return True when receiver login.xml reports <LOCKED>1</LOCKED>."""
+    if not xml_text:
+        return False
+    if "<LOCKED>1</LOCKED>" in xml_text:
+        return True
+    try:
+        locked = ET.fromstring(xml_text).find("LOCKED")
+        return locked is not None and str(locked.text).strip() == "1"
+    except ET.ParseError:
+        return False
 
 
 def decrypt_receiver_password(stored):

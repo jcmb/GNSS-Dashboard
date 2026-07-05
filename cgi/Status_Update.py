@@ -17,6 +17,7 @@ import stat
 #import base64
 import requests
 import datetime
+import time
 import logging
 import logging.handlers
 import xml.etree.ElementTree as ET
@@ -55,7 +56,17 @@ else:
     # Assuming databaseFile() is defined in that file.
     pass
 
-from gnss_security import decrypt_receiver_password
+from gnss_security import decrypt_receiver_password, receiver_login_locked
+from radio_config import (
+    ensure_gnss_radio_columns,
+    radio_modes_match,
+    normalize_radio_mode,
+    wireless_mode_label,
+    xml_find_text,
+    channel_spacing_matches,
+    radio_summary_root,
+    detect_active_radio_band,
+)
 
 class DB_Class:
 
@@ -80,6 +91,7 @@ class DB_Class:
         self.GNSS = self.conn.cursor()
         self.STATUS = self.conn.cursor()
         self.FIRMWARE = self.conn.cursor()
+        ensure_gnss_radio_columns(self.conn)
 
     def read_Firmware_configuration(self):
         query = 'SELECT * FROM Firmware'
@@ -188,7 +200,12 @@ class DB_Class:
 
         self.RadioEnabled = row["RadioEnabled"]
         self.RadioOnOffState = row["RadioOnOffState"]
-        self.RadioMode = row["RadioMode"]
+        self.RadioMode = normalize_radio_mode(row["RadioMode"])
+        self.RadioBand = row["RadioBand"] if row["RadioBand"] else "900"
+        self.RadioNetworkNumber = row["RadioNetworkNumber"]
+        self.RadioFrequency = row["RadioFrequency"]
+        self.RadioWirelessMode = row["RadioWirelessMode"]
+        self.RadioActiveChanSpacing = row["RadioActiveChanSpacing"]
         self.DynDNS_Enabled = row["DynDNS_Enabled"]
         self.DynDNS_Host = row["DynDNS_Host"]
 
@@ -233,6 +250,26 @@ def STATUS_Update_Check(DB, GNSS_ID, Enabled):
         DB.STATUS.execute("INSERT or REPLACE into STATUS (id,Checked,Last_Check) VALUES (?,?,?)", (GNSS_ID, True, now_str))
         DB.conn.commit()
         return (True)
+
+
+def check_login_locked(GNSS_ID, DB, HTTP):
+    username = HTTP.Ses.auth[0] if HTTP.Ses.auth else DB.User_Name
+    password = HTTP.Ses.auth[1] if HTTP.Ses.auth else DB.Password
+    url = "/cgi-bin/login.xml?username={}&password={}&t={}".format(
+        username,
+        password,
+        int(time.time()),
+    )
+    (reply, result) = HTTP.get(url)
+    if reply and receiver_login_locked(reply):
+        logger.warning(DB.Address + ":" + str(DB.Port) + " login locked out")
+        DB.STATUS.execute(
+            "UPDATE STATUS SET Alive=?, Password_Valid=? where id=?",
+            (True, False, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (True, "Receiver login is locked out\n")
+    return (False, "")
 
 
 def check_firmware_and_password(GNSS_ID, DB, HTTP):
@@ -1398,6 +1435,8 @@ def check_Radio(GNSS_ID, DB, HTTP):
         Message = "Radiosummary.xml not found. Does the unit have a radio?\n"
         return (Radio_Valid, Message)
 
+    root = radio_summary_root(root)
+
     Radio_Valid = True
 
     RadioOnOffState = root.find("RadioOnOffState")
@@ -1424,13 +1463,103 @@ def check_Radio(GNSS_ID, DB, HTTP):
             Message += "RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState, RadioOnOffState_Str)
             Radio_Valid = False
 
-        if DB.RadioMode != radioMode:
-            if not (DB.RadioMode == "RadioModeBase" and radioMode == "RadioModeBaseW4Repeater"):
-                Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
+        if not radio_modes_match(DB.RadioMode, radioMode):
+            Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
+            Radio_Valid = False
+
+        radio_band = DB.RadioBand if DB.RadioBand else "900"
+        if radio_band == "combo":
+            detected_band = detect_active_radio_band(root)
+            if detected_band is None:
+                Message += "Could not determine active radio band from radiosummary\n"
                 Radio_Valid = False
+            else:
+                radio_band = detected_band
+        radio_details = []
 
+        if radio_band == "900":
+            network_number = xml_find_text(
+                root,
+                "type900/networkId",
+                "type900/networkID",
+                "general/networkID",
+                "general/networkId",
+                "general/networkNumber",
+                "networkID",
+            )
+            if DB.RadioNetworkNumber is not None:
+                if network_number is None:
+                    Message += "Radio network number could not be determined\n"
+                    Radio_Valid = False
+                elif int(network_number) != int(DB.RadioNetworkNumber):
+                    Message += "Radio network number is {}, Expected {}\n".format(
+                        network_number, DB.RadioNetworkNumber
+                    )
+                    Radio_Valid = False
+                else:
+                    radio_details.append("net{}".format(network_number))
+        elif radio_band == "450":
+            frequency = xml_find_text(
+                root,
+                "type450/curChannel",
+                "general/currentChannel",
+                "general/currentChannelMHz",
+                "general/frequency",
+                "radio450MHz/currentChannel",
+            )
+            active_chan_spacing = xml_find_text(
+                root,
+                "type450/activeChanSpacing",
+            )
+            wireless_mode = xml_find_text(
+                root,
+                "type450/curWirelessMode",
+                "type450/wirelessMode",
+                "general/wirelessMode",
+                "general/wirelessModeID",
+            )
+            if DB.RadioFrequency is not None:
+                if frequency is None:
+                    Message += "Radio frequency could not be determined\n"
+                    Radio_Valid = False
+                elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
+                    Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
+                        frequency, DB.RadioFrequency
+                    )
+                    Radio_Valid = False
+                else:
+                    radio_details.append("{}MHz".format(frequency))
+            if DB.RadioActiveChanSpacing is not None:
+                if active_chan_spacing is None:
+                    Message += "Radio active channel spacing could not be determined\n"
+                    Radio_Valid = False
+                elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
+                    Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
+                        active_chan_spacing, DB.RadioActiveChanSpacing
+                    )
+                    Radio_Valid = False
+                else:
+                    radio_details.append("{}kHz".format(active_chan_spacing))
+            if DB.RadioWirelessMode is not None:
+                if wireless_mode is None:
+                    Message += "Radio wireless mode could not be determined\n"
+                    Radio_Valid = False
+                elif int(wireless_mode) != int(DB.RadioWirelessMode):
+                    Message += "Radio wireless mode is {} ({}), Expected {} ({})\n".format(
+                        wireless_mode,
+                        wireless_mode_label(wireless_mode),
+                        DB.RadioWirelessMode,
+                        wireless_mode_label(DB.RadioWirelessMode),
+                    )
+                    Radio_Valid = False
+                else:
+                    radio_details.append("mode{}".format(wireless_mode))
 
-        Radio_Str = RadioOnOffState + ":" + radioMode
+        Radio_Str = RadioOnOffState + ":" + radioMode + ":" + (DB.RadioBand if DB.RadioBand else "900")
+        if DB.RadioBand == "combo" and radio_band in ("450", "900"):
+            Radio_Str += "(" + radio_band + ")"
+        if radio_details:
+            Radio_Str += ":" + ",".join(radio_details)
     else:
         Radio_Str = "Radio States not found"
 
@@ -2337,6 +2466,11 @@ if not DB.Enabled:
 HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10)
 # DB.Password
 
+(locked, locked_message) = check_login_locked(args.GNSS_ID, DB, HTTP)
+if locked:
+    logger.warning(DB.Address + ":" + str(DB.Port) + " login locked out")
+    print("ERROR: " + locked_message.strip())
+    sys.exit(2)
 
 if not check_firmware_and_password(args.GNSS_ID, DB, HTTP):
     logger.warning(DB.Address + ":" + str(DB.Port) + " Is down or wrong password")
