@@ -509,6 +509,16 @@ On:
 </td></tr>
 
 <tr><td>
+Radio Band:
+</td><td>
+<select required name="RadioBand" id="RadioBand">
+  <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
+  <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
+  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
+</select>
+</td></tr>
+
+<tr><td>
 Operation Mode:
 </td><td>
 
@@ -524,16 +534,6 @@ Operation Mode:
   <option value="RadioModeRepeater4" <?php echo (!empty($row) && $row["RadioMode"]=="RadioModeRepeater4"?"selected":""); ?>>Repeater 4</option>
 </select>
 
-</td></tr>
-
-<tr><td>
-Radio Band:
-</td><td>
-<select required name="RadioBand" id="RadioBand">
-  <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
-  <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
-  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
-</select>
 </td></tr>
 
 <tr class="radio-900-field"><td>
@@ -579,6 +579,9 @@ $(function() {
    updateRadioBandFields();
 });
 </script>
+
+<p/>
+<p/>
 
 <table>
 <tr><caption>Base Follow</caption>
