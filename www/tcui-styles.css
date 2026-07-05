@@ -12,7 +12,7 @@ body { font-family: Arial, sans-serif; font-size: 120%; line-height: 2.0; color:
 #top-header .container { min-height: 16px; background-color: #282828; border: none; }
 #logo-area { text-align: center; position: relative; padding-bottom: 37px; }
 #logo { background-color: transparent; border: none; }
-#top-header-trim { background: url(Images/tht-back.gif) repeat-x; height: 7px; }
+#top-header-trim { height: 7px; background: linear-gradient(to bottom, #f9b233 0%, #e8a528 45%, #d4921a 100%); }
 #content-top-light { background-color: #464646; padding-top: 20px; }
 #content-area { border-bottom: 0px solid #000; background-color: #000; padding-bottom: 0px; }
 #content-area .container { padding-top: 0px; }
