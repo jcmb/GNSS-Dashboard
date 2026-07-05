@@ -124,6 +124,15 @@ $(document).ready(function()
    }
 
 
+   function gnss_wireless_modes_sorted($modes)
+   {
+       uasort($modes, function ($a, $b) {
+           return strcasecmp($a, $b);
+       });
+       return $modes;
+   }
+
+
    function gnss_radio_wireless_modes()
    {
        $paths = array(
@@ -134,8 +143,7 @@ $(document).ready(function()
            if (is_readable($path)) {
                $raw = json_decode(file_get_contents($path), true);
                if (is_array($raw)) {
-                   ksort($raw, SORT_NUMERIC);
-                   return $raw;
+                   return gnss_wireless_modes_sorted($raw);
                }
            }
        }

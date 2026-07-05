@@ -25,10 +25,26 @@ def radio_wireless_modes_path():
     return paths[0]
 
 
+def _wireless_mode_label_allowed(label):
+    lowered = str(label).lower()
+    if "reserved" in lowered:
+        return False
+    if "deprecated" in lowered:
+        return False
+    if "legacy error" in lowered:
+        return False
+    return True
+
+
 def load_radio_wireless_modes():
     with open(radio_wireless_modes_path(), "r", encoding="utf-8") as handle:
         raw = json.load(handle)
-    return {int(key): value for key, value in raw.items()}
+    modes = {
+        int(key): value
+        for key, value in raw.items()
+        if _wireless_mode_label_allowed(value)
+    }
+    return dict(sorted(modes.items(), key=lambda item: item[1].lower()))
 
 
 def wireless_mode_label(mode):
