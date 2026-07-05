@@ -68,6 +68,15 @@ def normalize_wireless_mode_text(text):
     return re.sub(r"\s+", " ", str(text).strip().lower())
 
 
+def wireless_mode_text_variants(text):
+    raw = str(text).strip()
+    variants = {normalize_wireless_mode_text(raw)}
+    stripped = re.sub(r"^\d+\s+", "", raw)
+    if stripped != raw:
+        variants.add(normalize_wireless_mode_text(stripped))
+    return variants
+
+
 def wireless_mode_match_names(mode_id):
     mode_id = int(mode_id)
     names = []
@@ -84,17 +93,22 @@ def wireless_mode_match_names(mode_id):
         if key not in seen:
             seen.add(key)
             deduped.append(name)
+        prefixed = "{} {}".format(mode_id, name)
+        prefixed_key = normalize_wireless_mode_text(prefixed)
+        if prefixed_key not in seen:
+            seen.add(prefixed_key)
+            deduped.append(prefixed)
     return deduped
 
 
 def wireless_mode_long_matches(mode_id, actual_long):
     if actual_long is None:
         return False
-    norm_actual = normalize_wireless_mode_text(actual_long)
+    actual_variants = wireless_mode_text_variants(actual_long)
+    expected_variants = set()
     for name in wireless_mode_match_names(mode_id):
-        if normalize_wireless_mode_text(name) == norm_actual:
-            return True
-    return False
+        expected_variants.update(wireless_mode_text_variants(name))
+    return not actual_variants.isdisjoint(expected_variants)
 
 
 def ensure_gnss_radio_columns(conn):
