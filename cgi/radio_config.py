@@ -81,7 +81,15 @@ def wireless_mode_display_name(mode):
 
 
 def normalize_wireless_mode_text(text):
-    return re.sub(r"\s+", " ", str(text).strip().lower())
+    text = str(text).strip().lower()
+    text = re.sub(r"^\d+\s+", "", text)
+    text = re.sub(r"\(auto cs and whitening\)", "", text, flags=re.I)
+    text = text.replace(":", " ")
+    text = re.sub(r"\bat\b", " ", text)
+    text = re.sub(r"[,/()]", " ", text)
+    text = re.sub(r"(\d)\s+bps", r"\1bps", text)
+    text = re.sub(r"\s+bps\b", "bps", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def wireless_mode_text_variants(text):
