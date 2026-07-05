@@ -57,6 +57,7 @@ else {
          'RadioFrequency' => 'NUMERIC',
          'RadioWirelessMode' => 'INTEGER',
          'RadioActiveChanSpacing' => 'NUMERIC',
+         'UseHTTPS' => 'BOOLEAN',
       );
       foreach ($columns as $name => $type) {
          if (!isset($existing[$name])) {
@@ -120,6 +121,7 @@ else {
          }
       $db = new SQLite3($databaseFile);
       gnss_ensure_radio_columns($db);
+      gnss_ensure_https_column($db);
       $gnss_id = gnss_verify_gnss_owner($db, $_REQUEST["GNSS_ID"], $user_id);
       $stmt = $db->prepare('SELECT * FROM GNSS WHERE id=?');
       $stmt->bindValue(1, $gnss_id, SQLITE3_INTEGER);
@@ -148,6 +150,10 @@ else {
    $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
    $radio_wireless_mode = (!empty($row) && $row["RadioWirelessMode"] !== null && $row["RadioWirelessMode"] !== "") ? $row["RadioWirelessMode"] : "0";
    $radio_active_chan_spacing = (!empty($row) && $row["RadioActiveChanSpacing"] !== null && $row["RadioActiveChanSpacing"] !== "") ? $row["RadioActiveChanSpacing"] : "12.5";
+   $use_https = (!empty($row) && gnss_use_https_enabled($row["UseHTTPS"]));
+   $receiver_port = (!empty($row) && $row["Port"] !== null && $row["Port"] !== "") ? $row["Port"] : "80";
+   $receiver_address = (!empty($row) && !empty($row["Address"])) ? $row["Address"] : "";
+   $receiver_url = gnss_receiver_url($receiver_address, $receiver_port, $use_https);
 
 ?>
 
@@ -197,13 +203,24 @@ Receiver Group:
 <tr><td>
 Address:
 </td><td>
-<input name="Address" type="text"  value="<?php echo $row["Address"] ?>">
+<input name="Address" id="Address" type="text" value="<?php echo h($receiver_address); ?>">
 </td></tr>
 
 <tr><td>
 Port:
 </td><td>
-<input name="Port" type="number" min="1" max="65535" step="1" value="<?php echo ($row["Port"])?$row["Port"]:"80" ?>" />
+<input name="Port" id="Port" type="number" min="1" max="65535" step="1" value="<?php echo h($receiver_port); ?>" />
+<?php if ($receiver_url !== "") { ?>
+  <a id="receiver-link" target="_blank" href="<?php echo h($receiver_url); ?>"><?php echo h($receiver_url); ?></a>
+<?php } else { ?>
+  <a id="receiver-link" target="_blank" href="#" style="display:none;"></a>
+<?php } ?>
+</td></tr>
+
+<tr><td>
+HTTPS:
+</td><td>
+<input name="UseHTTPS" id="UseHTTPS" type="checkbox" <?php echo ($use_https?"checked":""); ?>/>
 </td></tr>
 
 <tr><td>
@@ -599,6 +616,20 @@ Wireless Mode (450 MHz):
 
 <script>
 $(function() {
+   function updateReceiverLink() {
+      var addr = $("#Address").val();
+      var port = $("#Port").val() || "80";
+      var scheme = $("#UseHTTPS").is(":checked") ? "https" : "http";
+      if (addr) {
+         var url = scheme + "://" + addr + ":" + port;
+         $("#receiver-link").attr("href", url).text(url).show();
+      } else {
+         $("#receiver-link").hide();
+      }
+   }
+   $("#Address, #Port, #UseHTTPS").on("input change", updateReceiverLink);
+   updateReceiverLink();
+
    function updateRadioBandFields() {
       var band = $("#RadioBand").val();
       $(".radio-900-field").toggle(band === "900" || band === "combo");

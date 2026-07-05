@@ -53,6 +53,7 @@ from gnss_security import (
     require_csrf,
     verify_gnss_owner,
     verify_user_exists,
+    ensure_gnss_https_column,
 )
 from radio_config import ensure_gnss_radio_columns, load_radio_wireless_modes, normalize_channel_spacing, RADIO_CHANNEL_SPACINGS
 
@@ -69,6 +70,7 @@ except sqlite3.Error:
     sys.exit()
 
 ensure_gnss_radio_columns(conn)
+ensure_gnss_https_column(conn)
 
 cursor = conn.cursor()
 form = cgi.FieldStorage()
@@ -126,6 +128,8 @@ if "Port" not in form:
     sys.exit(100)
 else:
     Port = form["Port"].value
+
+Use_HTTPS = "UseHTTPS" in form
 
 if "Firmware" not in form:
     print("Firmware must be entered")
@@ -468,7 +472,7 @@ upsert_id = GNSS_ID if Update else None
 # 1. Store all your data in a tuple first
 data_values = (
     upsert_id,
-    User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Receiver_Type,
+    User_ID, Enabled, Name, Firmware, Loc_Group, Address, Port, Use_HTTPS, Receiver_Type,
     Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
     Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
     FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
@@ -495,7 +499,7 @@ placeholders = ', '.join(['?'] * len(data_values))
 # 3. Use an f-string to inject the placeholders into your SQL command
 sql_query = f'''
     INSERT INTO GNSS (
-        id, User_ID, Enabled, name, Firmware, Loc_Group, Address, Port, Reciever_Type,
+        id, User_ID, Enabled, name, Firmware, Loc_Group, Address, Port, UseHTTPS, Reciever_Type,
         Password, Pos_Type, Static, LowLatency, Elev_Mask, PDOP, Logging_Enabled,
         Logging_Duration, Logging_Measurement_Interval, Logging_Position_Interval,
         FTP_Enabled, FTP_To, Antenna, Measurement_Method, Ant_Height, Ref_Name,
@@ -525,6 +529,7 @@ sql_query = f'''
         Loc_Group=excluded.Loc_Group,
         Address=excluded.Address,
         Port=excluded.Port,
+        UseHTTPS=excluded.UseHTTPS,
         Reciever_Type=excluded.Reciever_Type,
         Password=excluded.Password,
         Pos_Type=excluded.Pos_Type,

@@ -145,6 +145,36 @@ def verify_gnss_owner(cursor, gnss_id, user_id):
         raise SystemExit(403)
 
 
+def gnss_use_https_enabled(value):
+    return value in (1, True, "1", "true", "True")
+
+
+def receiver_scheme(use_https):
+    return "https" if gnss_use_https_enabled(use_https) else "http"
+
+
+def receiver_url(address, port, use_https=False, path=""):
+    if not address:
+        return ""
+    if port in (None, ""):
+        port = 443 if gnss_use_https_enabled(use_https) else 80
+    url = "{}://{}:{}".format(receiver_scheme(use_https), address, port)
+    if path:
+        if not path.startswith("/"):
+            path = "/" + path
+        return url + path
+    return url
+
+
+def ensure_gnss_https_column(conn):
+    try:
+        conn.execute("ALTER TABLE GNSS ADD COLUMN UseHTTPS BOOLEAN")
+        conn.commit()
+    except Exception as err:
+        if "duplicate column name" not in str(err).lower():
+            raise
+
+
 def sanitize_upload_filename(name):
     name = os.path.basename(name)
     if not re.match(r"^[A-Za-z0-9._-]+\.(timg|img)$", name, re.IGNORECASE):

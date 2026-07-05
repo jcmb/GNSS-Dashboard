@@ -368,7 +368,7 @@ $(document).ready(function()
        echo "\n<td> ".h($row["name"])." </td>";
        echo "\n<td> ".$row["SystemName"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
-       echo "\n<td> <a target=\"_blank\" href=\"http://".$row["Address"].":".$row["Port"]."\"> ".$row["Address"].":".$row["Port"]." </a></td>";
+       echo "\n<td> <a target=\"_blank\" href=\"".h(gnss_receiver_url($row["Address"], $row["Port"], $row["UseHTTPS"] ?? false))."\"> ".h($row["Address"]).":".h($row["Port"])." </a></td>";
 
        if ($row["Checked"] ){
            echo "\n<td> ". $row["Last_Check"]." </td>";
@@ -631,7 +631,7 @@ if (!$have_ntrip_valid_col) {
 // Run the query on the connection
 
 //$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
+  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.UseHTTPS, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
   $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
   $result = $stmt->execute();
 

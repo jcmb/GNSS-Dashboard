@@ -56,7 +56,7 @@ else:
     # Assuming databaseFile() is defined in that file.
     pass
 
-from gnss_security import decrypt_receiver_password, receiver_login_locked
+from gnss_security import decrypt_receiver_password, receiver_login_locked, ensure_gnss_https_column, receiver_url, receiver_scheme
 from radio_config import (
     ensure_gnss_radio_columns,
     radio_modes_match,
@@ -94,6 +94,7 @@ class DB_Class:
         self.STATUS = self.conn.cursor()
         self.FIRMWARE = self.conn.cursor()
         ensure_gnss_radio_columns(self.conn)
+        ensure_gnss_https_column(self.conn)
 
     def read_Firmware_configuration(self):
         query = 'SELECT * FROM Firmware'
@@ -125,6 +126,7 @@ class DB_Class:
         self.Password = decrypt_receiver_password(row["Password"])
         self.Address = row["Address"]
         self.Port = row["Port"]
+        self.UseHTTPS = row["UseHTTPS"] == 1 if row["UseHTTPS"] is not None else False
         self.User_ID = row["User_ID"]
         self.name = row["name"]
         self.Firmware = row["Firmware"]
@@ -215,18 +217,24 @@ class DB_Class:
             self.DynDNS_Enabled=False
 
 class HTTP_Class:
-    def __init__(self, Host, Port, User_Name, Password, TimeOut):
+    def __init__(self, Host, Port, User_Name, Password, TimeOut, use_https=False):
         self.Ses = requests.Session()
         self.Ses.auth = (User_Name, Password)
         self.Host = Host
         self.Port = Port
         self.TimeOut = TimeOut
+        self.UseHTTPS = use_https
+        self.Scheme = receiver_scheme(use_https)
+
+    def url(self, url_part):
+        return receiver_url(self.Host, self.Port, self.UseHTTPS, url_part)
 
     def get(self, url_part):
         try:
-            # print("http://" + self.Host + ":" + str(self.Port) + url_part)
-            # pprint(self.Ses)
-            Response = self.Ses.get("http://" + self.Host + ":" + str(self.Port) + url_part, timeout=self.TimeOut)
+            kwargs = {"timeout": self.TimeOut}
+            if self.UseHTTPS:
+                kwargs["verify"] = False
+            Response = self.Ses.get(self.url(url_part), **kwargs)
             if Response.status_code != 200:
                 reply = None
             else:
@@ -1809,9 +1817,8 @@ def check_Auth(GNSS_ID, DB, HTTP):
     # logging.debug(Host+":"+str(Port)+ " Checking Auth: ")
     Auth = "Unknown"
     try:
-        # print("http://" + self.Host + ":" + str(self.Port) + url_part)
-        # pprint (self.Ses)
-        Response = Ses.get("http://" + Host + ":" + str(Port) + "/prog/show?pdopMask", timeout=TimeOut)
+        auth_url = receiver_url(Host, Port, HTTP.UseHTTPS, "/prog/show?pdopMask")
+        Response = Ses.get(auth_url, timeout=TimeOut, verify=not HTTP.UseHTTPS)
 
         # print(Response.status_code)
         if Response.status_code == 401:
@@ -1822,9 +1829,8 @@ def check_Auth(GNSS_ID, DB, HTTP):
             m = re.search(r'PdopMask mask=(.*)', Response.text)
             if m:
                 PDOP = int(m.group(1), 10)
-                # print("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP))
-
-                Response = Ses.get("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask=" + str(PDOP), timeout=TimeOut)
+                set_url = receiver_url(Host, Port, HTTP.UseHTTPS, "/prog/set?PdopMask&mask=" + str(PDOP))
+                Response = Ses.get(set_url, timeout=TimeOut, verify=not HTTP.UseHTTPS)
 
                 m = re.search(r'^ERROR', Response.text)
                 if m:
@@ -2461,7 +2467,7 @@ if not DB.Enabled:
     print("OK: Host Disabled")
     sys.exit(0)
 
-HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10)
+HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10, DB.UseHTTPS)
 # DB.Password
 
 (locked, locked_message) = check_login_locked(args.GNSS_ID, DB, HTTP)

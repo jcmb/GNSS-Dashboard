@@ -17,6 +17,7 @@
       Loc_Group TEXT,
       Address TEXT,
       Port INTEGER,
+      UseHTTPS BOOLEAN,
       Reciever_Type TEXT,
       Password TEXT,
       Pos_Type TEXT,
