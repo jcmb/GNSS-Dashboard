@@ -20,7 +20,7 @@
    include 'error.php.inc';
    include 'db.inc.php';
    include 'security.inc.php';
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   $user_id = gnss_require_user_id(gnss_open_db());
 ?>
 
 <p>Errors and Warnings is temporarily unavailable due to a receiver firmware change.</p>

@@ -78,18 +78,11 @@ class DB_Class:
 
     def open(self):
         try:
-            # Python 3 supports file descriptors, but standard path is safer if fd logic isn't strictly required for locking.
-            # Keeping original logic adapted for Py3:
-            fd = os.open(databaseFile(), os.O_RDONLY)
-            self.conn = sqlite3.connect(f'/dev/fd/{fd}')
-            os.close(fd)
-            # self.conn = sqlite3.connect(databaseFile())
-            # print(databaseFile() + " Open\n")
+            self.conn = open_database()
         except sqlite3.Error:
             print("Error opening db. " + databaseFile() + "\n")
             sys.exit(1)
 
-        self.conn.row_factory = sqlite3.Row
         self.GNSS = self.conn.cursor()
         self.STATUS = self.conn.cursor()
         self.FIRMWARE = self.conn.cursor()
@@ -1473,93 +1466,95 @@ def check_Radio(GNSS_ID, DB, HTTP):
             Message += "RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState, RadioOnOffState_Str)
             Radio_Valid = False
 
-        if not radio_modes_match(DB.RadioMode, radioMode):
-            Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
-            Radio_Valid = False
-
-        radio_band = DB.RadioBand if DB.RadioBand else "900"
-        if radio_band == "combo":
-            detected_band = detect_active_radio_band(root)
-            if detected_band is None:
-                Message += "Could not determine active radio band from radiosummary\n"
-                Radio_Valid = False
-            else:
-                radio_band = detected_band
         radio_details = []
+        radio_band = DB.RadioBand if DB.RadioBand else "900"
 
-        if radio_band == "900":
-            network_number = xml_find_text(
-                root,
-                "type900/networkId",
-                "type900/networkID",
-                "general/networkID",
-                "general/networkId",
-                "general/networkNumber",
-                "networkID",
-            )
-            if DB.RadioNetworkNumber is not None:
-                if network_number is None:
-                    Message += "Radio network number could not be determined\n"
-                    Radio_Valid = False
-                elif int(network_number) != int(DB.RadioNetworkNumber):
-                    Message += "Radio network number is {}, Expected {}\n".format(
-                        network_number, DB.RadioNetworkNumber
-                    )
+        if DB.RadioOnOffState:
+            if not radio_modes_match(DB.RadioMode, radioMode):
+                Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
+                Radio_Valid = False
+
+            if radio_band == "combo":
+                detected_band = detect_active_radio_band(root)
+                if detected_band is None:
+                    Message += "Could not determine active radio band from radiosummary\n"
                     Radio_Valid = False
                 else:
-                    radio_details.append("net{}".format(network_number))
-        elif radio_band == "450":
-            frequency = xml_find_text(
-                root,
-                "type450/curChannel",
-                "general/currentChannel",
-                "general/currentChannelMHz",
-                "general/frequency",
-                "radio450MHz/currentChannel",
-            )
-            active_chan_spacing = xml_find_text(
-                root,
-                "type450/activeChanSpacing",
-            )
-            wireless_mode_long = xml_find_text(
-                root,
-                "type450/curWirelessModeLong",
-            )
-            if DB.RadioFrequency is not None:
-                if frequency is None:
-                    Message += "Radio frequency could not be determined\n"
-                    Radio_Valid = False
-                elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
-                    Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
-                        frequency, DB.RadioFrequency
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append("{}MHz".format(frequency))
-            if DB.RadioActiveChanSpacing is not None:
-                if active_chan_spacing is None:
-                    Message += "Radio active channel spacing could not be determined\n"
-                    Radio_Valid = False
-                elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
-                    Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
-                        active_chan_spacing, DB.RadioActiveChanSpacing
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append("{}kHz".format(active_chan_spacing))
-            if DB.RadioWirelessMode is not None:
-                if wireless_mode_long is None:
-                    Message += "Radio wireless mode could not be determined\n"
-                    Radio_Valid = False
-                elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
-                    Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
-                        wireless_mode_long,
-                        DB.RadioWirelessMode,
-                        wireless_mode_display_name(DB.RadioWirelessMode),
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append(wireless_mode_long)
+                    radio_band = detected_band
+
+            if radio_band == "900":
+                network_number = xml_find_text(
+                    root,
+                    "type900/networkId",
+                    "type900/networkID",
+                    "general/networkID",
+                    "general/networkId",
+                    "general/networkNumber",
+                    "networkID",
+                )
+                if DB.RadioNetworkNumber is not None:
+                    if network_number is None:
+                        Message += "Radio network number could not be determined\n"
+                        Radio_Valid = False
+                    elif int(network_number) != int(DB.RadioNetworkNumber):
+                        Message += "Radio network number is {}, Expected {}\n".format(
+                            network_number, DB.RadioNetworkNumber
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("net{}".format(network_number))
+            elif radio_band == "450":
+                frequency = xml_find_text(
+                    root,
+                    "type450/curChannel",
+                    "general/currentChannel",
+                    "general/currentChannelMHz",
+                    "general/frequency",
+                    "radio450MHz/currentChannel",
+                )
+                active_chan_spacing = xml_find_text(
+                    root,
+                    "type450/activeChanSpacing",
+                )
+                wireless_mode_long = xml_find_text(
+                    root,
+                    "type450/curWirelessModeLong",
+                )
+                if DB.RadioFrequency is not None:
+                    if frequency is None:
+                        Message += "Radio frequency could not be determined\n"
+                        Radio_Valid = False
+                    elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
+                        Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
+                            frequency, DB.RadioFrequency
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("{}MHz".format(frequency))
+                if DB.RadioActiveChanSpacing is not None:
+                    if active_chan_spacing is None:
+                        Message += "Radio active channel spacing could not be determined\n"
+                        Radio_Valid = False
+                    elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
+                        Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
+                            active_chan_spacing, DB.RadioActiveChanSpacing
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("{}kHz".format(active_chan_spacing))
+                if DB.RadioWirelessMode is not None:
+                    if wireless_mode_long is None:
+                        Message += "Radio wireless mode could not be determined\n"
+                        Radio_Valid = False
+                    elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
+                        Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
+                            wireless_mode_long,
+                            DB.RadioWirelessMode,
+                            wireless_mode_display_name(DB.RadioWirelessMode),
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append(wireless_mode_long)
 
         Radio_Str = RadioOnOffState + ":" + radioMode + ":" + (DB.RadioBand if DB.RadioBand else "900")
         if DB.RadioBand == "combo" and radio_band in ("450", "900"):

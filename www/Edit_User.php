@@ -21,7 +21,7 @@ else {
    include 'error.php.inc';
    include 'db.inc.php';
    include 'security.inc.php';
-   $db = new SQLite3($databaseFile);
+   $db = gnss_open_db();
 
    if ($Editing) {
       $user_id = gnss_require_user_id($db);

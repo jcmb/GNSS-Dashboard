@@ -8,7 +8,7 @@ import sqlite3
 import subprocess
 import sys
 
-from db_inc import cgiDir, databaseFile
+from db_inc import cgiDir, databaseFile, open_database
 from gnss_security import decrypt_receiver_password, require_csrf, verify_gnss_owner, verify_user_exists
 
 
@@ -56,7 +56,7 @@ def main():
         print("Missing User_ID or GNSS_ID")
         raise SystemExit(400)
 
-    conn = sqlite3.connect(databaseFile())
+    conn = open_database()
     cursor = conn.cursor()
     receiver = _load_receiver(cursor, user_id, gnss_id)
     conn.close()

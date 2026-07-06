@@ -50,7 +50,7 @@ function check_file(file_control,name) {
 <?php
 include 'db.inc.php';
 include 'security.inc.php';
-$user_id = gnss_require_user_id(new SQLite3($databaseFile));
+$user_id = gnss_require_user_id(gnss_open_db());
 echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
 echo gnss_csrf_field((string)$user_id);
 ?>

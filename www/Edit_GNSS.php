@@ -116,7 +116,7 @@ else {
       return (string)$mode_id;
    }
 
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   $user_id = gnss_require_user_id(gnss_open_db());
 
    if ($_REQUEST["GNSS_ID"]) {
       if ($DUP) {
@@ -125,7 +125,7 @@ else {
       else {
          echo "Edit GNSS Receiver";
          }
-      $db = new SQLite3($databaseFile);
+      $db = gnss_open_db();
       gnss_ensure_radio_columns($db);
       gnss_ensure_https_column($db);
       $gnss_id = gnss_verify_gnss_owner($db, $_REQUEST["GNSS_ID"], $user_id);
@@ -189,7 +189,7 @@ if ($Editing && !$DUP) {
 <tr><td>
 Name:
 </td><td>
-<input name="Name" type="text" value="<?php echo $row["name"] ?>"/>
+<input name="Name" type="text" value="<?php echo $row["name"] ?>" autofocus/>
 </td></tr>
 
 <tr><td>
@@ -764,7 +764,7 @@ Format <?php echo $i; ?>:
 
 <?php
 if ($Editing && !$DUP) {
-   echo '<input type="submit" value="Edit GNSS Receiver" autofocus/>';
+   echo '<input type="submit" value="Edit GNSS Receiver" />';
    }
 else {
    echo '<input type="submit" value="Add a GNSS Receiver" />';

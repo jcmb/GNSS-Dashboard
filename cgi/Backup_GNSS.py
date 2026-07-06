@@ -17,7 +17,7 @@ from pprint import pprint
 #print                               # blank line, end of headers
 
 try:
-   conn = sqlite3.connect(databaseFile())
+   conn = open_database()
 #   print (databaseFile()+ " Open\n")
 except sqlite3.Error:
    print("Error opening db. " + databaseFile() +"\n")

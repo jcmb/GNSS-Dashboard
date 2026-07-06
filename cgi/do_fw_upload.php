@@ -77,7 +77,7 @@ if ($User_ID=="") {
     exit ("Internal Error: No User ID");
     }
 
-$userCheckDb = new SQLite3($databaseFile);
+$userCheckDb = gnss_open_db();
 $userStmt = $userCheckDb->prepare('SELECT id FROM Users WHERE id=?');
 $userStmt->bindValue(1, (int)$User_ID, SQLITE3_INTEGER);
 $userResult = $userStmt->execute();
@@ -125,8 +125,7 @@ $ClarkName = '';
 $LancetName = '';
 $KryptonName = '';
 
-$db = new SQLite3($databaseFile);
-$db->exec("PRAGMA busy_timeout=5000");
+$db = gnss_open_db();
 
 if ($allowMissing) {
    echo "Partial upload: missing platform files will keep existing filenames.<br/>\n";

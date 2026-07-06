@@ -9,7 +9,7 @@ import base64
 import ssl
 
 try:
-    from db_inc import databaseFile
+    from db_inc import databaseFile, open_database
 except ImportError:
     with open("db.inc.py") as f:
         exec(f.read())
@@ -30,7 +30,7 @@ print("Content-Type: text/html")
 print()
 
 try:
-   conn = sqlite3.connect(databaseFile())
+   conn = open_database()
 except sqlite3.Error:
    print("Error opening db. " + str(databaseFile()) + "\n")
    sys.exit(1)

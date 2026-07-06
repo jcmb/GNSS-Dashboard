@@ -63,8 +63,7 @@ print("Content-Type: text/html")     # HTML is following
 print()                              # blank line, end of headers
 
 try:
-    # Assuming databaseFile() is defined in db.inc.py
-    conn = sqlite3.connect(databaseFile())
+    conn = open_database()
 except sqlite3.Error:
     print("Error opening db. " + str(databaseFile()) + "\n")
     sys.exit()

@@ -26,7 +26,7 @@ print()                               # blank line, end of headers
 sys.stdout.flush()
 
 try:
-   conn = sqlite3.connect(databaseFile())
+   conn = open_database()
 except sqlite3.Error:
    print("Error opening db. " + str(databaseFile()) + "\n")
    sys.exit(1)
