@@ -189,7 +189,7 @@ if ($Editing && !$DUP) {
 <tr><td>
 Name:
 </td><td>
-<input name="Name" type="text" value="<?php echo $row["name"] ?>" autofocus/>
+<input name="Name" type="text" value="<?php echo $row["name"] ?>"/>
 </td></tr>
 
 <tr><td>
@@ -217,9 +217,9 @@ Port:
 </td><td>
 <input name="Port" id="Port" type="number" min="1" max="65535" step="1" value="<?php echo h($receiver_port); ?>" />
 <?php if ($receiver_url !== "") { ?>
-  <a id="receiver-link" target="_blank" href="<?php echo h($receiver_url); ?>"><?php echo h($receiver_url); ?></a>
+  <a id="receiver-link" target="_blank" href="<?php echo h($receiver_url); ?>" tabindex="-1"><?php echo h($receiver_url); ?></a>
 <?php } else { ?>
-  <a id="receiver-link" target="_blank" href="#" style="display:none;"></a>
+  <a id="receiver-link" target="_blank" href="#" style="display:none;" tabindex="-1"></a>
 <?php } ?>
 </td></tr>
 
@@ -276,7 +276,7 @@ Receiver:
 <tr><td>
 Admin password:
 </td><td>
-<input name="Password" type="password" value="" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
+<input name="Password" type="password" value="" autocomplete="new-password" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
 </td></tr>
 
 <tr><td>
@@ -635,6 +635,11 @@ $(function() {
    }
    $("#Address, #Port, #UseHTTPS").on("input change", updateReceiverLink);
    updateReceiverLink();
+
+   var link = $("#receiver-link");
+   if (link.is(":visible") && link.attr("href") && link.attr("href") !== "#") {
+      link.focus();
+   }
 
    function updateRadioBandFields() {
       var band = $("#RadioBand").val();

@@ -37,6 +37,8 @@ def _wireless_mode_label_allowed(label):
         return False
     if "trimtalk v2" in lowered:
         return False
+    if "trimtalk v1 auto" in lowered:
+        return False
     if "sitenet 900" in lowered:
         return False
     if "sitenet 2400" in lowered:
