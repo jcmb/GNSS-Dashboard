@@ -352,11 +352,11 @@ Radio_Wireless_Mode = None
 Radio_Active_Chan_Spacing = None
 
 if Radio_Enabled:
-    if Radio_Band not in ("450", "900", "combo"):
-        print("RadioBand must be 450, 900, or combo when radio checking is enabled.<br>")
+    if Radio_Band not in ("450", "900"):
+        print("RadioBand must be 450 or 900 when radio checking is enabled.<br>")
         sys.exit(100)
 
-    if Radio_Band in ("900", "combo"):
+    if Radio_Band == "900":
         if "RadioNetworkNumber" not in form:
             print("RadioNetworkNumber must be entered for 900 MHz radios.<br>")
             sys.exit(100)
@@ -369,7 +369,7 @@ if Radio_Enabled:
             print("RadioNetworkNumber must be between 1 and 40.<br>")
             sys.exit(100)
 
-    if Radio_Band in ("450", "combo"):
+    if Radio_Band == "450":
         if "RadioFrequency" not in form:
             print("RadioFrequency must be entered for 450 MHz radios.<br>")
             sys.exit(100)

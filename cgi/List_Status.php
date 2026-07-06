@@ -301,6 +301,90 @@ $(document).ready(function()
    }
 
 
+   function gnss_distinct_groups($db, $user_id)
+   {
+       $groups = array();
+       $stmt = $db->prepare('SELECT DISTINCT Loc_Group FROM GNSS WHERE User_ID=? ORDER BY Loc_Group COLLATE NOCASE');
+       $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+       $result = $stmt->execute();
+       if ($result) {
+           while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+               $groups[] = $row["Loc_Group"] !== null ? $row["Loc_Group"] : "";
+           }
+       }
+       return $groups;
+   }
+
+
+   function gnss_group_filter_value()
+   {
+       if (!isset($_REQUEST["Group"])) {
+           return "*";
+       }
+       return (string)$_REQUEST["Group"];
+   }
+
+
+   function gnss_show_disabled_filter_value()
+   {
+       return isset($_REQUEST["ShowDisabled"]) && $_REQUEST["ShowDisabled"] === "1";
+   }
+
+
+   function display_status_filters($user_id, $groups, $group_selected, $show_disabled)
+   {
+       echo '<form method="get" style="margin-bottom: 1em;">';
+       echo '<input type="hidden" name="User_ID" value="' . h($user_id) . '">';
+       echo '<label for="group-filter">Group: ';
+       echo '<select name="Group" id="group-filter" onchange="this.form.submit()">';
+       echo '<option value="*"' . ($group_selected === "*" ? ' selected' : '') . '>All groups</option>';
+       $has_empty = false;
+       foreach ($groups as $group) {
+           if ($group === "") {
+               $has_empty = true;
+               continue;
+           }
+           $is_selected = $group_selected === (string)$group;
+           echo '<option value="' . h($group) . '"' . ($is_selected ? ' selected' : '') . '>' . h($group) . '</option>';
+       }
+       if ($has_empty) {
+           $is_selected = $group_selected === "";
+           echo '<option value=""' . ($is_selected ? ' selected' : '') . '>(no group)</option>';
+       }
+       echo '</select></label> ';
+       echo '<label for="show-disabled">';
+       echo '<input type="checkbox" name="ShowDisabled" id="show-disabled" value="1"' . ($show_disabled ? ' checked' : '') . ' onchange="this.form.submit()"> ';
+       echo 'Show disabled receivers</label>';
+       echo '</form>';
+   }
+
+
+   function gnss_status_query_sql($group_filter, $show_disabled)
+   {
+       $where = "GNSS.User_ID=?";
+       if ($group_filter !== "*") {
+           if ($group_filter === "") {
+               $where .= " AND (GNSS.Loc_Group IS NULL OR GNSS.Loc_Group=?)";
+           } else {
+               $where .= " AND GNSS.Loc_Group=?";
+           }
+       }
+       if (!$show_disabled) {
+           $where .= " AND GNSS.Enabled=1";
+       }
+       return 'SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.UseHTTPS, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE ' . $where . ' ORDER BY GNSS.Name';
+   }
+
+
+   function gnss_bind_status_query($stmt, $user_id, $group_filter)
+   {
+       $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+       if ($group_filter !== "*") {
+           $stmt->bindValue(2, $group_filter, SQLITE3_TEXT);
+       }
+   }
+
+
    function displayStatus($result, $user_id)
    {
        $wireless_modes = gnss_radio_wireless_modes();
@@ -372,7 +456,7 @@ $(document).ready(function()
 //        var_dump($row);
 //        echo "<hr>";
         // ... start a TABLE row ...
-        echo "\n<tr>";
+        echo "\n<tr data-group=\"" . h(isset($row["Loc_Group"]) ? $row["Loc_Group"] : "") . "\">";
 
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
@@ -644,8 +728,13 @@ if (!$have_ntrip_valid_col) {
 // Run the query on the connection
 
 //$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.UseHTTPS, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
-  $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+$group_filter = gnss_group_filter_value();
+$show_disabled = gnss_show_disabled_filter_value();
+$groups = gnss_distinct_groups($db, $user_id);
+display_status_filters($user_id, $groups, $group_filter, $show_disabled);
+
+$stmt = $db->prepare(gnss_status_query_sql($group_filter, $show_disabled));
+gnss_bind_status_query($stmt, $user_id, $group_filter);
   $result = $stmt->execute();
 
 if (!($result))

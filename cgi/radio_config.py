@@ -13,6 +13,12 @@ _LEGACY_BASE_MODES = {
 
 RADIO_CHANNEL_SPACINGS = (12.5, 25.0)
 
+# Auto Rx modes report the active FEC ON/OFF string from the receiver, not the Auto Rx label.
+_RTCM135_AUTO_RX_ALIASES = {
+    104: (100, 102),
+    105: (101, 103),
+}
+
 
 def radio_wireless_modes_path():
     paths = [
@@ -115,25 +121,29 @@ def wireless_mode_text_variants(text):
 
 def wireless_mode_match_names(mode_id):
     mode_id = int(mode_id)
-    names = []
     xml_names = load_wireless_mode_xml_names()
     modes = load_radio_wireless_modes()
-    if mode_id in xml_names:
-        names.append(xml_names[mode_id])
-    if mode_id in modes:
-        names.append(modes[mode_id])
+    mode_ids = [mode_id]
+    if mode_id in _RTCM135_AUTO_RX_ALIASES:
+        mode_ids.extend(_RTCM135_AUTO_RX_ALIASES[mode_id])
     deduped = []
     seen = set()
-    for name in names:
-        key = normalize_wireless_mode_text(name)
-        if key not in seen:
-            seen.add(key)
-            deduped.append(name)
-        prefixed = "{} {}".format(mode_id, name)
-        prefixed_key = normalize_wireless_mode_text(prefixed)
-        if prefixed_key not in seen:
-            seen.add(prefixed_key)
-            deduped.append(prefixed)
+    for mid in mode_ids:
+        names = []
+        if mid in xml_names:
+            names.append(xml_names[mid])
+        if mid in modes:
+            names.append(modes[mid])
+        for name in names:
+            key = normalize_wireless_mode_text(name)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(name)
+            prefixed = "{} {}".format(mid, name)
+            prefixed_key = normalize_wireless_mode_text(prefixed)
+            if prefixed_key not in seen:
+                seen.add(prefixed_key)
+                deduped.append(prefixed)
     return deduped
 
 

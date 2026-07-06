@@ -152,6 +152,9 @@ else {
    $radio_wireless_modes = gnss_radio_wireless_modes();
    $radio_wireless_xml_names = gnss_radio_wireless_mode_xml_names();
    $radio_band = (!empty($row) && !empty($row["RadioBand"])) ? $row["RadioBand"] : "900";
+   if ($radio_band === "combo") {
+      $radio_band = "900";
+   }
    $radio_network_number = (!empty($row) && $row["RadioNetworkNumber"] !== null && $row["RadioNetworkNumber"] !== "") ? $row["RadioNetworkNumber"] : "1";
    $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
    $radio_wireless_mode = (!empty($row) && $row["RadioWirelessMode"] !== null && $row["RadioWirelessMode"] !== "") ? $row["RadioWirelessMode"] : "0";
@@ -564,7 +567,6 @@ Radio Band:
 <select required name="RadioBand" id="RadioBand">
   <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
   <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
-  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
 </select>
 </td></tr>
 
@@ -643,8 +645,8 @@ $(function() {
 
    function updateRadioBandFields() {
       var band = $("#RadioBand").val();
-      $(".radio-900-field").toggle(band === "900" || band === "combo");
-      $(".radio-450-field").toggle(band === "450" || band === "combo");
+      $(".radio-900-field").toggle(band === "900");
+      $(".radio-450-field").toggle(band === "450");
    }
    $("#RadioBand").on("change", updateRadioBandFields);
    updateRadioBandFields();
