@@ -595,7 +595,7 @@ Network Number (900 MHz):
 <tr class="radio-450-field"><td>
 Frequency (450 MHz):
 </td><td>
-<input name="RadioFrequency" type="number" min="403" max="473" step="0.001" value="<?php echo h($radio_frequency); ?>">
+<input name="RadioFrequency" type="number" min="403" max="473" step="0.001" size="12" style="width: 11ch; min-width: 11ch;" value="<?php echo h($radio_frequency); ?>">
 </td></tr>
 
 <tr class="radio-450-field"><td>

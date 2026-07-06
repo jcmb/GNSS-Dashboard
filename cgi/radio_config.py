@@ -33,6 +33,16 @@ def _wireless_mode_label_allowed(label):
         return False
     if "legacy error" in lowered:
         return False
+    if "220 mhz" in lowered or "220mhz" in lowered:
+        return False
+    if "trimtalk v2" in lowered:
+        return False
+    if "sitenet 900" in lowered:
+        return False
+    if "sitenet 2400" in lowered:
+        return False
+    if "pcc external customer" in lowered:
+        return False
     return True
 
 

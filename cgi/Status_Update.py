@@ -1436,13 +1436,13 @@ def check_Radio(GNSS_ID, DB, HTTP):
 
     if reply == None:
         Radio_Valid = False
-        Message = "Radiosummary not found. Does the unit have a radio?\n"
+        Message = "Radiosummary not found. Does the unit have a radio? Or too old firmware.\n"
         return (Radio_Valid, Message)
 
     root = ET.fromstring(reply)
     if root == None:
         Radio_Valid = False
-        Message = "Radiosummary.xml not found. Does the unit have a radio?\n"
+        Message = "Radiosummary.xml not found. Does the unit have a radio? Or too old firmware.\n"
         return (Radio_Valid, Message)
 
     root = radio_summary_root(root)

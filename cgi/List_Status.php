@@ -26,6 +26,11 @@ table.tablesorter tbody td.Issue {
 table.tablesorter tbody td.ntrip-ok {
     color: #000;
 }
+table.tablesorter th.radio-mhz-col,
+table.tablesorter td.radio-mhz-col {
+    min-width: 11ch;
+    white-space: nowrap;
+}
 </style>
 <script>
 $(document).ready(function()
@@ -263,7 +268,7 @@ $(document).ready(function()
        echo "\n<td>&nbsp;</td>";
        echo "\n<td>&nbsp;</td>";
        echo "\n<td>&nbsp;</td>";
-       echo "\n<td>&nbsp;</td>";
+       echo "\n<td class=\"radio-mhz-col\">&nbsp;</td>";
        echo "\n<td>&nbsp;</td>";
    }
 
@@ -277,7 +282,7 @@ $(document).ready(function()
        echo "\n<td" . $issue . "> " . h($band) . " </td>";
        echo "\n<td" . $issue . "> " . h(radio_mode_display(isset($row["RadioMode"]) ? $row["RadioMode"] : "")) . " </td>";
        echo "\n<td" . $issue . "> " . (!empty($row["RadioOnOffState"]) ? "On" : "Off") . " </td>";
-       echo "\n<td" . $issue . "> " . h(radio_channel_display($row, $band)) . " </td>";
+       echo "\n<td" . $issue . " class=\"radio-mhz-col\"> " . h(radio_channel_display($row, $band)) . " </td>";
 
        if ($band === "450") {
            echo "\n<td" . $issue . "> " . h(radio_wireless_display(isset($row["RadioWirelessMode"]) ? $row["RadioWirelessMode"] : "", $wireless_modes, $wireless_xml_names)) . " </td>";
@@ -335,7 +340,7 @@ $(document).ready(function()
           "\n<th>Band</th>" .
           "\n<th>Radio Mode</th>" .
           "\n<th>Radio On</th>" .
-          "\n<th>Net / MHz</th>" .
+          "\n<th class=\"radio-mhz-col\">Net / MHz</th>" .
           "\n<th>Wireless</th>" .
           "\n<th>NTRIP</th>" .
 //          "\n<th>IBSS</th>" .
