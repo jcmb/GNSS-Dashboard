@@ -18,7 +18,7 @@ print ()                              # blank line, end of headers
 
 
 try:
-   conn = sqlite3.connect(databaseFile())
+   conn = open_database()
 #   print databaseFile()+ " Open\n"
 except sqlite3.Error:
    print ("Error opening db. " + databaseFile() +"\n")
@@ -49,7 +49,6 @@ print ("""<title>GNSS receiver signin</title>
       </div>
   <!-- end #logo-area -->
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">""")

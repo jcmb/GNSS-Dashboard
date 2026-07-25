@@ -33,7 +33,6 @@ else {
       </div>
   <!-- end #logo-area -->
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">
@@ -58,12 +57,20 @@ else {
          'RadioFrequency' => 'NUMERIC',
          'RadioWirelessMode' => 'INTEGER',
          'RadioActiveChanSpacing' => 'NUMERIC',
+         'UseHTTPS' => 'BOOLEAN',
       );
       foreach ($columns as $name => $type) {
          if (!isset($existing[$name])) {
             $db->exec('ALTER TABLE GNSS ADD COLUMN ' . $name . ' ' . $type);
          }
       }
+   }
+
+   function gnss_wireless_modes_sorted($modes) {
+      uasort($modes, function($a, $b) {
+         return strcasecmp($a, $b);
+      });
+      return $modes;
    }
 
    function gnss_radio_wireless_modes() {
@@ -75,7 +82,22 @@ else {
          if (is_readable($path)) {
             $raw = json_decode(file_get_contents($path), true);
             if (is_array($raw)) {
-               ksort($raw, SORT_NUMERIC);
+               return gnss_wireless_modes_sorted($raw);
+            }
+         }
+      }
+      return array();
+   }
+
+   function gnss_radio_wireless_mode_xml_names() {
+      $paths = array(
+         '/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json',
+         dirname(__DIR__) . '/cgi/radio_wireless_mode_xml_names.json',
+      );
+      foreach ($paths as $path) {
+         if (is_readable($path)) {
+            $raw = json_decode(file_get_contents($path), true);
+            if (is_array($raw)) {
                return $raw;
             }
          }
@@ -83,7 +105,18 @@ else {
       return array();
    }
 
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   function gnss_radio_wireless_mode_display_name($mode_id, $modes, $xml_names) {
+      $key = (string)(int)$mode_id;
+      if (isset($xml_names[$key])) {
+         return $xml_names[$key];
+      }
+      if (isset($modes[$key])) {
+         return $modes[$key];
+      }
+      return (string)$mode_id;
+   }
+
+   $user_id = gnss_require_user_id(gnss_open_db());
 
    if ($_REQUEST["GNSS_ID"]) {
       if ($DUP) {
@@ -92,8 +125,9 @@ else {
       else {
          echo "Edit GNSS Receiver";
          }
-      $db = new SQLite3($databaseFile);
+      $db = gnss_open_db();
       gnss_ensure_radio_columns($db);
+      gnss_ensure_https_column($db);
       $gnss_id = gnss_verify_gnss_owner($db, $_REQUEST["GNSS_ID"], $user_id);
       $stmt = $db->prepare('SELECT * FROM GNSS WHERE id=?');
       $stmt->bindValue(1, $gnss_id, SQLITE3_INTEGER);
@@ -116,11 +150,19 @@ else {
       }
 
    $radio_wireless_modes = gnss_radio_wireless_modes();
+   $radio_wireless_xml_names = gnss_radio_wireless_mode_xml_names();
    $radio_band = (!empty($row) && !empty($row["RadioBand"])) ? $row["RadioBand"] : "900";
+   if ($radio_band === "combo") {
+      $radio_band = "900";
+   }
    $radio_network_number = (!empty($row) && $row["RadioNetworkNumber"] !== null && $row["RadioNetworkNumber"] !== "") ? $row["RadioNetworkNumber"] : "1";
    $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
    $radio_wireless_mode = (!empty($row) && $row["RadioWirelessMode"] !== null && $row["RadioWirelessMode"] !== "") ? $row["RadioWirelessMode"] : "0";
    $radio_active_chan_spacing = (!empty($row) && $row["RadioActiveChanSpacing"] !== null && $row["RadioActiveChanSpacing"] !== "") ? $row["RadioActiveChanSpacing"] : "12.5";
+   $use_https = (!empty($row) && gnss_use_https_enabled($row["UseHTTPS"]));
+   $receiver_port = (!empty($row) && $row["Port"] !== null && $row["Port"] !== "") ? $row["Port"] : "80";
+   $receiver_address = (!empty($row) && !empty($row["Address"])) ? $row["Address"] : "";
+   $receiver_url = gnss_receiver_url($receiver_address, $receiver_port, $use_https);
 
 ?>
 
@@ -170,13 +212,24 @@ Receiver Group:
 <tr><td>
 Address:
 </td><td>
-<input name="Address" type="text"  value="<?php echo $row["Address"] ?>">
+<input name="Address" id="Address" type="text" value="<?php echo h($receiver_address); ?>">
 </td></tr>
 
 <tr><td>
 Port:
 </td><td>
-<input name="Port" type="number" min="1" max="65535" step="1" value="<?php echo ($row["Port"])?$row["Port"]:"80" ?>" />
+<input name="Port" id="Port" type="number" min="1" max="65535" step="1" value="<?php echo h($receiver_port); ?>" />
+<?php if ($receiver_url !== "") { ?>
+  <a id="receiver-link" target="_blank" href="<?php echo h($receiver_url); ?>" tabindex="-1"><?php echo h($receiver_url); ?></a>
+<?php } else { ?>
+  <a id="receiver-link" target="_blank" href="#" style="display:none;" tabindex="-1"></a>
+<?php } ?>
+</td></tr>
+
+<tr><td>
+HTTPS:
+</td><td>
+<input name="UseHTTPS" id="UseHTTPS" type="checkbox" <?php echo ($use_https?"checked":""); ?>/>
 </td></tr>
 
 <tr><td>
@@ -226,7 +279,7 @@ Receiver:
 <tr><td>
 Admin password:
 </td><td>
-<input name="Password" type="password" value="" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
+<input name="Password" type="password" value="" autocomplete="new-password" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
 </td></tr>
 
 <tr><td>
@@ -509,6 +562,15 @@ On:
 </td></tr>
 
 <tr><td>
+Radio Band:
+</td><td>
+<select required name="RadioBand" id="RadioBand">
+  <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
+  <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
+</select>
+</td></tr>
+
+<tr><td>
 Operation Mode:
 </td><td>
 
@@ -526,16 +588,6 @@ Operation Mode:
 
 </td></tr>
 
-<tr><td>
-Radio Band:
-</td><td>
-<select required name="RadioBand" id="RadioBand">
-  <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
-  <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
-  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
-</select>
-</td></tr>
-
 <tr class="radio-900-field"><td>
 Network Number (900 MHz):
 </td><td>
@@ -545,7 +597,7 @@ Network Number (900 MHz):
 <tr class="radio-450-field"><td>
 Frequency (450 MHz):
 </td><td>
-<input name="RadioFrequency" type="number" min="403" max="473" step="0.001" value="<?php echo h($radio_frequency); ?>">
+<input name="RadioFrequency" type="number" min="403" max="473" step="0.001" size="12" style="width: 11ch; min-width: 11ch;" value="<?php echo h($radio_frequency); ?>">
 </td></tr>
 
 <tr class="radio-450-field"><td>
@@ -561,8 +613,10 @@ Active Channel Spacing (450 MHz):
 Wireless Mode (450 MHz):
 </td><td>
 <select name="RadioWirelessMode">
-<?php foreach ($radio_wireless_modes as $mode_id => $mode_label) { ?>
-  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id)?"selected":""); ?>><?php echo h($mode_id . " - " . $mode_label); ?></option>
+<?php foreach ($radio_wireless_modes as $mode_id => $mode_label) {
+   $mode_display = gnss_radio_wireless_mode_display_name($mode_id, $radio_wireless_modes, $radio_wireless_xml_names);
+?>
+  <option value="<?php echo h($mode_id); ?>" <?php echo ((string)$radio_wireless_mode === (string)$mode_id?"selected":""); ?>><?php echo h($mode_display); ?></option>
 <?php } ?>
 </select>
 </td></tr>
@@ -570,15 +624,37 @@ Wireless Mode (450 MHz):
 
 <script>
 $(function() {
+   function updateReceiverLink() {
+      var addr = $("#Address").val();
+      var port = $("#Port").val() || "80";
+      var scheme = $("#UseHTTPS").is(":checked") ? "https" : "http";
+      if (addr) {
+         var url = scheme + "://" + addr + ":" + port;
+         $("#receiver-link").attr("href", url).text(url).show();
+      } else {
+         $("#receiver-link").hide();
+      }
+   }
+   $("#Address, #Port, #UseHTTPS").on("input change", updateReceiverLink);
+   updateReceiverLink();
+
+   var link = $("#receiver-link");
+   if (link.is(":visible") && link.attr("href") && link.attr("href") !== "#") {
+      link.focus();
+   }
+
    function updateRadioBandFields() {
       var band = $("#RadioBand").val();
-      $(".radio-900-field").toggle(band === "900" || band === "combo");
-      $(".radio-450-field").toggle(band === "450" || band === "combo");
+      $(".radio-900-field").toggle(band === "900");
+      $(".radio-450-field").toggle(band === "450");
    }
    $("#RadioBand").on("change", updateRadioBandFields);
    updateRadioBandFields();
 });
 </script>
+
+<p/>
+<p/>
 
 <table>
 <tr><caption>Base Follow</caption>
@@ -695,7 +771,7 @@ Format <?php echo $i; ?>:
 
 <?php
 if ($Editing && !$DUP) {
-   echo '<input type="submit" value="Edit GNSS Receiver" autofocus/>';
+   echo '<input type="submit" value="Edit GNSS Receiver" />';
    }
 else {
    echo '<input type="submit" value="Add a GNSS Receiver" />';

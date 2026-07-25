@@ -4,7 +4,7 @@
    include 'db.inc.php';
   // open the db file (test.db) if it exists, or create it if it doesn't
 
-  $db = new SQLite3($databaseFile);
+  $db = gnss_open_db();
   echo "Database file " , $databaseFile, " opened\n";
   // create a new table in the file
   $db->exec('CREATE TABLE IF NOT EXISTS  GNSS (
@@ -17,6 +17,7 @@
       Loc_Group TEXT,
       Address TEXT,
       Port INTEGER,
+      UseHTTPS BOOLEAN,
       Reciever_Type TEXT,
       Password TEXT,
       Pos_Type TEXT,

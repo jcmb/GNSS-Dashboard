@@ -12,7 +12,6 @@
       </div>
   <!-- end #logo-area -->
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">
@@ -26,6 +25,11 @@ table.tablesorter tbody td.Issue {
 }
 table.tablesorter tbody td.ntrip-ok {
     color: #000;
+}
+table.tablesorter th.radio-mhz-col,
+table.tablesorter td.radio-mhz-col {
+    min-width: 11ch;
+    white-space: nowrap;
 }
 </style>
 <script>
@@ -46,7 +50,7 @@ $(document).ready(function()
    include 'db.inc.php';
    include 'security.inc.php';
 
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   $user_id = gnss_require_user_id(gnss_open_db());
    echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
 ?>
 
@@ -121,7 +125,170 @@ $(document).ready(function()
    /** Must match the number of <th> cells in the status table header row. */
    function status_table_column_count()
    {
-       return 41;
+       return 47;
+   }
+
+
+   function gnss_wireless_modes_sorted($modes)
+   {
+       uasort($modes, function ($a, $b) {
+           return strcasecmp($a, $b);
+       });
+       return $modes;
+   }
+
+
+   function gnss_radio_wireless_modes()
+   {
+       $paths = array(
+           '/usr/lib/cgi-bin/Dashboard/radio_wireless_modes.json',
+           __DIR__ . '/radio_wireless_modes.json',
+       );
+       foreach ($paths as $path) {
+           if (is_readable($path)) {
+               $raw = json_decode(file_get_contents($path), true);
+               if (is_array($raw)) {
+                   return gnss_wireless_modes_sorted($raw);
+               }
+           }
+       }
+       return array();
+   }
+
+
+   function radio_mode_display($mode)
+   {
+       if ($mode === "RadioModeBase" || $mode === "RadioModeBaseW4Repeater") {
+           return "Base w/ 4 Repeaters";
+       }
+       $labels = array(
+           "RadioModeBaseW0Repeater" => "Base w/ 0 Repeaters",
+           "RadioModeBaseW1Repeater" => "Base w/ 1 Repeater",
+           "RadioModeBaseW2Repeater" => "Base w/ 2 Repeaters",
+           "RadioModeRover" => "Rover",
+           "RadioModeRepeater1" => "Repeater 1",
+           "RadioModeRepeater2" => "Repeater 2",
+           "RadioModeRepeater3" => "Repeater 3",
+           "RadioModeRepeater4" => "Repeater 4",
+       );
+       return isset($labels[$mode]) ? $labels[$mode] : (string)$mode;
+   }
+
+
+   function radio_issue_class($row)
+   {
+       if (empty($row["RadioEnabled"])) {
+           return "";
+       }
+       if (!array_key_exists("Radio_Valid", $row) || $row["Radio_Valid"] === null) {
+           return "";
+       }
+       if ((int)$row["Radio_Valid"] === 1) {
+           return "";
+       }
+       return ' class="Issue"';
+   }
+
+
+   function radio_band_value($row)
+   {
+       $band = !empty($row["RadioBand"]) ? $row["RadioBand"] : "900";
+       if ($band === "450" || $band === "900") {
+           return $band;
+       }
+       if (!empty($row["Radio"])) {
+           if (strpos($row["Radio"], "(450)") !== false) {
+               return "450";
+           }
+           if (strpos($row["Radio"], "(900)") !== false) {
+               return "900";
+           }
+       }
+       if (!empty($row["RadioFrequency"])) {
+           return "450";
+       }
+       if (!empty($row["RadioNetworkNumber"])) {
+           return "900";
+       }
+       return "900";
+   }
+
+
+   function radio_channel_display($row, $band)
+   {
+       if ($band === "900") {
+           $net = isset($row["RadioNetworkNumber"]) ? $row["RadioNetworkNumber"] : "";
+           return ($net !== "" && $net !== null) ? (string)$net : "";
+       }
+       if ($band === "450") {
+           $freq = isset($row["RadioFrequency"]) ? $row["RadioFrequency"] : "";
+           return ($freq !== "" && $freq !== null) ? $freq . " MHz" : "";
+       }
+       return "";
+   }
+
+
+   function gnss_radio_wireless_mode_xml_names()
+   {
+       $paths = array(
+           '/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json',
+           __DIR__ . '/radio_wireless_mode_xml_names.json',
+       );
+       foreach ($paths as $path) {
+           if (is_readable($path)) {
+               $raw = json_decode(file_get_contents($path), true);
+               if (is_array($raw)) {
+                   return $raw;
+               }
+           }
+       }
+       return array();
+   }
+
+
+   function radio_wireless_display($mode_id, $modes, $xml_names = array())
+   {
+       if ($mode_id === null || $mode_id === "") {
+           return "";
+       }
+       $key = (string)(int)$mode_id;
+       if (!empty($xml_names) && isset($xml_names[$key])) {
+           return $xml_names[$key];
+       }
+       if (isset($modes[$key])) {
+           return $modes[$key];
+       }
+       return (string)$mode_id;
+   }
+
+
+   function radio_disabled_cells()
+   {
+       echo "\n<td> Disabled </td>";
+       echo "\n<td>&nbsp;</td>";
+       echo "\n<td>&nbsp;</td>";
+       echo "\n<td>&nbsp;</td>";
+       echo "\n<td class=\"radio-mhz-col\">&nbsp;</td>";
+       echo "\n<td>&nbsp;</td>";
+   }
+
+
+   function radio_status_cells($row, $wireless_modes, $wireless_xml_names)
+   {
+       $issue = radio_issue_class($row);
+       $band = radio_band_value($row);
+
+       echo "\n<td" . $issue . "> " . h(isset($row["Radio"]) ? $row["Radio"] : "") . " </td>";
+       echo "\n<td" . $issue . "> " . h($band) . " </td>";
+       echo "\n<td" . $issue . "> " . h(radio_mode_display(isset($row["RadioMode"]) ? $row["RadioMode"] : "")) . " </td>";
+       echo "\n<td" . $issue . "> " . (!empty($row["RadioOnOffState"]) ? "On" : "Off") . " </td>";
+       echo "\n<td" . $issue . " class=\"radio-mhz-col\"> " . h(radio_channel_display($row, $band)) . " </td>";
+
+       if ($band === "450") {
+           echo "\n<td" . $issue . "> " . h(radio_wireless_display(isset($row["RadioWirelessMode"]) ? $row["RadioWirelessMode"] : "", $wireless_modes, $wireless_xml_names)) . " </td>";
+       } else {
+           echo "\n<td>&nbsp;</td>";
+       }
    }
 
 
@@ -134,8 +301,95 @@ $(document).ready(function()
    }
 
 
+   function gnss_distinct_groups($db, $user_id)
+   {
+       $groups = array();
+       $stmt = $db->prepare('SELECT DISTINCT Loc_Group FROM GNSS WHERE User_ID=? ORDER BY Loc_Group COLLATE NOCASE');
+       $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+       $result = $stmt->execute();
+       if ($result) {
+           while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+               $groups[] = $row["Loc_Group"] !== null ? $row["Loc_Group"] : "";
+           }
+       }
+       return $groups;
+   }
+
+
+   function gnss_group_filter_value()
+   {
+       if (!isset($_REQUEST["Group"])) {
+           return "*";
+       }
+       return (string)$_REQUEST["Group"];
+   }
+
+
+   function gnss_show_disabled_filter_value()
+   {
+       return isset($_REQUEST["ShowDisabled"]) && $_REQUEST["ShowDisabled"] === "1";
+   }
+
+
+   function display_status_filters($user_id, $groups, $group_selected, $show_disabled)
+   {
+       echo '<form method="get" style="margin-bottom: 1em;">';
+       echo '<input type="hidden" name="User_ID" value="' . h($user_id) . '">';
+       echo '<label for="group-filter">Group: ';
+       echo '<select name="Group" id="group-filter" onchange="this.form.submit()">';
+       echo '<option value="*"' . ($group_selected === "*" ? ' selected' : '') . '>All groups</option>';
+       $has_empty = false;
+       foreach ($groups as $group) {
+           if ($group === "") {
+               $has_empty = true;
+               continue;
+           }
+           $is_selected = $group_selected === (string)$group;
+           echo '<option value="' . h($group) . '"' . ($is_selected ? ' selected' : '') . '>' . h($group) . '</option>';
+       }
+       if ($has_empty) {
+           $is_selected = $group_selected === "";
+           echo '<option value=""' . ($is_selected ? ' selected' : '') . '>(no group)</option>';
+       }
+       echo '</select></label> ';
+       echo '<label for="show-disabled">';
+       echo '<input type="checkbox" name="ShowDisabled" id="show-disabled" value="1"' . ($show_disabled ? ' checked' : '') . ' onchange="this.form.submit()"> ';
+       echo 'Show disabled receivers</label>';
+       echo '</form>';
+   }
+
+
+   function gnss_status_query_sql($group_filter, $show_disabled)
+   {
+       $where = "GNSS.User_ID=?";
+       if ($group_filter !== "*") {
+           if ($group_filter === "") {
+               $where .= " AND (GNSS.Loc_Group IS NULL OR GNSS.Loc_Group=?)";
+           } else {
+               $where .= " AND GNSS.Loc_Group=?";
+           }
+       }
+       if (!$show_disabled) {
+           $where .= " AND GNSS.Enabled=1";
+       }
+       return 'SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port, GNSS.UseHTTPS, GNSS.RadioEnabled, GNSS.RadioOnOffState, GNSS.RadioMode, GNSS.RadioBand, GNSS.RadioNetworkNumber, GNSS.RadioFrequency, GNSS.RadioWirelessMode FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE ' . $where . ' ORDER BY GNSS.Name';
+   }
+
+
+   function gnss_bind_status_query($stmt, $user_id, $group_filter)
+   {
+       $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+       if ($group_filter !== "*") {
+           $stmt->bindValue(2, $group_filter, SQLITE3_TEXT);
+       }
+   }
+
+
    function displayStatus($result, $user_id)
    {
+       $wireless_modes = gnss_radio_wireless_modes();
+       $wireless_xml_names = gnss_radio_wireless_mode_xml_names();
+
        // Start a table, with column headers
 
       echo "\n<table id=\"Receivers\" class=\"tablesorter\" border='1'>\n" .
@@ -166,6 +420,12 @@ $(document).ready(function()
           "\n<th>Logging</th>" .
           "\n<th>Email</th>" .
           "\n<th>FTP</th>" .
+          "\n<th>Radio</th>" .
+          "\n<th>Band</th>" .
+          "\n<th>Radio Mode</th>" .
+          "\n<th>Radio On</th>" .
+          "\n<th class=\"radio-mhz-col\">Net / MHz</th>" .
+          "\n<th>Wireless</th>" .
           "\n<th>NTRIP</th>" .
 //          "\n<th>IBSS</th>" .
           "\n<th>Freq</th>" .
@@ -191,12 +451,12 @@ $(document).ready(function()
      // Until there are no rows in the result set,
      // fetch a row into the $row array and ...
 
-     while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
+     while ($row = $result->fetchArray(SQLITE3_ASSOC))
         {
 //        var_dump($row);
 //        echo "<hr>";
         // ... start a TABLE row ...
-        echo "\n<tr>";
+        echo "\n<tr data-group=\"" . h(isset($row["Loc_Group"]) ? $row["Loc_Group"] : "") . "\">";
 
         // ... and print out each of the attributes
         // in that row as a separate TD (Table Data).
@@ -205,7 +465,7 @@ $(document).ready(function()
        echo "\n<td> ".h($row["name"])." </td>";
        echo "\n<td> ".$row["SystemName"]." </td>";
        echo "\n<td> ".$row["Loc_Group"]." </td>";
-       echo "\n<td> <a target=\"_blank\" href=\"http://".$row["Address"].":".$row["Port"]."\"> ".$row["Address"].":".$row["Port"]." </a></td>";
+       echo "\n<td> <a target=\"_blank\" href=\"".h(gnss_receiver_url($row["Address"], $row["Port"], $row["UseHTTPS"] ?? false))."\"> ".h($row["Address"]).":".h($row["Port"])." </a></td>";
 
        if ($row["Checked"] ){
            echo "\n<td> ". $row["Last_Check"]." </td>";
@@ -406,6 +666,12 @@ $(document).ready(function()
            echo "\n<td " . ($row["FTP_Valid"]?"":"class=\"Issue\"") . " > ".$row["FTP_To"]." </td>";
            }
 
+       if (empty($row["RadioEnabled"])) {
+           radio_disabled_cells();
+       } else {
+           radio_status_cells($row, $wireless_modes, $wireless_xml_names);
+       }
+
        echo "\n<td" . ntrip_cell_classes($row) . "> " . ntrip_summary_html($row) . " </td>";
 
        echo "\n<td " . ($row["Frequencies_Valid"]?"":"class=\"Issue\"") . " > ".$row["Frequencies"] ." </td>";
@@ -436,7 +702,7 @@ $(document).ready(function()
 
 // Connect to sqlite
 
-$db = new SQLite3($databaseFile);
+$db = gnss_open_db();
 
 if (! $db) {
    die ("Failed to open GNSS.db");
@@ -462,8 +728,13 @@ if (!$have_ntrip_valid_col) {
 // Run the query on the connection
 
 //$query = "SELECT * FROM GNSS WHERE User_ID=" . $_REQUEST["User_ID"];
-  $stmt = $db->prepare('SELECT STATUS.*, GNSS.Loc_Group, GNSS.Name, GNSS.User_ID, GNSS.Address, GNSS.Port FROM STATUS INNER JOIN GNSS ON GNSS.id = STATUS.id WHERE User_ID=? order by GNSS.Name');
-  $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
+$group_filter = gnss_group_filter_value();
+$show_disabled = gnss_show_disabled_filter_value();
+$groups = gnss_distinct_groups($db, $user_id);
+display_status_filters($user_id, $groups, $group_filter, $show_disabled);
+
+$stmt = $db->prepare(gnss_status_query_sql($group_filter, $show_disabled));
+gnss_bind_status_query($stmt, $user_id, $group_filter);
   $result = $stmt->execute();
 
 if (!($result))

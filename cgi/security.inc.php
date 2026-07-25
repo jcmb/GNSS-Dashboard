@@ -64,6 +64,21 @@ function h($value) {
    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function gnss_use_https_enabled($value) {
+   return !empty($value) && (string)$value !== "0";
+}
+
+function gnss_receiver_url($address, $port, $use_https = false) {
+   if ($address === null || $address === "") {
+      return "";
+   }
+   $scheme = gnss_use_https_enabled($use_https) ? "https" : "http";
+   if ($port === null || $port === "") {
+      $port = gnss_use_https_enabled($use_https) ? "443" : "80";
+   }
+   return $scheme . "://" . $address . ":" . $port;
+}
+
 function gnss_require_user_id($db) {
    if (empty($_REQUEST['User_ID'])) {
       die('Internal Error: Missing User ID');

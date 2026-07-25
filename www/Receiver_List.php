@@ -12,7 +12,6 @@
       </div>
   <!-- end #logo-area -->
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">
@@ -42,7 +41,7 @@ $(document).ready(function()
    include 'db.inc.php';
    include 'security.inc.php';
 
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   $user_id = gnss_require_user_id(gnss_open_db());
    echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
 ?>
 
@@ -81,7 +80,7 @@ $(document).ready(function()
 
      // Until there are no rows in the result set,
      // fetch a row into the $row array and ...
-     while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
+     while ($row = $result->fetchArray(SQLITE3_ASSOC))
         {
 //        var_dump($row);
         // ... start a TABLE row ...
@@ -225,7 +224,7 @@ $(document).ready(function()
 
 // Connect to sqlite
 
-$db = new SQLite3($databaseFile);
+$db = gnss_open_db();
 
 if (! $db) {
    die ("Failed to open GNSS.db");

@@ -56,12 +56,14 @@ else:
     # Assuming databaseFile() is defined in that file.
     pass
 
-from gnss_security import decrypt_receiver_password, receiver_login_locked
+from gnss_security import decrypt_receiver_password, receiver_login_locked, ensure_gnss_https_column, receiver_url, receiver_scheme
 from radio_config import (
     ensure_gnss_radio_columns,
     radio_modes_match,
     normalize_radio_mode,
     wireless_mode_label,
+    wireless_mode_display_name,
+    wireless_mode_long_matches,
     xml_find_text,
     channel_spacing_matches,
     radio_summary_root,
@@ -76,22 +78,16 @@ class DB_Class:
 
     def open(self):
         try:
-            # Python 3 supports file descriptors, but standard path is safer if fd logic isn't strictly required for locking.
-            # Keeping original logic adapted for Py3:
-            fd = os.open(databaseFile(), os.O_RDONLY)
-            self.conn = sqlite3.connect(f'/dev/fd/{fd}')
-            os.close(fd)
-            # self.conn = sqlite3.connect(databaseFile())
-            # print(databaseFile() + " Open\n")
+            self.conn = open_database()
         except sqlite3.Error:
             print("Error opening db. " + databaseFile() + "\n")
             sys.exit(1)
 
-        self.conn.row_factory = sqlite3.Row
         self.GNSS = self.conn.cursor()
         self.STATUS = self.conn.cursor()
         self.FIRMWARE = self.conn.cursor()
         ensure_gnss_radio_columns(self.conn)
+        ensure_gnss_https_column(self.conn)
 
     def read_Firmware_configuration(self):
         query = 'SELECT * FROM Firmware'
@@ -123,6 +119,7 @@ class DB_Class:
         self.Password = decrypt_receiver_password(row["Password"])
         self.Address = row["Address"]
         self.Port = row["Port"]
+        self.UseHTTPS = row["UseHTTPS"] == 1 if row["UseHTTPS"] is not None else False
         self.User_ID = row["User_ID"]
         self.name = row["name"]
         self.Firmware = row["Firmware"]
@@ -213,18 +210,24 @@ class DB_Class:
             self.DynDNS_Enabled=False
 
 class HTTP_Class:
-    def __init__(self, Host, Port, User_Name, Password, TimeOut):
+    def __init__(self, Host, Port, User_Name, Password, TimeOut, use_https=False):
         self.Ses = requests.Session()
         self.Ses.auth = (User_Name, Password)
         self.Host = Host
         self.Port = Port
         self.TimeOut = TimeOut
+        self.UseHTTPS = use_https
+        self.Scheme = receiver_scheme(use_https)
+
+    def url(self, url_part):
+        return receiver_url(self.Host, self.Port, self.UseHTTPS, url_part)
 
     def get(self, url_part):
         try:
-            # print("http://" + self.Host + ":" + str(self.Port) + url_part)
-            # pprint(self.Ses)
-            Response = self.Ses.get("http://" + self.Host + ":" + str(self.Port) + url_part, timeout=self.TimeOut)
+            kwargs = {"timeout": self.TimeOut}
+            if self.UseHTTPS:
+                kwargs["verify"] = False
+            Response = self.Ses.get(self.url(url_part), **kwargs)
             if Response.status_code != 200:
                 reply = None
             else:
@@ -1426,13 +1429,13 @@ def check_Radio(GNSS_ID, DB, HTTP):
 
     if reply == None:
         Radio_Valid = False
-        Message = "Radiosummary not found. Does the unit have a radio?\n"
+        Message = "Radiosummary not found. Does the unit have a radio? Or too old firmware.\n"
         return (Radio_Valid, Message)
 
     root = ET.fromstring(reply)
     if root == None:
         Radio_Valid = False
-        Message = "Radiosummary.xml not found. Does the unit have a radio?\n"
+        Message = "Radiosummary.xml not found. Does the unit have a radio? Or too old firmware.\n"
         return (Radio_Valid, Message)
 
     root = radio_summary_root(root)
@@ -1463,97 +1466,95 @@ def check_Radio(GNSS_ID, DB, HTTP):
             Message += "RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState, RadioOnOffState_Str)
             Radio_Valid = False
 
-        if not radio_modes_match(DB.RadioMode, radioMode):
-            Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
-            Radio_Valid = False
-
-        radio_band = DB.RadioBand if DB.RadioBand else "900"
-        if radio_band == "combo":
-            detected_band = detect_active_radio_band(root)
-            if detected_band is None:
-                Message += "Could not determine active radio band from radiosummary\n"
-                Radio_Valid = False
-            else:
-                radio_band = detected_band
         radio_details = []
+        radio_band = DB.RadioBand if DB.RadioBand else "900"
 
-        if radio_band == "900":
-            network_number = xml_find_text(
-                root,
-                "type900/networkId",
-                "type900/networkID",
-                "general/networkID",
-                "general/networkId",
-                "general/networkNumber",
-                "networkID",
-            )
-            if DB.RadioNetworkNumber is not None:
-                if network_number is None:
-                    Message += "Radio network number could not be determined\n"
-                    Radio_Valid = False
-                elif int(network_number) != int(DB.RadioNetworkNumber):
-                    Message += "Radio network number is {}, Expected {}\n".format(
-                        network_number, DB.RadioNetworkNumber
-                    )
+        if DB.RadioOnOffState:
+            if not radio_modes_match(DB.RadioMode, radioMode):
+                Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
+                Radio_Valid = False
+
+            if radio_band == "combo":
+                detected_band = detect_active_radio_band(root)
+                if detected_band is None:
+                    Message += "Could not determine active radio band from radiosummary\n"
                     Radio_Valid = False
                 else:
-                    radio_details.append("net{}".format(network_number))
-        elif radio_band == "450":
-            frequency = xml_find_text(
-                root,
-                "type450/curChannel",
-                "general/currentChannel",
-                "general/currentChannelMHz",
-                "general/frequency",
-                "radio450MHz/currentChannel",
-            )
-            active_chan_spacing = xml_find_text(
-                root,
-                "type450/activeChanSpacing",
-            )
-            wireless_mode = xml_find_text(
-                root,
-                "type450/curWirelessMode",
-                "type450/wirelessMode",
-                "general/wirelessMode",
-                "general/wirelessModeID",
-            )
-            if DB.RadioFrequency is not None:
-                if frequency is None:
-                    Message += "Radio frequency could not be determined\n"
-                    Radio_Valid = False
-                elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
-                    Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
-                        frequency, DB.RadioFrequency
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append("{}MHz".format(frequency))
-            if DB.RadioActiveChanSpacing is not None:
-                if active_chan_spacing is None:
-                    Message += "Radio active channel spacing could not be determined\n"
-                    Radio_Valid = False
-                elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
-                    Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
-                        active_chan_spacing, DB.RadioActiveChanSpacing
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append("{}kHz".format(active_chan_spacing))
-            if DB.RadioWirelessMode is not None:
-                if wireless_mode is None:
-                    Message += "Radio wireless mode could not be determined\n"
-                    Radio_Valid = False
-                elif int(wireless_mode) != int(DB.RadioWirelessMode):
-                    Message += "Radio wireless mode is {} ({}), Expected {} ({})\n".format(
-                        wireless_mode,
-                        wireless_mode_label(wireless_mode),
-                        DB.RadioWirelessMode,
-                        wireless_mode_label(DB.RadioWirelessMode),
-                    )
-                    Radio_Valid = False
-                else:
-                    radio_details.append("mode{}".format(wireless_mode))
+                    radio_band = detected_band
+
+            if radio_band == "900":
+                network_number = xml_find_text(
+                    root,
+                    "type900/networkId",
+                    "type900/networkID",
+                    "general/networkID",
+                    "general/networkId",
+                    "general/networkNumber",
+                    "networkID",
+                )
+                if DB.RadioNetworkNumber is not None:
+                    if network_number is None:
+                        Message += "Radio network number could not be determined\n"
+                        Radio_Valid = False
+                    elif int(network_number) != int(DB.RadioNetworkNumber):
+                        Message += "Radio network number is {}, Expected {}\n".format(
+                            network_number, DB.RadioNetworkNumber
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("net{}".format(network_number))
+            elif radio_band == "450":
+                frequency = xml_find_text(
+                    root,
+                    "type450/curChannel",
+                    "general/currentChannel",
+                    "general/currentChannelMHz",
+                    "general/frequency",
+                    "radio450MHz/currentChannel",
+                )
+                active_chan_spacing = xml_find_text(
+                    root,
+                    "type450/activeChanSpacing",
+                )
+                wireless_mode_long = xml_find_text(
+                    root,
+                    "type450/curWirelessModeLong",
+                )
+                if DB.RadioFrequency is not None:
+                    if frequency is None:
+                        Message += "Radio frequency could not be determined\n"
+                        Radio_Valid = False
+                    elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
+                        Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
+                            frequency, DB.RadioFrequency
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("{}MHz".format(frequency))
+                if DB.RadioActiveChanSpacing is not None:
+                    if active_chan_spacing is None:
+                        Message += "Radio active channel spacing could not be determined\n"
+                        Radio_Valid = False
+                    elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
+                        Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
+                            active_chan_spacing, DB.RadioActiveChanSpacing
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append("{}kHz".format(active_chan_spacing))
+                if DB.RadioWirelessMode is not None:
+                    if wireless_mode_long is None:
+                        Message += "Radio wireless mode could not be determined\n"
+                        Radio_Valid = False
+                    elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
+                        Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
+                            wireless_mode_long,
+                            DB.RadioWirelessMode,
+                            wireless_mode_display_name(DB.RadioWirelessMode),
+                        )
+                        Radio_Valid = False
+                    else:
+                        radio_details.append(wireless_mode_long)
 
         Radio_Str = RadioOnOffState + ":" + radioMode + ":" + (DB.RadioBand if DB.RadioBand else "900")
         if DB.RadioBand == "combo" and radio_band in ("450", "900"):
@@ -1811,9 +1812,8 @@ def check_Auth(GNSS_ID, DB, HTTP):
     # logging.debug(Host+":"+str(Port)+ " Checking Auth: ")
     Auth = "Unknown"
     try:
-        # print("http://" + self.Host + ":" + str(self.Port) + url_part)
-        # pprint (self.Ses)
-        Response = Ses.get("http://" + Host + ":" + str(Port) + "/prog/show?pdopMask", timeout=TimeOut)
+        auth_url = receiver_url(Host, Port, HTTP.UseHTTPS, "/prog/show?pdopMask")
+        Response = Ses.get(auth_url, timeout=TimeOut, verify=not HTTP.UseHTTPS)
 
         # print(Response.status_code)
         if Response.status_code == 401:
@@ -1824,9 +1824,8 @@ def check_Auth(GNSS_ID, DB, HTTP):
             m = re.search(r'PdopMask mask=(.*)', Response.text)
             if m:
                 PDOP = int(m.group(1), 10)
-                # print("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask="+str(PDOP))
-
-                Response = Ses.get("http://" + Host + ":" + str(Port) + "/prog/set?PdopMask&mask=" + str(PDOP), timeout=TimeOut)
+                set_url = receiver_url(Host, Port, HTTP.UseHTTPS, "/prog/set?PdopMask&mask=" + str(PDOP))
+                Response = Ses.get(set_url, timeout=TimeOut, verify=not HTTP.UseHTTPS)
 
                 m = re.search(r'^ERROR', Response.text)
                 if m:
@@ -2463,7 +2462,7 @@ if not DB.Enabled:
     print("OK: Host Disabled")
     sys.exit(0)
 
-HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10)
+HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10, DB.UseHTTPS)
 # DB.Password
 
 (locked, locked_message) = check_login_locked(args.GNSS_ID, DB, HTTP)

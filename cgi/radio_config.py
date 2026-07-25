@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import sqlite3
 
 
@@ -11,6 +12,12 @@ _LEGACY_BASE_MODES = {
 }
 
 RADIO_CHANNEL_SPACINGS = (12.5, 25.0)
+
+# Auto Rx modes report the active FEC ON/OFF string from the receiver, not the Auto Rx label.
+_RTCM135_AUTO_RX_ALIASES = {
+    104: (100, 102),
+    105: (101, 103),
+}
 
 
 def radio_wireless_modes_path():
@@ -24,15 +31,130 @@ def radio_wireless_modes_path():
     return paths[0]
 
 
+def _wireless_mode_label_allowed(label):
+    lowered = str(label).lower()
+    if "reserved" in lowered:
+        return False
+    if "deprecated" in lowered:
+        return False
+    if "legacy error" in lowered:
+        return False
+    if "220 mhz" in lowered or "220mhz" in lowered:
+        return False
+    if "trimtalk v2" in lowered:
+        return False
+    if "trimtalk v1 auto" in lowered:
+        return False
+    if "sitenet 900" in lowered:
+        return False
+    if "sitenet 2400" in lowered:
+        return False
+    if "pcc external customer" in lowered:
+        return False
+    return True
+
+
 def load_radio_wireless_modes():
     with open(radio_wireless_modes_path(), "r", encoding="utf-8") as handle:
         raw = json.load(handle)
-    return {int(key): value for key, value in raw.items()}
+    modes = {
+        int(key): value
+        for key, value in raw.items()
+        if _wireless_mode_label_allowed(value)
+    }
+    return dict(sorted(modes.items(), key=lambda item: item[1].lower()))
 
 
 def wireless_mode_label(mode):
     modes = load_radio_wireless_modes()
     return modes.get(int(mode), "Unknown wireless mode {}".format(mode))
+
+
+def wireless_mode_xml_names_path():
+    paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "radio_wireless_mode_xml_names.json"),
+        "/usr/lib/cgi-bin/Dashboard/radio_wireless_mode_xml_names.json",
+    ]
+    for path in paths:
+        if os.path.isfile(path):
+            return path
+    return paths[0]
+
+
+def load_wireless_mode_xml_names():
+    path = wireless_mode_xml_names_path()
+    if not os.path.isfile(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as handle:
+        raw = json.load(handle)
+    return {int(key): value for key, value in raw.items()}
+
+
+def wireless_mode_display_name(mode):
+    mode_id = int(mode)
+    xml_names = load_wireless_mode_xml_names()
+    if mode_id in xml_names:
+        return xml_names[mode_id]
+    return wireless_mode_label(mode_id)
+
+
+def normalize_wireless_mode_text(text):
+    text = str(text).strip().lower()
+    text = re.sub(r"^\d+\s+", "", text)
+    text = re.sub(r"\(auto cs and whitening\)", "", text, flags=re.I)
+    text = text.replace(":", " ")
+    text = re.sub(r"\bat\b", " ", text)
+    text = re.sub(r"[,/()]", " ", text)
+    text = re.sub(r"(\d)\s+bps", r"\1bps", text)
+    text = re.sub(r"\s+bps\b", "bps", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def wireless_mode_text_variants(text):
+    raw = str(text).strip()
+    variants = {normalize_wireless_mode_text(raw)}
+    stripped = re.sub(r"^\d+\s+", "", raw)
+    if stripped != raw:
+        variants.add(normalize_wireless_mode_text(stripped))
+    return variants
+
+
+def wireless_mode_match_names(mode_id):
+    mode_id = int(mode_id)
+    xml_names = load_wireless_mode_xml_names()
+    modes = load_radio_wireless_modes()
+    mode_ids = [mode_id]
+    if mode_id in _RTCM135_AUTO_RX_ALIASES:
+        mode_ids.extend(_RTCM135_AUTO_RX_ALIASES[mode_id])
+    deduped = []
+    seen = set()
+    for mid in mode_ids:
+        names = []
+        if mid in xml_names:
+            names.append(xml_names[mid])
+        if mid in modes:
+            names.append(modes[mid])
+        for name in names:
+            key = normalize_wireless_mode_text(name)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(name)
+            prefixed = "{} {}".format(mid, name)
+            prefixed_key = normalize_wireless_mode_text(prefixed)
+            if prefixed_key not in seen:
+                seen.add(prefixed_key)
+                deduped.append(prefixed)
+    return deduped
+
+
+def wireless_mode_long_matches(mode_id, actual_long):
+    if actual_long is None:
+        return False
+    actual_variants = wireless_mode_text_variants(actual_long)
+    expected_variants = set()
+    for name in wireless_mode_match_names(mode_id):
+        expected_variants.update(wireless_mode_text_variants(name))
+    return not actual_variants.isdisjoint(expected_variants)
 
 
 def ensure_gnss_radio_columns(conn):

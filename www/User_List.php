@@ -16,7 +16,7 @@
    if (empty($_REQUEST['User_ID'])) {
       die('Internal Error: Missing User ID');
    }
-   gnss_require_user_id(new SQLite3($databaseFile));
+   gnss_require_user_id(gnss_open_db());
 
    function displayUsers($result)
    {
@@ -26,7 +26,7 @@
           "\n<th>Email</th>" .
           "\n</tr>";
 
-     while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
+     while ($row = $result->fetchArray(SQLITE3_ASSOC))
         {
         echo "\n<tr>";
        echo '<td><a href="Edit_User.php?User_ID='.h($row["ID"]).'">Edit</a></td>';
@@ -41,7 +41,7 @@
   }
 
 
-$db = new SQLite3($databaseFile); 
+$db = gnss_open_db(); 
 
 if (! $db) {
    die ("Failed to open GNSS.db");

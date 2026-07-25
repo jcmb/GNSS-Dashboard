@@ -16,7 +16,6 @@
       </div>
   <!-- end #logo-area -->
 </div>
-<div id="top-header-trim"></div>
 <div id="content-area">
 <div id="content">
 <div id="main-content" class="clearfix">
@@ -60,7 +59,7 @@ function AllOn() {
    include 'error.php.inc';
    include 'db.inc.php';
    include 'security.inc.php';
-   $user_id = gnss_require_user_id(new SQLite3($databaseFile));
+   $user_id = gnss_require_user_id(gnss_open_db());
    echo '<input name="User_ID" type="hidden" value="'.h($user_id).'">';
    echo gnss_csrf_field((string)$user_id);
 ?>
@@ -68,7 +67,7 @@ function AllOn() {
 <?php
    // Connect to sqlite
 
-   $db = new SQLite3($databaseFile);
+   $db = gnss_open_db();
 
    if (! $db) {
       die ("Failed to open GNSS.db");
@@ -89,7 +88,7 @@ function AllOn() {
       // Display the results
 
    $versions=array();
-   while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
+   while ($row = $result->fetchArray(SQLITE3_ASSOC))
         {
         $versions[$row["Type"]]=$row["Titan_Version"];
 //        var_dump($versions);
@@ -123,7 +122,7 @@ Upgrade To:
      // fetch a row into the $row array and ...
      $Current_Loc=""; //The ungrouped ones come first in the search
 
-     while ($row = @ $result->fetchArray(SQLITE3_ASSOC))
+     while ($row = $result->fetchArray(SQLITE3_ASSOC))
         {
 //        var_dump($row);
         // ... start a TABLE row ...
