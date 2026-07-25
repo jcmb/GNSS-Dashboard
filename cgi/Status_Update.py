@@ -796,6 +796,24 @@ def check_logging(GNSS_ID, DB, HTTP):
     return (Logging_Valid, Message)
 
 
+_EMAIL_PASSING_RESULTS = frozenset({
+    "EmailStatusOK",
+    "EmailStatusNothing",
+    "EmailStatusInProgress",
+})
+
+
+def _email_result_text(root):
+    node = root.find("result")
+    if node is None or node.text is None:
+        return ""
+    return str(node.text).strip()
+
+
+def _email_result_passing(root):
+    return _email_result_text(root) in _EMAIL_PASSING_RESULTS
+
+
 def _fetch_email_xml_root(HTTP):
     (reply, result) = HTTP.get("/xml/dynamic/email.xml")
     if result != 200 or not reply:
@@ -879,15 +897,16 @@ def check_email(GNSS_ID, DB, HTTP):
                     logger.info(DB.Address + ":" + str(DB.Port) + " Email enabled but not reporting crashes")
 
 
-        if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing") and (root.find('result').text != "EmailStatusInProgress"):
+        if not _email_result_passing(root):
             Email_Valid = False
-            err_node = root.find('err')
+            result_text = _email_result_text(root)
+            err_node = root.find("err")
             if err_node is not None and err_node.text:
                 Message += "Email result is {} ({}) should be OK\n".format(
-                    root.find('result').text, err_node.text.strip()
+                    result_text, err_node.text.strip()
                 )
             else:
-                Message += "Email result is {} should be OK\n".format(root.find('result').text)
+                Message += "Email result is {} should be OK\n".format(result_text)
 
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?", (Email_Enabled, Email_To, Email_Valid, GNSS_ID))
         DB.conn.commit()
