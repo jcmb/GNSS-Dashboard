@@ -127,7 +127,8 @@ for row in rows:
          print("Not Supported")
       elif Reciever_Type == 112:
          print("Ag542 ", end=" ")
-         firmware_file = GamelFile
+         firmware_file = ""
+         print("Not Supported")
       elif Reciever_Type == 162:
          print("Alloy ", end=" ")
          firmware_file = AlloyFile

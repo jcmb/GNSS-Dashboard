@@ -331,7 +331,6 @@ def check_firmware_and_password(GNSS_ID, DB, HTTP):
         return False
 
 RECEIVER_FIRMWARE_COLUMNS = {
-    "112": "GamelFile",
     "162": "AlloyFile",
     "169": "ChinstrapFile",
     "188": "BarracudaFile",
@@ -390,9 +389,6 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
     firmwareValid = True
     Message = ""
     firmwareType = 1 # Everything is Titan now
-
-    if (DB.Reciever_Type == "112"):
-        firmwareType = 0
 
     if (DB.Reciever_Type == "162"):
         firmwareType = 1
