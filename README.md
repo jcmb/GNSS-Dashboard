@@ -88,6 +88,8 @@ cfg_dir=/usr/lib/cgi-bin/Dashboard/User
 
 `Status_Update.py` polls each receiver over HTTP/HTTPS, compares live settings to the database, and updates the `STATUS` table.
 
+If email status is `EmailStatusConnectErr`, the checker issues one authenticated `GET` to `/cgi-bin/emailAlert.xml?request=1`, then re-reads `/xml/dynamic/email.xml` every 2 seconds for up to 20 seconds before reporting a failure.
+
 ### Database access
 
 The web UI and background `Status_Update.py` jobs share one SQLite database (`GNSS.db`). Connections use **WAL mode** and a **10 second busy timeout** (`gnss_open_db()` in PHP, `open_database()` in Python) so list pages do not fail when Nagios runs many checks at once.

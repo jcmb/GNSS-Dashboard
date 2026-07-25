@@ -799,19 +799,58 @@ def check_logging(GNSS_ID, DB, HTTP):
 
     return (Logging_Valid, Message)
 
+
+def _fetch_email_xml_root(HTTP):
+    (reply, result) = HTTP.get("/xml/dynamic/email.xml")
+    if result != 200 or not reply:
+        return None, result
+    try:
+        return ET.fromstring(reply), result
+    except ET.ParseError:
+        return None, result
+
+
+def _recover_email_connect_err(DB, HTTP, root):
+    result_node = root.find("result")
+    if result_node is None or result_node.text != "EmailStatusConnectErr":
+        return root
+
+    logger.info(
+        DB.Address + ":" + str(DB.Port) + " EmailStatusConnectErr; requesting /cgi-bin/emailAlert.xml?request=1"
+    )
+    HTTP.get("/cgi-bin/emailAlert.xml?request=1")
+
+    deadline = time.time() + 20
+    last_root = root
+    while time.time() < deadline:
+        time.sleep(2)
+        new_root, status = _fetch_email_xml_root(HTTP)
+        if new_root is None:
+            continue
+        last_root = new_root
+        new_result = new_root.find("result")
+        if new_result is not None and new_result.text != "EmailStatusConnectErr":
+            logger.info(
+                DB.Address
+                + ":"
+                + str(DB.Port)
+                + " Email status after emailAlert: "
+                + str(new_result.text)
+            )
+            return last_root
+
+    return last_root
+
+
 def check_email(GNSS_ID, DB, HTTP):
 
-
-    (reply, result) = HTTP.get("/xml/dynamic/email.xml")
+    root, result = _fetch_email_xml_root(HTTP)
 
     # print(reply)
-    if result != 200:
+    if result != 200 or root is None:
         Email_Valid = False
         Message = "Could not determine Email\n"
         return(Email_Valid, Message)
-
-    root = ET.fromstring(reply)
-
 
     Email_Valid = True
     Message = ""
@@ -819,6 +858,9 @@ def check_email(GNSS_ID, DB, HTTP):
         Email_Enabled = root.find("enable").text == "1"
     except AttributeError:
         Email_Enabled = False
+
+    if Email_Enabled:
+        root = _recover_email_connect_err(DB, HTTP, root)
 
     if not (Email_Enabled == DB.Email_Enabled):
         Email_Valid = False
@@ -843,10 +885,13 @@ def check_email(GNSS_ID, DB, HTTP):
 
         if (root.find('result').text != "EmailStatusOK") and (root.find('result').text != "EmailStatusNothing"):
             Email_Valid = False
-            if root.find('err') != None:
-                Message += "Email result is {} should be OK\n".format(root.find('result').text)
+            err_node = root.find('err')
+            if err_node is not None and err_node.text:
+                Message += "Email result is {} ({}) should be OK\n".format(
+                    root.find('result').text, err_node.text.strip()
+                )
             else:
-                Message += "Email result is {} ({}) should be OK\n".format(root.find('result').text, root.find('err').text.strip())
+                Message += "Email result is {} should be OK\n".format(root.find('result').text)
 
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?", (Email_Enabled, Email_To, Email_Valid, GNSS_ID))
         DB.conn.commit()
