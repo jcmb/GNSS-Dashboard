@@ -88,7 +88,7 @@ cfg_dir=/usr/lib/cgi-bin/Dashboard/User
 
 `Status_Update.py` polls each receiver over HTTP/HTTPS, compares live settings to the database, and updates the `STATUS` table.
 
-If email status is `EmailStatusConnectErr`, the checker issues one authenticated `GET` to `/cgi-bin/emailAlert.xml?request=1`, then re-reads `/xml/dynamic/email.xml` every 2 seconds for up to 20 seconds before reporting a failure.
+If email is enabled and `<result>` is not OK, Nothing, or InProgress, the checker calls **`/cgi-bin/emailAlert.xml?request=1`** and re-reads **`/xml/dynamic/email.xml`** every 2 seconds for up to 20 seconds (retrying emailAlert each poll) before reporting a failure.
 
 ### Database access
 

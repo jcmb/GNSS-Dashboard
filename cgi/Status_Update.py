@@ -824,32 +824,37 @@ def _fetch_email_xml_root(HTTP):
         return None, result
 
 
-def _recover_email_connect_err(DB, HTTP, root):
-    result_node = root.find("result")
-    if result_node is None or result_node.text != "EmailStatusConnectErr":
+def _recover_email_status(DB, HTTP, root):
+    """Trigger emailAlert and poll email.xml until status passes or timeout."""
+    if _email_result_passing(root):
         return root
 
+    result_text = _email_result_text(root)
     logger.info(
-        DB.Address + ":" + str(DB.Port) + " EmailStatusConnectErr; requesting /cgi-bin/emailAlert.xml?request=1"
+        DB.Address
+        + ":"
+        + str(DB.Port)
+        + " Email status "
+        + result_text
+        + "; requesting /cgi-bin/emailAlert.xml?request=1 and polling"
     )
-    HTTP.get("/cgi-bin/emailAlert.xml?request=1")
 
     deadline = time.time() + 20
     last_root = root
     while time.time() < deadline:
+        HTTP.get("/cgi-bin/emailAlert.xml?request=1")
         time.sleep(2)
         new_root, status = _fetch_email_xml_root(HTTP)
         if new_root is None:
             continue
         last_root = new_root
-        new_result = new_root.find("result")
-        if new_result is not None and new_result.text != "EmailStatusConnectErr":
+        if _email_result_passing(new_root):
             logger.info(
                 DB.Address
                 + ":"
                 + str(DB.Port)
-                + " Email status after emailAlert: "
-                + str(new_result.text)
+                + " Email status after recovery: "
+                + _email_result_text(new_root)
             )
             return last_root
 
@@ -873,9 +878,6 @@ def check_email(GNSS_ID, DB, HTTP):
     except AttributeError:
         Email_Enabled = False
 
-    if Email_Enabled:
-        root = _recover_email_connect_err(DB, HTTP, root)
-
     if not (Email_Enabled == DB.Email_Enabled):
         Email_Valid = False
         Message += "Email is " + str(Email_Enabled) + " expected " + str(DB.Email_Enabled) + "\n"
@@ -896,6 +898,7 @@ def check_email(GNSS_ID, DB, HTTP):
                     Message += "Email is enabled without crash reporting\n"
                     logger.info(DB.Address + ":" + str(DB.Port) + " Email enabled but not reporting crashes")
 
+        root = _recover_email_status(DB, HTTP, root)
 
         if not _email_result_passing(root):
             Email_Valid = False
