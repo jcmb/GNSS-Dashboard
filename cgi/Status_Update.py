@@ -376,22 +376,32 @@ class HTTP_Class:
         self.TimeOut = TimeOut
         self.UseHTTPS = use_https
         self.Scheme = receiver_scheme(use_https)
+        self.last_url = None
+        self.last_error = None
+        self.last_status = None
 
     def url(self, url_part):
         return receiver_url(self.Host, self.Port, self.UseHTTPS, url_part)
 
     def get(self, url_part):
+        self.last_url = self.url(url_part)
+        self.last_error = None
+        self.last_status = None
         try:
             kwargs = {"timeout": self.TimeOut}
             if self.UseHTTPS:
                 kwargs["verify"] = False
-            Response = self.Ses.get(self.url(url_part), **kwargs)
+            Response = self.Ses.get(self.last_url, **kwargs)
+            self.last_status = Response.status_code
             if Response.status_code != 200:
                 reply = None
+                self.last_error = "HTTP {}".format(Response.status_code)
             else:
                 reply = Response.text
             return (reply, Response.status_code)
-        except:
+        except Exception as err:
+            self.last_status = 0
+            self.last_error = "{}: {}".format(type(err).__name__, err)
             return (None, 0)
 
 
@@ -961,8 +971,22 @@ _EMAIL_PASSING_RESULTS = frozenset({
 })
 
 
+def _email_log(DB, message):
+    """Email recovery diagnostics: ERROR so they show with default logger level."""
+    line = DB.Address + ":" + str(DB.Port) + " " + message
+    logger.error(line)
+    return line
+
+
 def _email_result_text(root):
-    node = root.find("result")
+    node = root.find("result") if root is not None else None
+    if node is None or node.text is None:
+        return ""
+    return str(node.text).strip()
+
+
+def _email_err_text(root):
+    node = root.find("err") if root is not None else None
     if node is None or node.text is None:
         return ""
     return str(node.text).strip()
@@ -972,61 +996,124 @@ def _email_result_passing(root):
     return _email_result_text(root) in _EMAIL_PASSING_RESULTS
 
 
+def _email_snapshot(root, http_status=None, http_error=None):
+    parts = []
+    if http_status is not None:
+        parts.append("http={}".format(http_status))
+    if http_error:
+        parts.append("http_err={}".format(http_error))
+    if root is None:
+        parts.append("xml=missing")
+    else:
+        result = _email_result_text(root) or "(empty)"
+        err = _email_err_text(root)
+        parts.append("result={}".format(result))
+        if err:
+            parts.append("err={}".format(err))
+        enable = root.find("enable")
+        if enable is not None and enable.text is not None:
+            parts.append("enable={}".format(enable.text.strip()))
+    return ", ".join(parts)
+
+
 def _fetch_email_xml_root(HTTP):
     (reply, result) = HTTP.get("/xml/dynamic/email.xml")
     if result != 200 or not reply:
-        return None, result
+        return None, result, HTTP.last_error or "empty response"
     try:
-        return ET.fromstring(reply), result
-    except ET.ParseError:
-        return None, result
+        return ET.fromstring(reply), result, None
+    except ET.ParseError as err:
+        snippet = reply[:200].replace("\n", " ") if reply else ""
+        return None, result, "XML parse error: {}; body starts: {!r}".format(err, snippet)
 
 
 def _recover_email_status(DB, HTTP, root):
-    """Trigger emailAlert and poll email.xml until status passes or timeout."""
+    """Trigger emailAlert and poll email.xml until status passes or timeout.
+
+    Returns (root, notes) where notes is a list of diagnostic lines.
+    """
+    notes = []
     if _email_result_passing(root):
-        return root
+        return root, notes
 
-    result_text = _email_result_text(root)
-    logger.info(
-        DB.Address
-        + ":"
-        + str(DB.Port)
-        + " Email status "
-        + result_text
-        + "; requesting /cgi-bin/emailAlert.xml?request=1 and polling"
+    result_text = _email_result_text(root) or "(empty)"
+    err_text = _email_err_text(root)
+    start = "Email recovery start: result={}{}".format(
+        result_text,
+        (" err=" + err_text) if err_text else "",
     )
+    notes.append(_email_log(DB, start))
 
+    alert_path = "/cgi-bin/emailAlert.xml?request=1"
     deadline = time.time() + 20
     last_root = root
+    attempt = 0
     while time.time() < deadline:
-        HTTP.get("/cgi-bin/emailAlert.xml?request=1")
+        attempt += 1
+        remaining = max(0, int(deadline - time.time()))
+        (alert_reply, alert_status) = HTTP.get(alert_path)
+        alert_note = "Email recovery attempt {}: GET {} -> {}".format(
+            attempt,
+            HTTP.last_url or alert_path,
+            _email_snapshot(None, alert_status, HTTP.last_error),
+        )
+        if alert_reply:
+            alert_snip = alert_reply.strip().replace("\n", " ")[:160]
+            if alert_snip:
+                alert_note += "; body={!r}".format(alert_snip)
+        notes.append(_email_log(DB, alert_note))
+
         time.sleep(2)
-        new_root, status = _fetch_email_xml_root(HTTP)
+        new_root, status, fetch_err = _fetch_email_xml_root(HTTP)
+        poll_note = "Email recovery attempt {}: poll email.xml -> {}".format(
+            attempt,
+            _email_snapshot(new_root, status, fetch_err or HTTP.last_error),
+        )
+        notes.append(_email_log(DB, poll_note))
+
         if new_root is None:
+            notes.append(
+                _email_log(
+                    DB,
+                    "Email recovery attempt {}: no usable email.xml ({}s left)".format(
+                        attempt, remaining
+                    ),
+                )
+            )
             continue
         last_root = new_root
         if _email_result_passing(new_root):
-            logger.info(
-                DB.Address
-                + ":"
-                + str(DB.Port)
-                + " Email status after recovery: "
-                + _email_result_text(new_root)
+            notes.append(
+                _email_log(
+                    DB,
+                    "Email recovery succeeded after {} attempt(s): {}".format(
+                        attempt, _email_snapshot(new_root, status)
+                    ),
+                )
             )
-            return last_root
+            return last_root, notes
 
-    return last_root
+    notes.append(
+        _email_log(
+            DB,
+            "Email recovery gave up after {} attempt(s): {}".format(
+                attempt, _email_snapshot(last_root)
+            ),
+        )
+    )
+    return last_root, notes
 
 
 def check_email(GNSS_ID, DB, HTTP):
 
-    root, result = _fetch_email_xml_root(HTTP)
+    root, result, fetch_err = _fetch_email_xml_root(HTTP)
 
     # print(reply)
     if result != 200 or root is None:
         Email_Valid = False
-        Message = "Could not determine Email\n"
+        detail = fetch_err or HTTP.last_error or "unknown"
+        Message = "Could not determine Email (http={}, {})\n".format(result, detail)
+        _email_log(DB, Message.strip())
         return(Email_Valid, Message)
 
     Email_Valid = True
@@ -1035,6 +1122,9 @@ def check_email(GNSS_ID, DB, HTTP):
         Email_Enabled = root.find("enable").text == "1"
     except AttributeError:
         Email_Enabled = False
+
+    initial = "Email initial: {}".format(_email_snapshot(root, result))
+    _email_log(DB, initial)
 
     if not (Email_Enabled == DB.Email_Enabled):
         Email_Valid = False
@@ -1056,22 +1146,35 @@ def check_email(GNSS_ID, DB, HTTP):
                     Message += "Email is enabled without crash reporting\n"
                     logger.info(DB.Address + ":" + str(DB.Port) + " Email enabled but not reporting crashes")
 
-        root = _recover_email_status(DB, HTTP, root)
+        root, recovery_notes = _recover_email_status(DB, HTTP, root)
 
         if not _email_result_passing(root):
             Email_Valid = False
             result_text = _email_result_text(root)
-            err_node = root.find("err")
+            err_node = root.find("err") if root is not None else None
             if err_node is not None and err_node.text:
                 Message += "Email result is {} ({}) should be OK\n".format(
                     result_text, err_node.text.strip()
                 )
             else:
                 Message += "Email result is {} should be OK\n".format(result_text)
+            if recovery_notes:
+                Message += "Email recovery detail:\n"
+                for note in recovery_notes:
+                    # notes already include host:port prefix from _email_log
+                    Message += "  " + note + "\n"
+        elif recovery_notes:
+            # Recovered — keep a short breadcrumb in logs only (already logged).
+            pass
 
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_To=?, Email_Valid=? where id=?", (Email_Enabled, Email_To, Email_Valid, GNSS_ID))
         DB.conn.commit()
     else:
+        if DB.Email_Enabled:
+            _email_log(
+                DB,
+                "Email recovery skipped: receiver has email disabled (enable=0)",
+            )
         DB.STATUS.execute("UPDATE STATUS SET Email_Enabled=?, Email_Valid=? where id=?", (Email_Enabled, Email_Valid, GNSS_ID))
         DB.conn.commit()
 
