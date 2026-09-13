@@ -70,24 +70,182 @@ from radio_config import (
     detect_active_radio_band,
 )
 
+class _StatusBufferCursor:
+    """Intercepts STATUS SQL and stores column values in memory."""
+
+    def __init__(self, owner):
+        self.owner = owner
+
+    def execute(self, sql, params=None):
+        if params is None:
+            params = ()
+        elif not isinstance(params, (list, tuple)):
+            params = (params,)
+        else:
+            params = tuple(params)
+        self.owner._buffer_status_sql(sql, params)
+
+
+class _CommitNopConnection:
+    """Proxy that no-ops commit() while STATUS updates are buffered."""
+
+    def __init__(self, owner, real_conn):
+        self._owner = owner
+        self._conn = real_conn
+
+    def commit(self):
+        if self._owner._status_buffering:
+            return
+        if self._conn is not None:
+            self._conn.commit()
+
+    def cursor(self):
+        return self._conn.cursor()
+
+    def execute(self, *args, **kwargs):
+        return self._conn.execute(*args, **kwargs)
+
+    def close(self):
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
 class DB_Class:
 
     def __init__(self):
         self.conn = None
-        pass
+        self._real_conn = None
+        self._status_buffering = False
+        self.status_buf = {}
+        self._status_schema = []
 
     def open(self):
         try:
-            self.conn = open_database()
+            self._real_conn = open_database()
         except sqlite3.Error as err:
             print("Error opening db. {}: {}\n".format(databaseFile(), err))
             sys.exit(1)
 
+        self.conn = self._real_conn
         self.GNSS = self.conn.cursor()
         self.STATUS = self.conn.cursor()
         self.FIRMWARE = self.conn.cursor()
         ensure_gnss_radio_columns(self.conn)
         ensure_gnss_https_column(self.conn)
+        self._ensure_status_ntrip_valid_column()
+
+    def _ensure_status_ntrip_valid_column(self):
+        try:
+            self._real_conn.execute("ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN")
+            self._real_conn.commit()
+        except sqlite3.OperationalError as err:
+            if "duplicate column name" not in str(err).lower():
+                raise
+
+    def begin_status_batch(self):
+        """Buffer STATUS writes in memory; release the DB during HTTP checks."""
+        self._status_buffering = True
+        self.status_buf = {}
+        self._status_schema = []
+        self.STATUS = _StatusBufferCursor(self)
+        if self._real_conn is not None:
+            self._real_conn.close()
+            self._real_conn = None
+        self.conn = _CommitNopConnection(self, None)
+
+    def _buffer_status_sql(self, sql, params):
+        sql_n = " ".join(str(sql).split())
+        upper = sql_n.upper()
+
+        if upper.startswith("DELETE FROM STATUS"):
+            return
+
+        if upper.startswith("ALTER TABLE STATUS"):
+            self._status_schema.append(sql_n)
+            return
+
+        insert_match = re.search(
+            r"INSERT\s+(?:OR\s+REPLACE\s+)?INTO\s+STATUS\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)",
+            sql_n,
+            flags=re.I,
+        )
+        if insert_match:
+            cols = [c.strip() for c in insert_match.group(1).split(",")]
+            for col, val in zip(cols, params):
+                if col.lower() != "id":
+                    self.status_buf[col] = val
+            return
+
+        if "UPDATE STATUS SET" in upper:
+            set_part = re.split(r"\sWHERE\s", sql_n, maxsplit=1, flags=re.I)[0]
+            set_part = re.sub(r"^\s*UPDATE\s+STATUS\s+SET\s+", "", set_part, flags=re.I)
+            param_i = 0
+            for assign in set_part.split(","):
+                assign = assign.strip()
+                if "=" not in assign:
+                    continue
+                col, expr = assign.split("=", 1)
+                col = col.strip()
+                expr = expr.strip()
+                if expr == "?":
+                    self.status_buf[col] = params[param_i]
+                    param_i += 1
+                else:
+                    try:
+                        self.status_buf[col] = int(expr)
+                    except ValueError:
+                        self.status_buf[col] = expr.strip("'\"")
+            return
+
+        logger.warning(self.Address + " unbuffered STATUS SQL: " + sql_n)
+
+    def flush_status_batch(self):
+        """Write buffered STATUS fields in one UPSERT, then close the connection."""
+        if not self._status_buffering and not self.status_buf and not self._status_schema:
+            return
+
+        try:
+            if self._real_conn is None:
+                self._real_conn = open_database()
+            conn = self._real_conn
+
+            for ddl in self._status_schema:
+                try:
+                    conn.execute(ddl)
+                    conn.commit()
+                except sqlite3.OperationalError as err:
+                    if "duplicate column name" not in str(err).lower():
+                        raise
+
+            fields = dict(self.status_buf)
+            if fields:
+                cols = ["id"] + list(fields.keys())
+                vals = [self.GNSS_ID] + [fields[c] for c in fields.keys()]
+                placeholders = ",".join("?" for _ in cols)
+                updates = ",".join("{0}=excluded.{0}".format(c) for c in fields.keys())
+                sql = (
+                    "INSERT INTO STATUS ({cols}) VALUES ({vals}) "
+                    "ON CONFLICT(id) DO UPDATE SET {updates}"
+                ).format(
+                    cols=",".join(cols),
+                    vals=placeholders,
+                    updates=updates,
+                )
+                conn.execute(sql, vals)
+                conn.commit()
+        finally:
+            self.status_buf = {}
+            self._status_schema = []
+            self._status_buffering = False
+            if self._real_conn is not None:
+                self._real_conn.close()
+                self._real_conn = None
+            self.conn = None
+            self.STATUS = None
 
     def read_Firmware_configuration(self):
         query = 'SELECT * FROM Firmware'
@@ -1203,12 +1361,6 @@ def parse_ntrip_status(root, target_mountpoint=None):
 
 
 def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid):
-    try:
-        DB.STATUS.execute("ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN")
-        DB.conn.commit()
-    except sqlite3.OperationalError as err:
-        if "duplicate column name" not in str(err).lower():
-            raise
     DB.STATUS.execute(
         """
             UPDATE STATUS SET
@@ -2514,6 +2666,7 @@ DB = DB_Class()
 DB.open()
 firmware_Versions = DB.read_Firmware_configuration()
 DB.read_GNSS_configuration(args.GNSS_ID)
+DB.begin_status_batch()
 
 
 STATUS_Update_Check (DB, args.GNSS_ID, DB.Enabled)
@@ -2522,6 +2675,7 @@ STATUS_Update_Check (DB, args.GNSS_ID, DB.Enabled)
 
 
 if not DB.Enabled:
+    DB.flush_status_batch()
     print("OK: Host Disabled")
     sys.exit(0)
 
@@ -2531,11 +2685,13 @@ HTTP = HTTP_Class(DB.Address, DB.Port, DB.User_Name, DB.Password, 10, DB.UseHTTP
 (locked, locked_message) = check_login_locked(args.GNSS_ID, DB, HTTP)
 if locked:
     logger.warning(DB.Address + ":" + str(DB.Port) + " login locked out")
+    DB.flush_status_batch()
     print("ERROR: " + locked_message.strip())
     sys.exit(2)
 
 if not check_firmware_and_password(args.GNSS_ID, DB, HTTP):
     logger.warning(DB.Address + ":" + str(DB.Port) + " Is down or wrong password")
+    DB.flush_status_batch()
     print("ERROR: Down or wrong password")
     sys.exit(2)
 else:
@@ -2743,6 +2899,7 @@ logger.debug(DB.Address + ":" + str(DB.Port) + " After Check Errors: " + str(Suc
 
 if OK:
     (Success, Message) = check_Uptime(args.GNSS_ID, DB, HTTP)
+    DB.flush_status_batch()
     if Success:
         logger.info(DB.Address + ":" + str(DB.Port) + " OK")
         print("OK : " + DB.Address + ":" + str(DB.Port))
@@ -2752,6 +2909,7 @@ if OK:
         print("WARNING : " + DB.Address + ":" + str(DB.Port) + " " + Message)
         sys.exit(1)
 else:
+    DB.flush_status_batch()
     logger.info(DB.Address + ":" + str(DB.Port) + " ERROR: " + Result_String)
     print("ERROR: " + Result_String) # Python 3 handles utf-8 encoding by default in print
     sys.exit(2)

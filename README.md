@@ -86,7 +86,7 @@ Add to `nagios.cfg`:
 cfg_dir=/usr/lib/cgi-bin/Dashboard/User
 ```
 
-`Status_Update.py` polls each receiver over HTTP/HTTPS, compares live settings to the database, and updates the `STATUS` table.
+`Status_Update.py` polls each receiver over HTTP/HTTPS, compares live settings to the database, and updates the `STATUS` table. STATUS column updates are **buffered in memory** while the receiver is polled; the DB connection is closed during HTTP work and a single UPSERT is written when the check finishes (or on early exit).
 
 If email is enabled and `<result>` is not OK, Nothing, or InProgress, the checker calls **`/cgi-bin/emailAlert.xml?request=1`** and re-reads **`/xml/dynamic/email.xml`** every 2 seconds for up to 20 seconds (retrying emailAlert each poll) before reporting a failure.
 
@@ -109,7 +109,7 @@ sudo -u www-data /usr/lib/cgi-bin/Dashboard/Status_Update.py <GNSS_ID>
 sudo usermod -aG nagios "$USER"
 ```
 
-`Status_Update.py` holds the database open while polling receivers (slow). If you still see lock contention under heavy load, consider serializing checks or refactoring status updates to close the DB during HTTP calls.
+`Status_Update.py` closes the DB while polling receivers and writes STATUS once at the end. If you still see lock contention under heavy Nagios parallelism, consider serializing checks.
 
 ## Web UI
 
