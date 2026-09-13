@@ -19,8 +19,8 @@ from pprint import pprint
 try:
    conn = open_database()
 #   print (databaseFile()+ " Open\n")
-except sqlite3.Error:
-   print("Error opening db. " + databaseFile() +"\n")
+except sqlite3.Error as err:
+   print("Error opening db. {}: {}\n".format(databaseFile(), err))
    quit()
 
 conn.row_factory = sqlite3.Row

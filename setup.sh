@@ -41,6 +41,18 @@ cp  www/* $WWW
 cp  cgi/* $CGI
 cp  User/* $CGI/User
 
+# SQLite WAL creates GNSS.db-wal / GNSS.db-shm beside the DB. The CGI
+# directory and those sidecars must be writable by www-data and nagios.
+fix_db_permissions() {
+    chown "$WWW_USER:$NAGIOS_USER" "$CGI" "$CGI/User" 2>/dev/null || true
+    chmod 2775 "$CGI" "$CGI/User" 2>/dev/null || true
+    if [ -f "$CGI/GNSS.db" ]; then
+        chown "$WWW_USER:$NAGIOS_USER" "$CGI"/GNSS.db "$CGI"/GNSS.db-wal "$CGI"/GNSS.db-shm 2>/dev/null || true
+        chmod 0660 "$CGI"/GNSS.db 2>/dev/null || true
+        chmod 0660 "$CGI"/GNSS.db-wal "$CGI"/GNSS.db-shm 2>/dev/null || true
+    fi
+}
+
 if [ "$RUN_INSTALL" -eq 1 ]; then
     cd $CGI
     chown $WWW_USER $WWW/*
@@ -77,14 +89,13 @@ if [ "$RUN_INSTALL" -eq 1 ]; then
         echo "Error: GNSS.db not created. PHP installed?"
         exit 1
     fi
-
-    chown $WWW_USER GNSS.db
-    chgrp $NAGIOS_USER GNSS.db
-    chmod 0770 GNSS.db
 fi
+
+fix_db_permissions
 
 echo "Dashboard files copied."
 if [ "$RUN_INSTALL" -eq 0 ]; then
     echo "Install steps skipped (default). Run '$0 --install' to run full setup."
 fi
+echo "DB permissions: $CGI should be writable by $WWW_USER and group $NAGIOS_USER (WAL sidecars)."
 

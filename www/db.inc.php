@@ -8,12 +8,17 @@
       if ($path === null) {
          $path = $databaseFile;
       }
-      $db = new SQLite3($path);
+      try {
+         $db = new SQLite3($path);
+      } catch (Exception $e) {
+         return false;
+      }
       if (!$db) {
          return false;
       }
       $db->busyTimeout(10000);
-      $db->exec('PRAGMA journal_mode=WAL');
+      // WAL needs a writable directory for GNSS.db-wal / GNSS.db-shm.
+      @$db->exec('PRAGMA journal_mode=WAL');
       return $db;
    }
 

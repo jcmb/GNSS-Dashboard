@@ -20,8 +20,8 @@ print ()                              # blank line, end of headers
 try:
    conn = open_database()
 #   print databaseFile()+ " Open\n"
-except sqlite3.Error:
-   print ("Error opening db. " + databaseFile() +"\n")
+except sqlite3.Error as err:
+   print("Error opening db. {}: {}\n".format(databaseFile(), err))
    quit()
 
 cursor = conn.cursor()

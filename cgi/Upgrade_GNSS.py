@@ -27,8 +27,8 @@ sys.stdout.flush()
 
 try:
    conn = open_database()
-except sqlite3.Error:
-   print("Error opening db. " + str(databaseFile()) + "\n")
+except sqlite3.Error as err:
+   print("Error opening db. {}: {}\n".format(databaseFile(), err))
    sys.exit(1)
 
 conn.row_factory = sqlite3.Row

@@ -94,6 +94,21 @@ If email is enabled and `<result>` is not OK, Nothing, or InProgress, the checke
 
 The web UI and background `Status_Update.py` jobs share one SQLite database (`GNSS.db`). Connections use **WAL mode** and a **10 second busy timeout** (`gnss_open_db()` in PHP, `open_database()` in Python) so list pages do not fail when Nagios runs many checks at once.
 
+**WAL needs a writable directory**, not only a writable `.db` file. Opening the DB creates or updates `GNSS.db-wal` and `GNSS.db-shm` next to `GNSS.db`. If you see `Error opening db` when not root, check:
+
+```bash
+ls -la /usr/lib/cgi-bin/Dashboard/
+ls -la /usr/lib/cgi-bin/Dashboard/GNSS.db*
+```
+
+`setup.sh` sets the CGI directory to `www-data:nagios` mode `2775` and the DB/sidecars to mode `0660`. For manual CLI runs, either:
+
+```bash
+sudo -u www-data /usr/lib/cgi-bin/Dashboard/Status_Update.py <GNSS_ID>
+# or add your user to the nagios group, then re-login:
+sudo usermod -aG nagios "$USER"
+```
+
 `Status_Update.py` holds the database open while polling receivers (slow). If you still see lock contention under heavy load, consider serializing checks or refactoring status updates to close the DB during HTTP calls.
 
 ## Web UI

@@ -79,8 +79,8 @@ class DB_Class:
     def open(self):
         try:
             self.conn = open_database()
-        except sqlite3.Error:
-            print("Error opening db. " + databaseFile() + "\n")
+        except sqlite3.Error as err:
+            print("Error opening db. {}: {}\n".format(databaseFile(), err))
             sys.exit(1)
 
         self.GNSS = self.conn.cursor()

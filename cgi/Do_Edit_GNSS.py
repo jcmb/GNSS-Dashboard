@@ -64,8 +64,8 @@ print()                              # blank line, end of headers
 
 try:
     conn = open_database()
-except sqlite3.Error:
-    print("Error opening db. " + str(databaseFile()) + "\n")
+except sqlite3.Error as err:
+    print("Error opening db. {}: {}\n".format(databaseFile(), err))
     sys.exit()
 
 ensure_gnss_radio_columns(conn)
