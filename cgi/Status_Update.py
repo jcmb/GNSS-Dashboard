@@ -22,6 +22,7 @@ import logging
 import logging.handlers
 import xml.etree.ElementTree as ET
 import re
+import urllib.parse
 from pprint import pprint
 
 logger = logging.getLogger('Status_Update')
@@ -1027,8 +1028,8 @@ def _fetch_email_xml_root(HTTP):
         return None, result, "XML parse error: {}; body starts: {!r}".format(err, snippet)
 
 
-def _recover_email_status(DB, HTTP, root):
-    """Trigger emailAlert and poll email.xml until status passes or timeout.
+def _recover_email_status(DB, HTTP, root, smtp_to):
+    """Trigger emailAlert with SMTPTo and poll email.xml until status passes or timeout.
 
     Returns (root, notes) where notes is a list of diagnostic lines.
     """
@@ -1038,13 +1039,15 @@ def _recover_email_status(DB, HTTP, root):
 
     result_text = _email_result_text(root) or "(empty)"
     err_text = _email_err_text(root)
-    start = "Email recovery start: result={}{}".format(
+    smtp_to_q = urllib.parse.quote(str(smtp_to).strip(), safe="")
+    alert_path = "/cgi-bin/emailAlert.xml?request=1&SMTPTo={}".format(smtp_to_q)
+    start = "Email recovery start: result={}{} SMTPTo={}".format(
         result_text,
         (" err=" + err_text) if err_text else "",
+        smtp_to_q,
     )
     notes.append(_email_log(DB, start))
 
-    alert_path = "/cgi-bin/emailAlert.xml?request=1"
     deadline = time.time() + 20
     last_root = root
     attempt = 0
@@ -1132,8 +1135,11 @@ def check_email(GNSS_ID, DB, HTTP):
         logger.debug(DB.Address + ":" + str(DB.Port) + " Email Enabled: " + str(Email_Enabled) + ", Expected Enabled: " + str(DB.Email_Enabled) + ', Valid: ' + str(Email_Valid))
 
     if Email_Enabled:
-        Email_To = root.find("to").text.lower()
-        if not(Email_To == DB.Email_To.lower()):
+        to_node = root.find("to")
+        Email_To = to_node.text.lower() if to_node is not None and to_node.text else ""
+        expected_to = (DB.Email_To or "").lower()
+        email_to_matches = Email_To == expected_to
+        if not email_to_matches:
             Email_Valid = False
             Message += "Email is " + str(Email_To) + " expected " + DB.Email_To + "\n"
             logger.debug(DB.Address + ":" + str(DB.Port) + " Email To: " + str(Email_To) + ", Expected To: " + str(DB.Email_To) + ', Valid: ' + str(Email_Valid))
@@ -1146,7 +1152,16 @@ def check_email(GNSS_ID, DB, HTTP):
                     Message += "Email is enabled without crash reporting\n"
                     logger.info(DB.Address + ":" + str(DB.Port) + " Email enabled but not reporting crashes")
 
-        root, recovery_notes = _recover_email_status(DB, HTTP, root)
+        recovery_notes = []
+        if email_to_matches:
+            root, recovery_notes = _recover_email_status(DB, HTTP, root, DB.Email_To)
+        else:
+            _email_log(
+                DB,
+                "Email recovery skipped: receiver To {!r} does not match expected {!r}".format(
+                    Email_To, expected_to
+                ),
+            )
 
         if not _email_result_passing(root):
             Email_Valid = False

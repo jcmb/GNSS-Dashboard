@@ -15,8 +15,15 @@ def open_database():
    except sqlite3.Error as err:
       hint = ""
       if not os.access(db_dir, os.W_OK):
-         hint = " Directory {} is not writable (SQLite WAL needs to create {}-wal/-shm there).".format(
-            db_dir, os.path.basename(path)
+         hint = (
+            " Directory {} is not writable (SQLite WAL needs to create {}-wal/-shm there). "
+            "Fix: sudo chown www-data:nagios {dir} && sudo chmod 2775 {dir}; "
+            "then re-run as www-data/nagios, or: sudo -u www-data {script}"
+         ).format(
+            db_dir,
+            os.path.basename(path),
+            dir=db_dir,
+            script="Status_Update.py <id>",
          )
       raise sqlite3.OperationalError(
          "Cannot open {}: {}.{}".format(path, err, hint)
@@ -29,7 +36,8 @@ def open_database():
    except sqlite3.Error as err:
       raise sqlite3.OperationalError(
          "Cannot enable WAL on {}: {}. Ensure {} is writable by this user "
-         "(www-data/nagios group) and that GNSS.db-wal / GNSS.db-shm are group-writable.".format(
+         "(www-data:nagios, mode 2775) and GNSS.db-wal / GNSS.db-shm are group-writable. "
+         "Or: sudo -u www-data Status_Update.py <id>".format(
             path, err, db_dir
          )
       ) from err
