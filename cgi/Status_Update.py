@@ -137,15 +137,37 @@ class DB_Class:
         self.FIRMWARE = self.conn.cursor()
         ensure_gnss_radio_columns(self.conn)
         ensure_gnss_https_column(self.conn)
-        self._ensure_status_ntrip_valid_column()
+        self._ensure_status_extra_columns()
 
-    def _ensure_status_ntrip_valid_column(self):
+    def _ensure_status_extra_columns(self):
+        for ddl in (
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN SysLog_Length INTEGER",
+            "ALTER TABLE STATUS ADD COLUMN SysLog_Length_Changed TEXT",
+            "ALTER TABLE STATUS ADD COLUMN SysLog_Valid BOOLEAN",
+        ):
+            try:
+                self._real_conn.execute(ddl)
+                self._real_conn.commit()
+            except sqlite3.OperationalError as err:
+                if "duplicate column name" not in str(err).lower():
+                    raise
+
+    def read_status_syslog(self, GNSS_ID):
+        """Load prior SysLog.bin length tracking from STATUS (before batch closes DB)."""
+        self.Prev_SysLog_Length = None
+        self.Prev_SysLog_Length_Changed = None
         try:
-            self._real_conn.execute("ALTER TABLE STATUS ADD COLUMN NTRIP_Valid BOOLEAN")
-            self._real_conn.commit()
-        except sqlite3.OperationalError as err:
-            if "duplicate column name" not in str(err).lower():
-                raise
+            row = self.conn.execute(
+                "SELECT SysLog_Length, SysLog_Length_Changed FROM STATUS WHERE id=?",
+                (GNSS_ID,),
+            ).fetchone()
+        except sqlite3.Error:
+            return
+        if row is None:
+            return
+        self.Prev_SysLog_Length = row["SysLog_Length"]
+        self.Prev_SysLog_Length_Changed = row["SysLog_Length_Changed"]
 
     def begin_status_batch(self):
         """Buffer STATUS writes in memory; release the DB during HTTP checks."""
@@ -404,6 +426,46 @@ class HTTP_Class:
             self.last_status = 0
             self.last_error = "{}: {}".format(type(err).__name__, err)
             return (None, 0)
+
+    def content_length(self, url_part):
+        """Return Content-Length for a receiver URL without downloading the body."""
+        self.last_url = self.url(url_part)
+        self.last_error = None
+        self.last_status = None
+        base_kwargs = {"timeout": self.TimeOut}
+        if self.UseHTTPS:
+            base_kwargs["verify"] = False
+        try:
+            Response = self.Ses.head(
+                self.last_url, allow_redirects=True, **base_kwargs
+            )
+            self.last_status = Response.status_code
+            if Response.status_code == 200:
+                cl = Response.headers.get("Content-Length")
+                if cl is not None and str(cl).strip() != "":
+                    return int(cl)
+        except Exception as err:
+            self.last_error = "HEAD {}: {}".format(type(err).__name__, err)
+
+        try:
+            Response = self.Ses.get(
+                self.last_url, allow_redirects=True, stream=True, **base_kwargs
+            )
+            self.last_status = Response.status_code
+            if Response.status_code != 200:
+                self.last_error = "HTTP {}".format(Response.status_code)
+                Response.close()
+                return None
+            cl = Response.headers.get("Content-Length")
+            Response.close()
+            if cl is None or str(cl).strip() == "":
+                self.last_error = "Content-Length missing"
+                return None
+            return int(cl)
+        except Exception as err:
+            self.last_status = 0
+            self.last_error = "{}: {}".format(type(err).__name__, err)
+            return None
 
 
 def STATUS_Update_Check(DB, GNSS_ID, Enabled):
@@ -1194,6 +1256,71 @@ def check_email(GNSS_ID, DB, HTTP):
         DB.conn.commit()
 
     return(Email_Valid, Message)
+
+
+def check_SysLog(GNSS_ID, DB, HTTP):
+    """Compare /xml/dynamic/SysLog.bin Content-Length to the previous check.
+
+    First successful observation only stores a baseline (no error).
+    A later length change is reported as an error and updates SysLog_Length_Changed.
+    """
+    Message = ""
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    length = HTTP.content_length("/xml/dynamic/SysLog.bin")
+
+    if length is None:
+        Message = "SysLog.bin length could not be determined ({})\n".format(
+            HTTP.last_error or "unknown"
+        )
+        logger.error(DB.Address + ":" + str(DB.Port) + " " + Message.strip())
+        DB.STATUS.execute(
+            "UPDATE STATUS SET SysLog_Valid=? where id=?",
+            (False, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (False, Message)
+
+    prev = getattr(DB, "Prev_SysLog_Length", None)
+    prev_changed = getattr(DB, "Prev_SysLog_Length_Changed", None)
+
+    if prev is None or prev == "":
+        # Baseline only — do not report an error on the first check.
+        DB.STATUS.execute(
+            "UPDATE STATUS SET SysLog_Length=?, SysLog_Valid=? where id=?",
+            (int(length), True, GNSS_ID),
+        )
+        DB.conn.commit()
+        logger.error(
+            DB.Address
+            + ":"
+            + str(DB.Port)
+            + " SysLog.bin baseline length={}".format(length)
+        )
+        return (True, "")
+
+    prev = int(prev)
+    if int(length) != prev:
+        Message = "SysLog.bin length changed from {} to {} bytes\n".format(prev, length)
+        logger.error(DB.Address + ":" + str(DB.Port) + " " + Message.strip())
+        DB.STATUS.execute(
+            "UPDATE STATUS SET SysLog_Length=?, SysLog_Length_Changed=?, SysLog_Valid=? where id=?",
+            (int(length), now_str, False, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (False, Message)
+
+    # Unchanged — keep prior change timestamp.
+    DB.STATUS.execute(
+        "UPDATE STATUS SET SysLog_Length=?, SysLog_Valid=? where id=?",
+        (int(length), True, GNSS_ID),
+    )
+    if prev_changed:
+        DB.STATUS.execute(
+            "UPDATE STATUS SET SysLog_Length_Changed=? where id=?",
+            (prev_changed, GNSS_ID),
+        )
+    DB.conn.commit()
+    return (True, "")
 
 
 def check_errors(GNSS_ID, DB, HTTP):
@@ -2784,6 +2911,7 @@ DB = DB_Class()
 DB.open()
 firmware_Versions = DB.read_Firmware_configuration()
 DB.read_GNSS_configuration(args.GNSS_ID)
+DB.read_status_syslog(args.GNSS_ID)
 DB.begin_status_batch()
 
 
@@ -2919,6 +3047,12 @@ if not Success:
 OK = OK and Success
 
 (Success, Message) = check_email(args.GNSS_ID, DB, HTTP)
+if not Success:
+    Result_String += Message
+
+OK = OK and Success
+
+(Success, Message) = check_SysLog(args.GNSS_ID, DB, HTTP)
 if not Success:
     Result_String += Message
 

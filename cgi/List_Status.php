@@ -125,7 +125,7 @@ $(document).ready(function()
    /** Must match the number of <th> cells in the status table header row. */
    function status_table_column_count()
    {
-       return 47;
+       return 48;
    }
 
 
@@ -419,6 +419,7 @@ $(document).ready(function()
           "\n<th>PDOP</th>" .
           "\n<th>Logging</th>" .
           "\n<th>Email</th>" .
+          "\n<th>SysLog Changed</th>" .
           "\n<th>FTP</th>" .
           "\n<th>Radio</th>" .
           "\n<th>Band</th>" .
@@ -658,6 +659,16 @@ $(document).ready(function()
         else {
            echo "\n<td " . ($row["Email_Valid"]?"":"class=\"Issue\"") . " > ".$row["Email_To"]." </td>";
            }
+
+       $syslog_issue = "";
+       if (array_key_exists("SysLog_Valid", $row) && $row["SysLog_Valid"] !== null && (int)$row["SysLog_Valid"] !== 1) {
+           $syslog_issue = ' class="Issue"';
+       }
+       $syslog_changed = "";
+       if (!empty($row["SysLog_Length_Changed"])) {
+           $syslog_changed = $row["SysLog_Length_Changed"];
+       }
+       echo "\n<td" . $syslog_issue . "> " . h($syslog_changed) . " </td>";
 
        if ($row["FTP_Enabled"] == 0 ) {
            echo "\n<td " . ($row["FTP_Valid"]?"":"class=\"Issue\"") . " > Disabled </td>";

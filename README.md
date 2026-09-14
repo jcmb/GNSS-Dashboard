@@ -90,6 +90,8 @@ cfg_dir=/usr/lib/cgi-bin/Dashboard/User
 
 If email is enabled, the configured To address matches the database, and `<result>` is not OK, Nothing, or InProgress, the checker calls **`/cgi-bin/emailAlert.xml?request=1&SMTPTo=<url-encoded-address>`** (authenticated) and re-reads **`/xml/dynamic/email.xml`** every 2 seconds for up to 20 seconds before reporting a failure. Recovery is skipped when the receiver To address does not match the expected database value.
 
+`Status_Update.py` also tracks **`/xml/dynamic/SysLog.bin`** `Content-Length`. The first successful observation stores a baseline (no alert). If the length changes on a later check, Nagios gets an error and `List_Status` shows **SysLog Changed** (timestamp of the last length change).
+
 ### Database access
 
 The web UI and background `Status_Update.py` jobs share one SQLite database (`GNSS.db`). Connections use **WAL mode** and a **10 second busy timeout** (`gnss_open_db()` in PHP, `open_database()` in Python) so list pages do not fail when Nagios runs many checks at once.

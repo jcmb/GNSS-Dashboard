@@ -165,7 +165,10 @@ $db->exec('CREATE TABLE IF NOT EXISTS STATUS (
       BASEFOLLOW NUMERIC,
       BaseFollowValid BOOLEAN,
       DynDNS_Valid BOOLEAN,
-      DynDNS_Value STRING
+      DynDNS_Value STRING,
+      SysLog_Length INTEGER,
+      SysLog_Length_Changed TEXT,
+      SysLog_Valid BOOLEAN
       )');
 
 
