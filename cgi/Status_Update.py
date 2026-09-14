@@ -427,26 +427,15 @@ class HTTP_Class:
             self.last_error = "{}: {}".format(type(err).__name__, err)
             return (None, 0)
 
-    def content_length(self, url_part):
-        """Return Content-Length for a receiver URL without downloading the body."""
+    def download_to_file(self, url_part, dest_path, max_bytes=50 * 1024 * 1024):
+        """Download a receiver URL to dest_path; return byte length or None."""
         self.last_url = self.url(url_part)
         self.last_error = None
         self.last_status = None
         base_kwargs = {"timeout": self.TimeOut}
         if self.UseHTTPS:
             base_kwargs["verify"] = False
-        try:
-            Response = self.Ses.head(
-                self.last_url, allow_redirects=True, **base_kwargs
-            )
-            self.last_status = Response.status_code
-            if Response.status_code == 200:
-                cl = Response.headers.get("Content-Length")
-                if cl is not None and str(cl).strip() != "":
-                    return int(cl)
-        except Exception as err:
-            self.last_error = "HEAD {}: {}".format(type(err).__name__, err)
-
+        tmp_path = dest_path + ".tmp"
         try:
             Response = self.Ses.get(
                 self.last_url, allow_redirects=True, stream=True, **base_kwargs
@@ -456,16 +445,33 @@ class HTTP_Class:
                 self.last_error = "HTTP {}".format(Response.status_code)
                 Response.close()
                 return None
-            cl = Response.headers.get("Content-Length")
-            Response.close()
-            if cl is None or str(cl).strip() == "":
-                self.last_error = "Content-Length missing"
-                return None
-            return int(cl)
+
+            total = 0
+            try:
+                with open(tmp_path, "wb") as out:
+                    for chunk in Response.iter_content(chunk_size=65536):
+                        if not chunk:
+                            continue
+                        total += len(chunk)
+                        if total > max_bytes:
+                            self.last_error = "body exceeds {} bytes".format(max_bytes)
+                            return None
+                        out.write(chunk)
+            finally:
+                Response.close()
+
+            os.replace(tmp_path, dest_path)
+            return total
         except Exception as err:
             self.last_status = 0
             self.last_error = "{}: {}".format(type(err).__name__, err)
             return None
+        finally:
+            try:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            except OSError:
+                pass
 
 
 def STATUS_Update_Check(DB, GNSS_ID, Enabled):
@@ -1259,17 +1265,39 @@ def check_email(GNSS_ID, DB, HTTP):
 
 
 def check_SysLog(GNSS_ID, DB, HTTP):
-    """Compare /xml/dynamic/SysLog.bin Content-Length to the previous check.
+    """Download /xml/dynamic/SysLog.bin, store it, and compare length to the previous check.
 
     First successful observation only stores a baseline (no error).
     A later length change is reported as an error and updates SysLog_Length_Changed.
+    Stored copies are served from the status view under /Dashboard/SysLog/.
     """
     Message = ""
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    length = HTTP.content_length("/xml/dynamic/SysLog.bin")
+
+    if "sysLogLocation" in globals():
+        syslog_dir = sysLogLocation()
+    elif "wwwDir" in globals():
+        syslog_dir = wwwDir() + "SysLog"
+    else:
+        syslog_dir = "/var/www/html/Dashboard/SysLog"
+
+    dest_path = os.path.join(syslog_dir, "GNSS_{}.bin".format(GNSS_ID))
+    try:
+        os.makedirs(syslog_dir, exist_ok=True)
+    except OSError as err:
+        Message = "SysLog store directory unavailable ({}): {}\n".format(syslog_dir, err)
+        logger.error(DB.Address + ":" + str(DB.Port) + " " + Message.strip())
+        DB.STATUS.execute(
+            "UPDATE STATUS SET SysLog_Valid=? where id=?",
+            (False, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (False, Message)
+
+    length = HTTP.download_to_file("/xml/dynamic/SysLog.bin", dest_path)
 
     if length is None:
-        Message = "SysLog.bin length could not be determined ({})\n".format(
+        Message = "SysLog.bin could not be downloaded ({})\n".format(
             HTTP.last_error or "unknown"
         )
         logger.error(DB.Address + ":" + str(DB.Port) + " " + Message.strip())
@@ -1294,7 +1322,7 @@ def check_SysLog(GNSS_ID, DB, HTTP):
             DB.Address
             + ":"
             + str(DB.Port)
-            + " SysLog.bin baseline length={}".format(length)
+            + " SysLog.bin baseline length={} stored={}".format(length, dest_path)
         )
         return (True, "")
 

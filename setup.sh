@@ -33,6 +33,7 @@ chgrp nagios $WWW
 mkdir -p $WWW/Firmware || exit Error could not make directory $WWW/Firmware
 mkdir -p $WWW/Clones || exit Error could not make directory $WWW/Clones
 mkdir -p $WWW/PI || exit Error could not make directory $WWW/Clones
+mkdir -p $WWW/SysLog || exit Error could not make directory $WWW/SysLog
 
 mkdir -p $CGI || exit Error could not make directory $CGI
 mkdir -p $CGI/User || exit Error could not make directory $CGI/User
@@ -51,6 +52,9 @@ fix_db_permissions() {
         chmod 0660 "$CGI"/GNSS.db 2>/dev/null || true
         chmod 0660 "$CGI"/GNSS.db-wal "$CGI"/GNSS.db-shm 2>/dev/null || true
     fi
+    # Status_Update (nagios) writes SysLog.bin copies for the status download links.
+    chown "$WWW_USER:$NAGIOS_USER" "$WWW/SysLog" 2>/dev/null || true
+    chmod 2775 "$WWW/SysLog" 2>/dev/null || true
 }
 
 if [ "$RUN_INSTALL" -eq 1 ]; then

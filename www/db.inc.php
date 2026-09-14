@@ -1,6 +1,7 @@
 <?php
    $databaseFile = "/usr/lib/cgi-bin/Dashboard/GNSS.db";
    $firmwareLocation = "/var/www/html/Dashboard/Firmware";
+   $sysLogLocation = "/var/www/html/Dashboard/SysLog";
 
    function gnss_open_db($path = null)
    {

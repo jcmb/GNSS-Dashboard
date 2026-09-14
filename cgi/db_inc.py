@@ -12,6 +12,9 @@ def databaseFile():
 def firmwareLocation():
    return "/var/www/html/Dashboard/Firmware";
 
+def sysLogLocation():
+   return wwwDir() + "SysLog";
+
 def open_database():
    import os
    import sqlite3

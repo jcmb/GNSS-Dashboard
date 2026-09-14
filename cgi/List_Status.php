@@ -668,7 +668,19 @@ $(document).ready(function()
        if (!empty($row["SysLog_Length_Changed"])) {
            $syslog_changed = $row["SysLog_Length_Changed"];
        }
-       echo "\n<td" . $syslog_issue . "> " . h($syslog_changed) . " </td>";
+       $syslog_file = $sysLogLocation . "/GNSS_" . (int)$row["id"] . ".bin";
+       $syslog_url = "/Dashboard/SysLog/GNSS_" . (int)$row["id"] . ".bin";
+       $syslog_label = $syslog_changed;
+       if ($syslog_label === "" && is_file($syslog_file)) {
+           $syslog_label = "Download";
+       }
+       echo "\n<td" . $syslog_issue . ">";
+       if ($syslog_label !== "" && is_file($syslog_file)) {
+           echo ' <a href="' . h($syslog_url) . '">' . h($syslog_label) . "</a> ";
+       } else {
+           echo " " . h($syslog_label) . " ";
+       }
+       echo "</td>";
 
        if ($row["FTP_Enabled"] == 0 ) {
            echo "\n<td " . ($row["FTP_Valid"]?"":"class=\"Issue\"") . " > Disabled </td>";
