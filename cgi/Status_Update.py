@@ -145,6 +145,37 @@ class DB_Class:
             "ALTER TABLE STATUS ADD COLUMN SysLog_Length INTEGER",
             "ALTER TABLE STATUS ADD COLUMN SysLog_Length_Changed TEXT",
             "ALTER TABLE STATUS ADD COLUMN SysLog_Valid BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_OnOff TEXT",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_Mode TEXT",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_Band TEXT",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_NetworkNumber INTEGER",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_Frequency NUMERIC",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_WirelessMode TEXT",
+            "ALTER TABLE STATUS ADD COLUMN Radio_Live_ChanSpacing NUMERIC",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_1_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_1_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_2_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_2_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_3_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Client_3_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_1_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_1_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_1_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_2_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_2_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_2_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_3_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_3_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Server_3_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_1_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_1_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_1_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_2_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_2_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_2_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Enabled BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Mount TEXT",
+            "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Format TEXT",
         ):
             try:
                 self._real_conn.execute(ddl)
@@ -1633,7 +1664,38 @@ def parse_ntrip_status(root, target_mountpoint=None):
 
 
 
-def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid):
+def _ntrip_live_slot(ntrip, stream_type, stream_id):
+    """Return (enabled, mount, format) for a parsed NTRIP stream slot."""
+    if not ntrip:
+        return (None, None, None)
+    slot = ntrip.get(stream_type, {}).get(stream_id)
+    if not slot:
+        return (None, None, None)
+    enabled = slot.get("enabled")
+    if enabled is None:
+        enabled = None
+    else:
+        enabled = bool(enabled)
+    mount = slot.get("mountpoint")
+    if mount is None:
+        mount = None
+    fmt = slot.get("format")
+    if fmt == "Unknown":
+        fmt = None
+    return (enabled, mount, fmt)
+
+
+def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid, live_ntrip=None):
+    c1_en, c1_m, _ = _ntrip_live_slot(live_ntrip, "NTripClient", 30)
+    c2_en, c2_m, _ = _ntrip_live_slot(live_ntrip, "NTripClient", 37)
+    c3_en, c3_m, _ = _ntrip_live_slot(live_ntrip, "NTripClient", 38)
+    s1_en, s1_m, s1_f = _ntrip_live_slot(live_ntrip, "NTripServer", 31)
+    s2_en, s2_m, s2_f = _ntrip_live_slot(live_ntrip, "NTripServer", 39)
+    s3_en, s3_m, s3_f = _ntrip_live_slot(live_ntrip, "NTripServer", 40)
+    a1_en, a1_m, a1_f = _ntrip_live_slot(live_ntrip, "NTripCaster", 32)
+    a2_en, a2_m, a2_f = _ntrip_live_slot(live_ntrip, "NTripCaster", 33)
+    a3_en, a3_m, a3_f = _ntrip_live_slot(live_ntrip, "NTripCaster", 34)
+
     DB.STATUS.execute(
         """
             UPDATE STATUS SET
@@ -1646,7 +1708,16 @@ def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid):
                 NTRIP_Caster_1_Enabled=?, NTRIP_Caster_1_Mount=?, NTRIP_Caster_1_Format=?,
                 NTRIP_Caster_2_Enabled=?, NTRIP_Caster_2_Mount=?, NTRIP_Caster_2_Format=?,
                 NTRIP_Caster_3_Enabled=?, NTRIP_Caster_3_Mount=?, NTRIP_Caster_3_Format=?,
-                NTRIP_Valid=?
+                NTRIP_Valid=?,
+                NTRIP_Client_1_Live_Enabled=?, NTRIP_Client_1_Live_Mount=?,
+                NTRIP_Client_2_Live_Enabled=?, NTRIP_Client_2_Live_Mount=?,
+                NTRIP_Client_3_Live_Enabled=?, NTRIP_Client_3_Live_Mount=?,
+                NTRIP_Server_1_Live_Enabled=?, NTRIP_Server_1_Live_Mount=?, NTRIP_Server_1_Live_Format=?,
+                NTRIP_Server_2_Live_Enabled=?, NTRIP_Server_2_Live_Mount=?, NTRIP_Server_2_Live_Format=?,
+                NTRIP_Server_3_Live_Enabled=?, NTRIP_Server_3_Live_Mount=?, NTRIP_Server_3_Live_Format=?,
+                NTRIP_Caster_1_Live_Enabled=?, NTRIP_Caster_1_Live_Mount=?, NTRIP_Caster_1_Live_Format=?,
+                NTRIP_Caster_2_Live_Enabled=?, NTRIP_Caster_2_Live_Mount=?, NTRIP_Caster_2_Live_Format=?,
+                NTRIP_Caster_3_Live_Enabled=?, NTRIP_Caster_3_Live_Mount=?, NTRIP_Caster_3_Live_Format=?
             WHERE id=?
         """,
         (
@@ -1675,6 +1746,30 @@ def persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid):
             DB.NTRIP_Caster_3_Mount,
             DB.NTRIP_Caster_3_Format,
             NTRIP_Valid,
+            c1_en,
+            c1_m,
+            c2_en,
+            c2_m,
+            c3_en,
+            c3_m,
+            s1_en,
+            s1_m,
+            s1_f,
+            s2_en,
+            s2_m,
+            s2_f,
+            s3_en,
+            s3_m,
+            s3_f,
+            a1_en,
+            a1_m,
+            a1_f,
+            a2_en,
+            a2_m,
+            a2_f,
+            a3_en,
+            a3_m,
+            a3_f,
             GNSS_ID,
         ),
     )
@@ -1704,6 +1799,9 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
 
         NTRIP=parse_ntrip_status(root)
 #        pprint(NTRIP)
+
+        # Persist live slots even when expected-enabled checks fail below.
+        live_ntrip = NTRIP
 
         if DB.NTRIP_Caster_1_Enabled:
             if NTRIP["NTripCaster"][32]["enabled"] == False:
@@ -1823,13 +1921,13 @@ def check_NTRIP(GNSS_ID, DB, HTTP):
         #     Message += f"Client 1 Enabled is {actual_client_1_enabled}, expected {DB.NTRIP_Client_1_Enabled}\n"
         # -------------------------------
 
-        # Update the STATUS table with the expected DB configuration (or actual parsed state if preferred)
-        persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid)
+        # Expected mounts stay on STATUS NTRIP_* columns; live values on *_Live_*.
+        persist_ntrip_status(GNSS_ID, DB, NTRIP_Valid, live_ntrip)
 
     except ET.ParseError:
         NTRIP_Valid = False
         Message += "NTRIP XML reply was invalid\n"
-        persist_ntrip_status(GNSS_ID, DB, False)
+        persist_ntrip_status(GNSS_ID, DB, False, None)
 
     return (NTRIP_Valid, Message)
 
@@ -1898,77 +1996,125 @@ def check_Uptime(GNSS_ID, DB, HTTP):
         return (True, "")
 
 
+def persist_radio_live_status(
+    GNSS_ID,
+    DB,
+    Radio_Str,
+    Radio_Valid,
+    live_onoff=None,
+    live_mode=None,
+    live_band=None,
+    live_network=None,
+    live_frequency=None,
+    live_wireless=None,
+    live_spacing=None,
+):
+    DB.STATUS.execute(
+        """
+            UPDATE STATUS SET
+                Radio=?, Radio_Valid=?,
+                Radio_Live_OnOff=?, Radio_Live_Mode=?, Radio_Live_Band=?,
+                Radio_Live_NetworkNumber=?, Radio_Live_Frequency=?,
+                Radio_Live_WirelessMode=?, Radio_Live_ChanSpacing=?
+            WHERE id=?
+        """,
+        (
+            Radio_Str,
+            Radio_Valid,
+            live_onoff,
+            live_mode,
+            live_band,
+            live_network,
+            live_frequency,
+            live_wireless,
+            live_spacing,
+            GNSS_ID,
+        ),
+    )
+    DB.conn.commit()
+
+
 def check_Radio(GNSS_ID, DB, HTTP):
 
     if not DB.RadioEnabled: #If we aren't checking the radio then just leave
         return (True, "")
-
-
-        # self.RadioOnOffState=row["RadioOnOffState"]
-        # self.RadioMode=row["RadioMode"]
-
-
 
     Message = ""
 
     (reply, result) = HTTP.get("/xml/dynamic/radiosummary.xml")
     # print(reply)
 
-
     if reply == None:
         Radio_Valid = False
         Message = "Radiosummary not found. Does the unit have a radio? Or too old firmware.\n"
+        persist_radio_live_status(GNSS_ID, DB, Message.strip(), Radio_Valid)
         return (Radio_Valid, Message)
 
     root = ET.fromstring(reply)
     if root == None:
         Radio_Valid = False
         Message = "Radiosummary.xml not found. Does the unit have a radio? Or too old firmware.\n"
+        persist_radio_live_status(GNSS_ID, DB, Message.strip(), Radio_Valid)
         return (Radio_Valid, Message)
 
     root = radio_summary_root(root)
 
     Radio_Valid = True
+    live_onoff = None
+    live_mode = None
+    live_band = None
+    live_network = None
+    live_frequency = None
+    live_wireless = None
+    live_spacing = None
+    radio_details = []
 
-    RadioOnOffState = root.find("RadioOnOffState")
-    radioMode = root.find("general/radioMode")
+    RadioOnOffState_node = root.find("RadioOnOffState")
+    radioMode_node = root.find("general/radioMode")
 
-    if RadioOnOffState == None:
+    if RadioOnOffState_node == None:
         Message += "RadioOnOffState not found\n"
         Radio_Valid = False
 
-    if radioMode == None:
+    if radioMode_node == None:
         Message += "radioMode not found\n"
         Radio_Valid = False
 
-    if Radio_Valid == True:
-        RadioOnOffState = RadioOnOffState.text
-        radioMode = radioMode.text
+    if RadioOnOffState_node is not None and RadioOnOffState_node.text is not None:
+        live_onoff = RadioOnOffState_node.text
+    if radioMode_node is not None and radioMode_node.text is not None:
+        live_mode = radioMode_node.text
 
+    configured_band = DB.RadioBand if DB.RadioBand else "900"
+    live_band = configured_band
+
+    if live_onoff is not None and live_mode is not None:
         if DB.RadioOnOffState:
             RadioOnOffState_Str = "On"
         else:
             RadioOnOffState_Str = "Off"
 
-        if RadioOnOffState != RadioOnOffState_Str:
-            Message += "RadioOnOffState is {}, Expected {}\n".format(RadioOnOffState, RadioOnOffState_Str)
+        if live_onoff != RadioOnOffState_Str:
+            Message += "RadioOnOffState is {}, Expected {}\n".format(live_onoff, RadioOnOffState_Str)
             Radio_Valid = False
 
-        radio_details = []
-        radio_band = DB.RadioBand if DB.RadioBand else "900"
-
-        if DB.RadioOnOffState:
-            if not radio_modes_match(DB.RadioMode, radioMode):
-                Message += "radioMode is {}, Expected {}\n".format(radioMode, DB.RadioMode)
-                Radio_Valid = False
-
+        # Read live channel fields whenever the radio reports On (for the UI).
+        # Validate against expected only when the dashboard expects On.
+        if live_onoff == "On":
+            radio_band = configured_band
             if radio_band == "combo":
                 detected_band = detect_active_radio_band(root)
                 if detected_band is None:
-                    Message += "Could not determine active radio band from radiosummary\n"
-                    Radio_Valid = False
+                    if DB.RadioOnOffState:
+                        Message += "Could not determine active radio band from radiosummary\n"
+                        Radio_Valid = False
                 else:
                     radio_band = detected_band
+            live_band = radio_band
+
+            if DB.RadioOnOffState and not radio_modes_match(DB.RadioMode, live_mode):
+                Message += "radioMode is {}, Expected {}\n".format(live_mode, DB.RadioMode)
+                Radio_Valid = False
 
             if radio_band == "900":
                 network_number = xml_find_text(
@@ -1980,17 +2126,22 @@ def check_Radio(GNSS_ID, DB, HTTP):
                     "general/networkNumber",
                     "networkID",
                 )
-                if DB.RadioNetworkNumber is not None:
+                if network_number is not None:
+                    try:
+                        live_network = int(network_number)
+                    except (TypeError, ValueError):
+                        live_network = None
+                    if live_network is not None:
+                        radio_details.append("net{}".format(live_network))
+                if DB.RadioOnOffState and DB.RadioNetworkNumber is not None:
                     if network_number is None:
                         Message += "Radio network number could not be determined\n"
                         Radio_Valid = False
-                    elif int(network_number) != int(DB.RadioNetworkNumber):
+                    elif live_network is None or int(live_network) != int(DB.RadioNetworkNumber):
                         Message += "Radio network number is {}, Expected {}\n".format(
                             network_number, DB.RadioNetworkNumber
                         )
                         Radio_Valid = False
-                    else:
-                        radio_details.append("net{}".format(network_number))
             elif radio_band == "450":
                 frequency = xml_find_text(
                     root,
@@ -2008,54 +2159,79 @@ def check_Radio(GNSS_ID, DB, HTTP):
                     root,
                     "type450/curWirelessModeLong",
                 )
-                if DB.RadioFrequency is not None:
-                    if frequency is None:
-                        Message += "Radio frequency could not be determined\n"
-                        Radio_Valid = False
-                    elif abs(float(frequency) - float(DB.RadioFrequency)) > 0.0005:
-                        Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
-                            frequency, DB.RadioFrequency
-                        )
-                        Radio_Valid = False
-                    else:
+                if frequency is not None:
+                    try:
+                        live_frequency = float(frequency)
+                    except (TypeError, ValueError):
+                        live_frequency = None
+                    if live_frequency is not None:
                         radio_details.append("{}MHz".format(frequency))
-                if DB.RadioActiveChanSpacing is not None:
-                    if active_chan_spacing is None:
-                        Message += "Radio active channel spacing could not be determined\n"
-                        Radio_Valid = False
-                    elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
-                        Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
-                            active_chan_spacing, DB.RadioActiveChanSpacing
-                        )
-                        Radio_Valid = False
-                    else:
+                if active_chan_spacing is not None:
+                    try:
+                        live_spacing = float(active_chan_spacing)
+                    except (TypeError, ValueError):
+                        live_spacing = None
+                    if live_spacing is not None:
                         radio_details.append("{}kHz".format(active_chan_spacing))
-                if DB.RadioWirelessMode is not None:
-                    if wireless_mode_long is None:
-                        Message += "Radio wireless mode could not be determined\n"
-                        Radio_Valid = False
-                    elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
-                        Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
-                            wireless_mode_long,
-                            DB.RadioWirelessMode,
-                            wireless_mode_display_name(DB.RadioWirelessMode),
-                        )
-                        Radio_Valid = False
-                    else:
-                        radio_details.append(wireless_mode_long)
+                if wireless_mode_long is not None:
+                    live_wireless = wireless_mode_long
+                    radio_details.append(wireless_mode_long)
 
-        Radio_Str = RadioOnOffState + ":" + radioMode + ":" + (DB.RadioBand if DB.RadioBand else "900")
-        if DB.RadioBand == "combo" and radio_band in ("450", "900"):
-            Radio_Str += "(" + radio_band + ")"
+                if DB.RadioOnOffState:
+                    if DB.RadioFrequency is not None:
+                        if frequency is None:
+                            Message += "Radio frequency could not be determined\n"
+                            Radio_Valid = False
+                        elif live_frequency is None or abs(live_frequency - float(DB.RadioFrequency)) > 0.0005:
+                            Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
+                                frequency, DB.RadioFrequency
+                            )
+                            Radio_Valid = False
+                    if DB.RadioActiveChanSpacing is not None:
+                        if active_chan_spacing is None:
+                            Message += "Radio active channel spacing could not be determined\n"
+                            Radio_Valid = False
+                        elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
+                            Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
+                                active_chan_spacing, DB.RadioActiveChanSpacing
+                            )
+                            Radio_Valid = False
+                    if DB.RadioWirelessMode is not None:
+                        if wireless_mode_long is None:
+                            Message += "Radio wireless mode could not be determined\n"
+                            Radio_Valid = False
+                        elif not wireless_mode_long_matches(DB.RadioWirelessMode, wireless_mode_long):
+                            Message += "Radio wireless mode is {}, Expected {} ({})\n".format(
+                                wireless_mode_long,
+                                DB.RadioWirelessMode,
+                                wireless_mode_display_name(DB.RadioWirelessMode),
+                            )
+                            Radio_Valid = False
+
+        Radio_Str = live_onoff + ":" + live_mode + ":" + configured_band
+        if configured_band == "combo" and live_band in ("450", "900"):
+            Radio_Str += "(" + live_band + ")"
         if radio_details:
             Radio_Str += ":" + ",".join(radio_details)
     else:
         Radio_Str = "Radio States not found"
+        Radio_Valid = False
 
     logger.debug(DB.Address + ":" + str(DB.Port) + " : " + Radio_Str + " Valid: " + str(Radio_Valid))
 
-    DB.STATUS.execute("UPDATE STATUS SET Radio=?, Radio_Valid=? where id=?", (Radio_Str, Radio_Valid, GNSS_ID))
-    DB.conn.commit()
+    persist_radio_live_status(
+        GNSS_ID,
+        DB,
+        Radio_Str,
+        Radio_Valid,
+        live_onoff=live_onoff,
+        live_mode=live_mode,
+        live_band=live_band,
+        live_network=live_network,
+        live_frequency=live_frequency,
+        live_wireless=live_wireless,
+        live_spacing=live_spacing,
+    )
 
     if Radio_Valid:
         return (True, "")

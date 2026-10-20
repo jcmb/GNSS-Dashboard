@@ -255,6 +255,8 @@ if (!($db->close()))
 <?php
 if ($user_id) {
     echo 'View <a href="/cgi-bin/Dashboard/List_Status.php?User_ID='.h($user_id).'">Receiver Status</a>';
+    echo ' | ';
+    echo '<a href="Radio_NTRIP.php?User_ID='.h($user_id).'">Radio &amp; NTRIP</a>';
     }
 ?>
 </form>

@@ -789,6 +789,12 @@ if ($user_id) {
     echo 'View <a href="/Dashboard/Receiver_Upgrade.php?User_ID='.h($user_id).'">Upgrade Firmware</a>';
     }
 ?>
+<br>
+<?php
+if ($user_id) {
+    echo 'View <a href="/Dashboard/Radio_NTRIP.php?User_ID='.h($user_id).'">Radio &amp; NTRIP</a>';
+    }
+?>
 
 </form>
 

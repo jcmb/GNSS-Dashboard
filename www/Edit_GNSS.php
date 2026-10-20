@@ -279,7 +279,7 @@ Receiver:
 <tr><td>
 Admin password:
 </td><td>
-<input name="Password" type="password" value="" autocomplete="new-password" placeholder="<?php echo ($Editing && !$DUP) ? 'Leave blank to keep current password' : 'Receiver admin password'; ?>"/>
+<input name="Password" type="text" value="<?php echo ($Editing && !empty($row["Password"])) ? h(gnss_display_receiver_password($row["Password"])) : ''; ?>" autocomplete="off" placeholder="Receiver admin password"/>
 </td></tr>
 
 <tr><td>
