@@ -28,6 +28,12 @@ table.radio-ntrip td.td_subheader {
     background: #e8e8e8;
     font-weight: bold;
 }
+table.radio-ntrip tr.group-spacer td {
+    height: 2em;
+    border: none;
+    background: transparent;
+    padding: 0;
+}
 h2.section-title {
     margin-top: 1.5em;
 }
@@ -103,7 +109,6 @@ h2.section-title {
    }
 
    echo '<h2 class="section-title">Radio configurations</h2>';
-   echo '<p>Live values from the last status check. Values that differ from the configured expectation are shown in red.</p>';
 
    if (count($radio_by_group) === 0) {
        echo "<p>No radio-enabled receivers.</p>";
@@ -113,7 +118,12 @@ h2.section-title {
        echo "<th>Edit</th><th>Name</th><th>Role</th><th>On/Off</th><th>Mode</th><th>Band</th><th>Channel / Network</th><th>Wireless</th>";
        echo "</tr></thead>\n<tbody>\n";
 
+       $radio_group_i = 0;
        foreach ($radio_by_group as $group => $clusters) {
+           if ($radio_group_i > 0) {
+               echo "\n<tr class=\"group-spacer\"><td colspan=\"8\">&nbsp;</td></tr>\n";
+           }
+           $radio_group_i++;
            $group_label = ($group === "") ? "(ungrouped)" : $group;
            echo "\n<tr><td colspan=\"8\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
 
@@ -145,9 +155,9 @@ h2.section-title {
        echo "</tbody></table>\n";
    }
 
-   // ---- NTRIP section: mount topology ----
+   // ---- NTRIP section: by producer Loc_Group; clients may be from other groups ----
    echo '<h2 class="section-title">NTRIP connections</h2>';
-   echo '<p>What is connected to what by mountpoint. Live mount/enabled/format shown; mismatches vs configured values are red. Mounts ending in <code>__wm_IBSS</code> are IBSS 3rd-party shares.</p>';
+   echo '<p>Grouped by the producer&rsquo;s group. Clients from other groups still appear under the mount. Mounts ending in <code>__wm_IBSS</code> are IBSS 3rd-party shares.</p>';
 
    $mounts = array(); // mount => array(producers => [], consumers => [], ibss => bool, ibss_base => ?)
 
@@ -183,7 +193,41 @@ h2.section-title {
        }
    }
 
-   ksort($mounts, SORT_NATURAL | SORT_FLAG_CASE);
+   // Index mounts under each producer Loc_Group; client-only mounts under "(no producer)".
+   $ntrip_by_group = array();
+   foreach ($mounts as $mount => $info) {
+       $producer_groups = array();
+       foreach ($info["producers"] as $p) {
+           $g = isset($p["row"]["Loc_Group"]) ? (string)$p["row"]["Loc_Group"] : "";
+           $producer_groups[$g] = true;
+       }
+       if (count($producer_groups) === 0) {
+           $producer_groups = array("(no producer)" => true);
+       }
+       foreach ($producer_groups as $g => $_) {
+           if (!isset($ntrip_by_group[$g])) {
+               $ntrip_by_group[$g] = array();
+           }
+           $ntrip_by_group[$g][$mount] = $info;
+       }
+   }
+
+   // Sort groups: named groups first, then ungrouped "", then "(no producer)".
+   uksort($ntrip_by_group, function ($a, $b) {
+       if ($a === "(no producer)") {
+           return 1;
+       }
+       if ($b === "(no producer)") {
+           return -1;
+       }
+       if ($a === "" && $b !== "") {
+           return 1;
+       }
+       if ($b === "" && $a !== "") {
+           return -1;
+       }
+       return strcasecmp($a, $b);
+   });
 
    if (count($mounts) === 0) {
        echo "<p>No enabled NTRIP slots.</p>";
@@ -191,41 +235,71 @@ h2.section-title {
        echo "\n<table border='1' class='tablesorter radio-ntrip'>\n";
        echo "<thead><tr><th>Mount</th><th>Notes</th><th>Producers (Server/Caster)</th><th>Consumers (Client)</th></tr></thead>\n<tbody>\n";
 
-       foreach ($mounts as $mount => $info) {
-           $notes = array();
-           if ($info["ibss"]) {
-               $notes[] = "IBSS 3rd-party share";
-               $base = $info["ibss_base"];
-               if ($base !== null && $base !== "") {
-                   if (isset($name_index[$base])) {
-                       $notes[] = "Base: " . $base;
-                   } else {
-                       $notes[] = "Base name: " . $base . " (not in list)";
+       $ntrip_group_i = 0;
+       foreach ($ntrip_by_group as $group => $group_mounts) {
+           if ($ntrip_group_i > 0) {
+               echo "\n<tr class=\"group-spacer\"><td colspan=\"4\">&nbsp;</td></tr>\n";
+           }
+           $ntrip_group_i++;
+           if ($group === "(no producer)") {
+               $group_label = "(no producer in dashboard)";
+           } elseif ($group === "") {
+               $group_label = "(ungrouped)";
+           } else {
+               $group_label = $group;
+           }
+           echo "\n<tr><td colspan=\"4\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
+
+           ksort($group_mounts, SORT_NATURAL | SORT_FLAG_CASE);
+           foreach ($group_mounts as $mount => $info) {
+               $notes = array();
+               if ($info["ibss"]) {
+                   $notes[] = "IBSS 3rd-party share";
+                   $base = $info["ibss_base"];
+                   if ($base !== null && $base !== "") {
+                       if (isset($name_index[$base])) {
+                           $notes[] = "Base: " . $base;
+                       } else {
+                           $notes[] = "Base name: " . $base . " (not in list)";
+                       }
                    }
                }
-           }
-           if (count($info["producers"]) === 0) {
-               $notes[] = "No producer in dashboard";
-           }
-           if (count($info["consumers"]) === 0) {
-               $notes[] = "No client in dashboard";
-           }
+               if (count($info["producers"]) === 0) {
+                   $notes[] = "No producer in dashboard";
+               }
+               if (count($info["consumers"]) === 0) {
+                   $notes[] = "No client in dashboard";
+               }
 
-           $prod_html = array();
-           foreach ($info["producers"] as $p) {
-               $prod_html[] = rn_ntrip_endpoint_cells($p);
-           }
-           $cons_html = array();
-           foreach ($info["consumers"] as $c) {
-               $cons_html[] = rn_ntrip_endpoint_cells($c);
-           }
+               // Producers for this group header (or all when in "(no producer)").
+               $prod_html = array();
+               foreach ($info["producers"] as $p) {
+                   $p_group = isset($p["row"]["Loc_Group"]) ? (string)$p["row"]["Loc_Group"] : "";
+                   if ($group !== "(no producer)" && $p_group !== $group) {
+                       continue;
+                   }
+                   $prod_html[] = rn_ntrip_endpoint_cells($p);
+               }
 
-           echo "\n<tr>";
-           echo "\n<td>" . h($mount) . "</td>";
-           echo "\n<td>" . h(implode("; ", $notes)) . "</td>";
-           echo "\n<td>" . (count($prod_html) ? implode("<br/>", $prod_html) : "&nbsp;") . "</td>";
-           echo "\n<td>" . (count($cons_html) ? implode("<br/>", $cons_html) : "&nbsp;") . "</td>";
-           echo "\n</tr>";
+               // All consumers; annotate group when it differs from this section's group.
+               $cons_html = array();
+               foreach ($info["consumers"] as $c) {
+                   $c_group = isset($c["row"]["Loc_Group"]) ? (string)$c["row"]["Loc_Group"] : "";
+                   $cell = rn_ntrip_endpoint_cells($c);
+                   if ($group !== "(no producer)" && $c_group !== $group) {
+                       $c_label = ($c_group === "") ? "(ungrouped)" : $c_group;
+                       $cell .= " <em>[" . h($c_label) . "]</em>";
+                   }
+                   $cons_html[] = $cell;
+               }
+
+               echo "\n<tr>";
+               echo "\n<td>" . h($mount) . "</td>";
+               echo "\n<td>" . h(implode("; ", $notes)) . "</td>";
+               echo "\n<td>" . (count($prod_html) ? implode("<br/>", $prod_html) : "&nbsp;") . "</td>";
+               echo "\n<td>" . (count($cons_html) ? implode("<br/>", $cons_html) : "&nbsp;") . "</td>";
+               echo "\n</tr>";
+           }
        }
        echo "</tbody></table>\n";
    }

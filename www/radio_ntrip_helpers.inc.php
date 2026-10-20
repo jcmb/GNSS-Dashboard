@@ -454,9 +454,19 @@ function rn_emit_radio_row($row, $user_id, $modes, $xml_names)
     $live_chan = rn_live_channel_display($row);
     $live_wm = isset($row["Radio_Live_WirelessMode"]) ? (string)$row["Radio_Live_WirelessMode"] : "";
 
+    $receiver_url = gnss_receiver_url(
+        isset($row["Address"]) ? $row["Address"] : "",
+        isset($row["Port"]) ? $row["Port"] : "",
+        isset($row["UseHTTPS"]) ? $row["UseHTTPS"] : false
+    );
+    $name_html = h($row["name"]);
+    if ($receiver_url !== "") {
+        $name_html = '<a href="' . h($receiver_url) . '" target="_blank" rel="noopener noreferrer">' . $name_html . '</a>';
+    }
+
     echo "\n<tr>";
     echo '<td><a href="Edit_GNSS.php?GNSS_ID=' . h($row["id"]) . '&User_ID=' . h($user_id) . '">Edit</a></td>';
-    echo "\n<td>" . h($row["name"]) . "</td>";
+    echo "\n<td>" . $name_html . "</td>";
     echo rn_cell($role, false);
     echo rn_cell($live_on !== "" ? $live_on : "(no data)", rn_onoff_mismatch($row));
     echo rn_cell($live_mode !== "" ? $live_mode : "(no data)", rn_mode_mismatch($row));
