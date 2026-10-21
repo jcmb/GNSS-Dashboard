@@ -151,9 +151,11 @@ else {
 
    $radio_wireless_modes = gnss_radio_wireless_modes();
    $radio_wireless_xml_names = gnss_radio_wireless_mode_xml_names();
+   $combo_receiver_types = array("191", "193", "329"); // R750-2, MPS566-2, R780-2
+   $receiver_type_value = (!empty($row) && !empty($row["Reciever_Type"])) ? (string)$row["Reciever_Type"] : "";
    $radio_band = (!empty($row) && !empty($row["RadioBand"])) ? $row["RadioBand"] : "900";
-   if ($radio_band === "combo") {
-      $radio_band = "900";
+   if (in_array($receiver_type_value, $combo_receiver_types, true)) {
+      $radio_band = "combo";
    }
    $radio_network_number = (!empty($row) && $row["RadioNetworkNumber"] !== null && $row["RadioNetworkNumber"] !== "") ? $row["RadioNetworkNumber"] : "1";
    $radio_frequency = (!empty($row) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== "") ? $row["RadioFrequency"] : "450.000";
@@ -567,6 +569,7 @@ Radio Band:
 <select required name="RadioBand" id="RadioBand">
   <option value="900" <?php echo ($radio_band=="900"?"selected":""); echo ($Editing?"":"selected") ?>>900 MHz</option>
   <option value="450" <?php echo ($radio_band=="450"?"selected":""); ?>>450 MHz</option>
+  <option value="combo" <?php echo ($radio_band=="combo"?"selected":""); ?>>450/900 Combo</option>
 </select>
 </td></tr>
 
@@ -643,13 +646,36 @@ $(function() {
       link.focus();
    }
 
+   var comboReceiverTypes = {"191": true, "193": true, "329": true};
    function updateRadioBandFields() {
       var band = $("#RadioBand").val();
-      $(".radio-900-field").toggle(band === "900");
-      $(".radio-450-field").toggle(band === "450");
+      $(".radio-900-field").toggle(band === "900" || band === "combo");
+      $(".radio-450-field").toggle(band === "450" || band === "combo");
    }
-   $("#RadioBand").on("change", updateRadioBandFields);
-   updateRadioBandFields();
+   function syncRadioBandForReceiverType() {
+      var rx = $("select[name=Receiver_Type]").val();
+      if (comboReceiverTypes[rx]) {
+         $("#RadioBand").val("combo");
+      } else if ($("#RadioBand").val() === "combo") {
+         $("#RadioBand").val("900");
+      }
+      updateRadioBandFields();
+   }
+   $("#RadioBand").on("change", function() {
+      var rx = $("select[name=Receiver_Type]").val();
+      if (comboReceiverTypes[rx] && $("#RadioBand").val() !== "combo") {
+         $("#RadioBand").val("combo");
+      }
+      updateRadioBandFields();
+   });
+   $("select[name=Receiver_Type]").on("change", syncRadioBandForReceiverType);
+   $("form[name=input]").on("submit", function() {
+      var rx = $("select[name=Receiver_Type]").val();
+      if (comboReceiverTypes[rx]) {
+         $("#RadioBand").val("combo");
+      }
+   });
+   syncRadioBandForReceiverType();
 });
 </script>
 

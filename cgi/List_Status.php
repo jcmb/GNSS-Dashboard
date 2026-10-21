@@ -193,7 +193,7 @@ $(document).ready(function()
    function radio_band_value($row)
    {
        $band = !empty($row["RadioBand"]) ? $row["RadioBand"] : "900";
-       if ($band === "450" || $band === "900") {
+       if ($band === "450" || $band === "900" || $band === "combo") {
            return $band;
        }
        if (!empty($row["Radio"])) {

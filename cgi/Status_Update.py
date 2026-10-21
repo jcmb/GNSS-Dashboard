@@ -69,6 +69,9 @@ from radio_config import (
     channel_spacing_matches,
     radio_summary_root,
     detect_active_radio_band,
+    receiver_expects_combo_radio,
+    radio_instance_count,
+    COMBO_RADIO_INSTANCE_COUNT,
 )
 
 class _StatusBufferCursor:
@@ -2059,6 +2062,14 @@ def check_Radio(GNSS_ID, DB, HTTP):
 
     root = radio_summary_root(root)
 
+    radioconfig_root = None
+    (config_reply, config_result) = HTTP.get("/xml/dynamic/radioconfig.xml")
+    if config_reply:
+        try:
+            radioconfig_root = ET.fromstring(config_reply)
+        except ET.ParseError:
+            radioconfig_root = None
+
     Radio_Valid = True
     live_onoff = None
     live_mode = None
@@ -2068,6 +2079,22 @@ def check_Radio(GNSS_ID, DB, HTTP):
     live_wireless = None
     live_spacing = None
     radio_details = []
+
+    expects_combo = receiver_expects_combo_radio(DB.Reciever_Type)
+    instance_count = radio_instance_count(root)
+    if instance_count is None and radioconfig_root is not None:
+        instance_count = radio_instance_count(radioconfig_root)
+    if expects_combo:
+        if instance_count is None:
+            Message += "Radio instance count could not be determined; combo receivers require {} instances\n".format(
+                COMBO_RADIO_INSTANCE_COUNT
+            )
+            Radio_Valid = False
+        elif instance_count != COMBO_RADIO_INSTANCE_COUNT:
+            Message += "Radio instance count is {}, Expected {} for combo receiver type\n".format(
+                instance_count, COMBO_RADIO_INSTANCE_COUNT
+            )
+            Radio_Valid = False
 
     RadioOnOffState_node = root.find("RadioOnOffState")
     radioMode_node = root.find("general/radioMode")
@@ -2086,6 +2113,8 @@ def check_Radio(GNSS_ID, DB, HTTP):
         live_mode = radioMode_node.text
 
     configured_band = DB.RadioBand if DB.RadioBand else "900"
+    if expects_combo:
+        configured_band = "combo"
     live_band = configured_band
 
     if live_onoff is not None and live_mode is not None:
@@ -2103,7 +2132,7 @@ def check_Radio(GNSS_ID, DB, HTTP):
         if live_onoff == "On":
             radio_band = configured_band
             if radio_band == "combo":
-                detected_band = detect_active_radio_band(root)
+                detected_band = detect_active_radio_band(root, radioconfig_root)
                 if detected_band is None:
                     if DB.RadioOnOffState:
                         Message += "Could not determine active radio band from radiosummary\n"

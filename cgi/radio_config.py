@@ -13,6 +13,11 @@ _LEGACY_BASE_MODES = {
 
 RADIO_CHANNEL_SPACINGS = (12.5, 25.0)
 
+# Dual-band (450/900 combo) receiver type IDs from the edit form / SerialNumber rxType.
+# MPS566-2=193, R750-2=191, R780-2=329
+COMBO_RECEIVER_TYPES = frozenset({"191", "193", "329"})
+COMBO_RADIO_INSTANCE_COUNT = 2
+
 # Auto Rx modes report the active FEC ON/OFF string from the receiver, not the Auto Rx label.
 _RTCM135_AUTO_RX_ALIASES = {
     104: (100, 102),
@@ -200,20 +205,128 @@ def radio_summary_root(root):
     return root
 
 
-def detect_active_radio_band(root):
-    has_450 = xml_find_text(root, "type450/curChannel") is not None
-    has_900 = xml_find_text(
-        root,
-        "type900/networkId",
-        "type900/networkID",
-    ) is not None
+def receiver_expects_combo_radio(receiver_type):
+    if receiver_type is None:
+        return False
+    return str(receiver_type).strip() in COMBO_RECEIVER_TYPES
+
+
+def xml_has_child(root, local_name):
+    if root is None:
+        return False
+    for child in root:
+        if _local_tag(child) == local_name:
+            return True
+    return False
+
+
+def radio_instance_count(root):
+    text = xml_find_text(root, "radioInstanceCount")
+    if text is None:
+        return None
+    try:
+        return int(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def _band_from_hardware_type(root):
+    hardware = xml_find_text(root, "HardwareType")
+    if hardware is None:
+        return None
+    lowered = hardware.lower()
+    # Prefer the more specific token when both appear (unlikely).
+    has_450 = "450" in lowered
+    has_900 = "900" in lowered
     if has_450 and not has_900:
         return "450"
     if has_900 and not has_450:
         return "900"
-    if has_450 and has_900:
-        return "450" if xml_find_text(root, "type450/curChannel") else "900"
     return None
+
+
+def _band_from_radioconfig(radioconfig_root):
+    if radioconfig_root is None:
+        return None
+    is_900 = xml_find_text(radioconfig_root, "is900Radio")
+    if is_900 == "1":
+        return "900"
+    if is_900 == "0":
+        return "450"
+    if xml_find_text(
+        radioconfig_root,
+        "networkId",
+        "networkID",
+        "type900/networkId",
+        "type900/networkID",
+    ) is not None:
+        return "900"
+    if xml_find_text(
+        radioconfig_root,
+        "curChannel",
+        "currentChannel",
+        "type450/curChannel",
+        "frequency",
+    ) is not None:
+        return "450"
+    return _band_from_hardware_type(radioconfig_root)
+
+
+def detect_active_radio_band(root, radioconfig_root=None):
+    """Detect whether the active radio channel is 450 or 900 MHz.
+
+    Preference order:
+    1. Explicit type450/curChannel vs type900/networkId fields
+    2. Presence of type450 / type900 sections
+    3. HardwareType text (RadioType450*, RadioType900*)
+    4. radioconfig.xml fallbacks (is900Radio, networkId, frequency)
+    """
+    has_450_channel = xml_find_text(
+        root,
+        "type450/curChannel",
+        "general/currentChannel",
+        "general/currentChannelMHz",
+        "general/frequency",
+        "radio450MHz/currentChannel",
+    ) is not None
+    has_900_network = xml_find_text(
+        root,
+        "type900/networkId",
+        "type900/networkID",
+        "general/networkID",
+        "general/networkId",
+        "general/networkNumber",
+        "networkID",
+    ) is not None
+
+    if has_450_channel and not has_900_network:
+        return "450"
+    if has_900_network and not has_450_channel:
+        return "900"
+    if has_450_channel and has_900_network:
+        # Both channel fields present; prefer HardwareType, else 450.
+        hw_band = _band_from_hardware_type(root)
+        if hw_band in ("450", "900"):
+            return hw_band
+        return "450"
+
+    has_type450 = xml_has_child(root, "type450")
+    has_type900 = xml_has_child(root, "type900")
+    if has_type450 and not has_type900:
+        return "450"
+    if has_type900 and not has_type450:
+        return "900"
+    if has_type450 and has_type900:
+        hw_band = _band_from_hardware_type(root)
+        if hw_band in ("450", "900"):
+            return hw_band
+        return "450"
+
+    hw_band = _band_from_hardware_type(root)
+    if hw_band in ("450", "900"):
+        return hw_band
+
+    return _band_from_radioconfig(radioconfig_root)
 
 
 def radio_modes_match(expected, actual):

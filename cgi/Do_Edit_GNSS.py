@@ -55,7 +55,13 @@ from gnss_security import (
     verify_user_exists,
     ensure_gnss_https_column,
 )
-from radio_config import ensure_gnss_radio_columns, load_radio_wireless_modes, normalize_channel_spacing, RADIO_CHANNEL_SPACINGS
+from radio_config import (
+    ensure_gnss_radio_columns,
+    load_radio_wireless_modes,
+    normalize_channel_spacing,
+    RADIO_CHANNEL_SPACINGS,
+    receiver_expects_combo_radio,
+)
 
 #cgitb.enable()
 
@@ -352,11 +358,16 @@ Radio_Wireless_Mode = None
 Radio_Active_Chan_Spacing = None
 
 if Radio_Enabled:
-    if Radio_Band not in ("450", "900"):
-        print("RadioBand must be 450 or 900 when radio checking is enabled.<br>")
+    if receiver_expects_combo_radio(Receiver_Type):
+        Radio_Band = "combo"
+    if Radio_Band not in ("450", "900", "combo"):
+        print("RadioBand must be 450, 900, or combo when radio checking is enabled.<br>")
         sys.exit(100)
 
-    if Radio_Band == "900":
+    need_900 = Radio_Band in ("900", "combo")
+    need_450 = Radio_Band in ("450", "combo")
+
+    if need_900:
         if "RadioNetworkNumber" not in form:
             print("RadioNetworkNumber must be entered for 900 MHz radios.<br>")
             sys.exit(100)
@@ -369,7 +380,7 @@ if Radio_Enabled:
             print("RadioNetworkNumber must be between 1 and 40.<br>")
             sys.exit(100)
 
-    if Radio_Band == "450":
+    if need_450:
         if "RadioFrequency" not in form:
             print("RadioFrequency must be entered for 450 MHz radios.<br>")
             sys.exit(100)
