@@ -406,7 +406,7 @@ function rn_ibss_base_name($mount)
     $suffix = "__wm_IBSS";
     $mount = (string)$mount;
     $len = strlen($suffix);
-    if ($len > 0 && substr($mount, -$len) === $suffix) {
+    if ($len > 0 && strcasecmp(substr($mount, -$len), $suffix) === 0) {
         return substr($mount, 0, -$len);
     }
     return null;
@@ -425,29 +425,34 @@ function rn_ntrip_server_name($row)
 }
 
 
+function rn_ntrip_ibss_label($org, $mount)
+{
+    $mount = (string)$mount;
+    if ($org !== "") {
+        return $org . " / " . $mount;
+    }
+    return $mount;
+}
+
+
 /**
  * Build a unique mount bucket key + display label.
- * IBSS: include org (Loc_Group) so the same __wm_IBSS mount in different orgs stays separate.
- * NTRIP: include server/receiver name so the same mountpoint on different servers stays separate.
+ * IBSS: Org (Loc_Group) / Mountpoint — never the receiver name.
+ * NTRIP: Server name / Mountpoint so identical mountpoints on different servers stay separate.
  */
-function rn_ntrip_mount_identity($mount, $row, $slot_kind)
+function rn_ntrip_mount_identity($mount, $row, $as_ibss = false)
 {
     $mount = (string)$mount;
     $ibss_base = rn_ibss_base_name($mount);
     $org = rn_ntrip_org($row);
     $server = rn_ntrip_server_name($row);
+    $is_ibss = ($ibss_base !== null) || $as_ibss;
 
-    if ($ibss_base !== null) {
+    if ($is_ibss) {
         $key = "ibss|" . strtolower($org) . "|" . $mount;
-        if ($org !== "") {
-            $label = $org . " / " . $mount;
-        } else {
-            $label = $mount;
-        }
-        return array($key, $label, true, $ibss_base);
+        return array($key, rn_ntrip_ibss_label($org, $mount), true, ($ibss_base !== null ? $ibss_base : $server));
     }
 
-    // Non-IBSS NTRIP: disambiguate by server (receiver) name.
     $key = "ntrip|" . strtolower($server) . "|" . $mount;
     if ($server !== "") {
         $label = $server . " / " . $mount;
@@ -468,9 +473,17 @@ function rn_ntrip_matching_mount_keys($mounts, $mount, $row)
     $ibss_base = rn_ibss_base_name($mount);
     $matches = array();
     if ($ibss_base !== null) {
-        list($want) = rn_ntrip_mount_identity($mount, $row, "client");
-        if (isset($mounts[$want])) {
-            $matches[] = $want;
+        $want_base = strtolower($ibss_base);
+        foreach ($mounts as $key => $info) {
+            if (empty($info["ibss"])) {
+                continue;
+            }
+            // Match IBSS client onto the base bucket by base/receiver name.
+            $info_mount = strtolower((string)$info["mount"]);
+            $info_base = isset($info["ibss_base"]) ? strtolower((string)$info["ibss_base"]) : "";
+            if ($info_base === $want_base || $info_mount === $want_base || $info_mount === strtolower($mount)) {
+                $matches[] = $key;
+            }
         }
         return $matches;
     }
@@ -484,6 +497,30 @@ function rn_ntrip_matching_mount_keys($mounts, $mount, $row)
         }
     }
     return $matches;
+}
+
+
+function rn_ntrip_format_display($entry)
+{
+    $slot = $entry["slot"];
+    if ($slot["format"] === null) {
+        return array("", false);
+    }
+    $row = $entry["row"];
+    $expected = isset($entry["expected_format"]) ? (string)$entry["expected_format"] : "";
+    $live_format = isset($row[$slot["live_format"]]) ? $row[$slot["live_format"]] : null;
+    $live_txt = ($live_format === null || $live_format === "") ? "" : (string)$live_format;
+    $mismatch = false;
+    if ($expected !== "" && $live_txt !== "") {
+        $mismatch = ($live_txt !== $expected);
+    }
+    if ($live_txt !== "") {
+        return array($live_txt, $mismatch);
+    }
+    if ($expected !== "") {
+        return array($expected, false);
+    }
+    return array("", false);
 }
 
 
@@ -555,21 +592,12 @@ function rn_ntrip_endpoint_cells($entry, $user_id)
     $slot = $entry["slot"];
     $live_en = isset($row[$slot["live_en"]]) ? $row[$slot["live_en"]] : null;
     $live_mount = isset($row[$slot["live_mount"]]) ? $row[$slot["live_mount"]] : null;
-    $live_format = ($slot["live_format"] !== null && isset($row[$slot["live_format"]])) ? $row[$slot["live_format"]] : null;
 
     $en_mismatch = ($live_en !== null && (int)$live_en !== 1);
     $mount_mismatch = ($live_mount !== null && $live_mount !== "" && (string)$live_mount !== (string)$entry["expected_mount"]);
-    $format_mismatch = false;
-    if ($slot["format"] !== null && $entry["expected_format"] !== "" && $live_format !== null && $live_format !== "") {
-        $format_mismatch = ((string)$live_format !== (string)$entry["expected_format"]);
-    }
 
     $live_en_txt = ($live_en === null || $live_en === "") ? "(no data)" : ((int)$live_en ? "On" : "Off");
     $live_mount_txt = ($live_mount === null || $live_mount === "") ? "(no data)" : (string)$live_mount;
-    $live_format_txt = "";
-    if ($slot["format"] !== null) {
-        $live_format_txt = ($live_format === null || $live_format === "") ? "(no data)" : (string)$live_format;
-    }
 
     $edit_html = '<a href="Edit_GNSS.php?GNSS_ID=' . h($row["id"]) . '&User_ID=' . h($user_id) . '">Edit</a>';
     $receiver_url = gnss_receiver_url(
@@ -587,8 +615,5 @@ function rn_ntrip_endpoint_cells($entry, $user_id)
     $parts[] = $name_html . " (" . h($slot["label"]) . ")";
     $parts[] = '<span' . rn_issue_class($en_mismatch) . '>live ' . h($live_en_txt) . '</span>';
     $parts[] = '<span' . rn_issue_class($mount_mismatch) . '>mount ' . h($live_mount_txt) . '</span>';
-    if ($slot["format"] !== null) {
-        $parts[] = '<span' . rn_issue_class($format_mismatch) . '>fmt ' . h($live_format_txt) . '</span>';
-    }
     return implode(" — ", $parts);
 }
