@@ -82,11 +82,6 @@ h2.section-title {
        }
    }
 
-   $name_index = array();
-   foreach ($rows as $row) {
-       $name_index[(string)$row["name"]] = $row;
-   }
-
    // ---- Radio section: group by Loc_Group, then by expected channel key ----
    $radio_by_group = array();
    foreach ($rows as $row) {
@@ -237,12 +232,12 @@ h2.section-title {
        echo "<p>No enabled NTRIP slots.</p>";
    } else {
        echo "\n<table border='1' class='tablesorter radio-ntrip'>\n";
-       echo "<thead><tr><th>Mount</th><th>Notes</th><th>Producers (Server/Caster)</th><th>Consumers (Client)</th></tr></thead>\n<tbody>\n";
+       echo "<thead><tr><th>Mount</th><th>Producers (Server/Caster)</th><th>Consumers (Client)</th></tr></thead>\n<tbody>\n";
 
        $ntrip_group_i = 0;
        foreach ($ntrip_by_group as $group => $group_mounts) {
            if ($ntrip_group_i > 0) {
-               echo "\n<tr class=\"group-spacer\"><td colspan=\"4\">&nbsp;</td></tr>\n";
+               echo "\n<tr class=\"group-spacer\"><td colspan=\"3\">&nbsp;</td></tr>\n";
            }
            $ntrip_group_i++;
            if ($group === "(no producer)") {
@@ -252,29 +247,10 @@ h2.section-title {
            } else {
                $group_label = $group;
            }
-           echo "\n<tr><td colspan=\"4\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
+           echo "\n<tr><td colspan=\"3\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
 
            ksort($group_mounts, SORT_NATURAL | SORT_FLAG_CASE);
            foreach ($group_mounts as $mount => $info) {
-               $notes = array();
-               if ($info["ibss"]) {
-                   $notes[] = "IBSS 3rd-party share";
-                   $base = $info["ibss_base"];
-                   if ($base !== null && $base !== "") {
-                       if (isset($name_index[$base])) {
-                           $notes[] = "Base: " . $base;
-                       } else {
-                           $notes[] = "Base name: " . $base . " (not in list)";
-                       }
-                   }
-               }
-               if (count($info["producers"]) === 0) {
-                   $notes[] = "No producer in dashboard";
-               }
-               if (count($info["consumers"]) === 0) {
-                   $notes[] = "No client in dashboard";
-               }
-
                // Producers for this group header (or all when in "(no producer)").
                $prod_html = array();
                foreach ($info["producers"] as $p) {
@@ -299,7 +275,6 @@ h2.section-title {
 
                echo "\n<tr>";
                echo "\n<td>" . h($mount) . "</td>";
-               echo "\n<td>" . h(implode("; ", $notes)) . "</td>";
                echo "\n<td>" . (count($prod_html) ? implode("<br/>", $prod_html) : "&nbsp;") . "</td>";
                echo "\n<td>" . (count($cons_html) ? implode("<br/>", $cons_html) : "&nbsp;") . "</td>";
                echo "\n</tr>";

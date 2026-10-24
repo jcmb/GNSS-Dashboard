@@ -379,20 +379,13 @@ function rn_channel_mismatch($row)
         }
         return (int)$row["Radio_Live_NetworkNumber"] !== (int)$row["RadioNetworkNumber"];
     }
-    $mismatch = false;
     if (isset($row["RadioFrequency"]) && $row["RadioFrequency"] !== null && $row["RadioFrequency"] !== ""
         && isset($row["Radio_Live_Frequency"]) && $row["Radio_Live_Frequency"] !== null && $row["Radio_Live_Frequency"] !== "") {
         if (abs((float)$row["Radio_Live_Frequency"] - (float)$row["RadioFrequency"]) > 0.0005) {
-            $mismatch = true;
+            return true;
         }
     }
-    if (isset($row["RadioActiveChanSpacing"]) && $row["RadioActiveChanSpacing"] !== null && $row["RadioActiveChanSpacing"] !== ""
-        && isset($row["Radio_Live_ChanSpacing"]) && $row["Radio_Live_ChanSpacing"] !== null && $row["Radio_Live_ChanSpacing"] !== "") {
-        if (abs((float)$row["Radio_Live_ChanSpacing"] - (float)$row["RadioActiveChanSpacing"]) > 0.01) {
-            $mismatch = true;
-        }
-    }
-    return $mismatch;
+    return false;
 }
 
 

@@ -66,7 +66,6 @@ from radio_config import (
     wireless_mode_display_name,
     wireless_mode_long_matches,
     xml_find_text,
-    channel_spacing_matches,
     radio_summary_root,
     detect_active_radio_band,
     receiver_expects_combo_radio,
@@ -2222,15 +2221,6 @@ def check_Radio(GNSS_ID, DB, HTTP):
                         elif live_frequency is None or abs(live_frequency - float(DB.RadioFrequency)) > 0.0005:
                             Message += "Radio frequency is {} MHz, Expected {} MHz\n".format(
                                 frequency, DB.RadioFrequency
-                            )
-                            Radio_Valid = False
-                    if DB.RadioActiveChanSpacing is not None:
-                        if active_chan_spacing is None:
-                            Message += "Radio active channel spacing could not be determined\n"
-                            Radio_Valid = False
-                        elif not channel_spacing_matches(DB.RadioActiveChanSpacing, active_chan_spacing):
-                            Message += "Radio active channel spacing is {} kHz, Expected {} kHz\n".format(
-                                active_chan_spacing, DB.RadioActiveChanSpacing
                             )
                             Radio_Valid = False
                     if DB.RadioWirelessMode is not None:
