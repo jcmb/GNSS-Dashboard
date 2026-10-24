@@ -93,6 +93,10 @@ h2.section-title {
        if (empty($row["RadioEnabled"])) {
            continue;
        }
+       // Skip radios that are correctly Off (expected Off and live Off).
+       if (rn_expected_onoff($row) === "Off" && rn_live_onoff($row) === "Off") {
+           continue;
+       }
        $group = isset($row["Loc_Group"]) ? (string)$row["Loc_Group"] : "";
        $key = rn_channel_key($row);
        if (!isset($radio_by_group[$group])) {

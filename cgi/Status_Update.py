@@ -2081,31 +2081,10 @@ def check_Radio(GNSS_ID, DB, HTTP):
     radio_details = []
 
     expects_combo = receiver_expects_combo_radio(DB.Reciever_Type)
-    instance_count = radio_instance_count(root)
-    if instance_count is None and radioconfig_root is not None:
-        instance_count = radio_instance_count(radioconfig_root)
-    if expects_combo:
-        if instance_count is None:
-            Message += "Radio instance count could not be determined; combo receivers require {} instances\n".format(
-                COMBO_RADIO_INSTANCE_COUNT
-            )
-            Radio_Valid = False
-        elif instance_count != COMBO_RADIO_INSTANCE_COUNT:
-            Message += "Radio instance count is {}, Expected {} for combo receiver type\n".format(
-                instance_count, COMBO_RADIO_INSTANCE_COUNT
-            )
-            Radio_Valid = False
+    expect_radio_on = bool(DB.RadioOnOffState)
 
     RadioOnOffState_node = root.find("RadioOnOffState")
     radioMode_node = root.find("general/radioMode")
-
-    if RadioOnOffState_node == None:
-        Message += "RadioOnOffState not found\n"
-        Radio_Valid = False
-
-    if radioMode_node == None:
-        Message += "radioMode not found\n"
-        Radio_Valid = False
 
     if RadioOnOffState_node is not None and RadioOnOffState_node.text is not None:
         live_onoff = RadioOnOffState_node.text
@@ -2117,96 +2096,125 @@ def check_Radio(GNSS_ID, DB, HTTP):
         configured_band = "combo"
     live_band = configured_band
 
-    if live_onoff is not None and live_mode is not None:
-        if DB.RadioOnOffState:
-            RadioOnOffState_Str = "On"
-        else:
-            RadioOnOffState_Str = "Off"
-
-        if live_onoff != RadioOnOffState_Str:
-            Message += "RadioOnOffState is {}, Expected {}\n".format(live_onoff, RadioOnOffState_Str)
+    # When radio checking is enabled but the radio is expected Off, only verify on/off.
+    if not expect_radio_on:
+        if live_onoff is None:
+            Message += "RadioOnOffState not found\n"
             Radio_Valid = False
-
-        # Read live channel fields whenever the radio reports On (for the UI).
-        # Validate against expected only when the dashboard expects On.
-        if live_onoff == "On":
-            radio_band = configured_band
-            if radio_band == "combo":
-                detected_band = detect_active_radio_band(root, radioconfig_root)
-                if detected_band is None:
-                    if DB.RadioOnOffState:
-                        Message += "Could not determine active radio band from radiosummary\n"
-                        Radio_Valid = False
-                else:
-                    radio_band = detected_band
-            live_band = radio_band
-
-            if DB.RadioOnOffState and not radio_modes_match(DB.RadioMode, live_mode):
-                Message += "radioMode is {}, Expected {}\n".format(live_mode, DB.RadioMode)
+            Radio_Str = "Radio States not found"
+        else:
+            if live_onoff != "Off":
+                Message += "RadioOnOffState is {}, Expected Off\n".format(live_onoff)
+                Radio_Valid = False
+            mode_part = live_mode if live_mode is not None else "?"
+            Radio_Str = live_onoff + ":" + mode_part + ":" + configured_band
+    else:
+        instance_count = radio_instance_count(root)
+        if instance_count is None and radioconfig_root is not None:
+            instance_count = radio_instance_count(radioconfig_root)
+        if expects_combo:
+            if instance_count is None:
+                Message += "Radio instance count could not be determined; combo receivers require {} instances\n".format(
+                    COMBO_RADIO_INSTANCE_COUNT
+                )
+                Radio_Valid = False
+            elif instance_count != COMBO_RADIO_INSTANCE_COUNT:
+                Message += "Radio instance count is {}, Expected {} for combo receiver type\n".format(
+                    instance_count, COMBO_RADIO_INSTANCE_COUNT
+                )
                 Radio_Valid = False
 
-            if radio_band == "900":
-                network_number = xml_find_text(
-                    root,
-                    "type900/networkId",
-                    "type900/networkID",
-                    "general/networkID",
-                    "general/networkId",
-                    "general/networkNumber",
-                    "networkID",
-                )
-                if network_number is not None:
-                    try:
-                        live_network = int(network_number)
-                    except (TypeError, ValueError):
-                        live_network = None
-                    if live_network is not None:
-                        radio_details.append("net{}".format(live_network))
-                if DB.RadioOnOffState and DB.RadioNetworkNumber is not None:
-                    if network_number is None:
-                        Message += "Radio network number could not be determined\n"
-                        Radio_Valid = False
-                    elif live_network is None or int(live_network) != int(DB.RadioNetworkNumber):
-                        Message += "Radio network number is {}, Expected {}\n".format(
-                            network_number, DB.RadioNetworkNumber
-                        )
-                        Radio_Valid = False
-            elif radio_band == "450":
-                frequency = xml_find_text(
-                    root,
-                    "type450/curChannel",
-                    "general/currentChannel",
-                    "general/currentChannelMHz",
-                    "general/frequency",
-                    "radio450MHz/currentChannel",
-                )
-                active_chan_spacing = xml_find_text(
-                    root,
-                    "type450/activeChanSpacing",
-                )
-                wireless_mode_long = xml_find_text(
-                    root,
-                    "type450/curWirelessModeLong",
-                )
-                if frequency is not None:
-                    try:
-                        live_frequency = float(frequency)
-                    except (TypeError, ValueError):
-                        live_frequency = None
-                    if live_frequency is not None:
-                        radio_details.append("{}MHz".format(frequency))
-                if active_chan_spacing is not None:
-                    try:
-                        live_spacing = float(active_chan_spacing)
-                    except (TypeError, ValueError):
-                        live_spacing = None
-                    if live_spacing is not None:
-                        radio_details.append("{}kHz".format(active_chan_spacing))
-                if wireless_mode_long is not None:
-                    live_wireless = wireless_mode_long
-                    radio_details.append(wireless_mode_long)
+        if RadioOnOffState_node is None:
+            Message += "RadioOnOffState not found\n"
+            Radio_Valid = False
 
-                if DB.RadioOnOffState:
+        if radioMode_node is None:
+            Message += "radioMode not found\n"
+            Radio_Valid = False
+
+        if live_onoff is not None and live_mode is not None:
+            if live_onoff != "On":
+                Message += "RadioOnOffState is {}, Expected On\n".format(live_onoff)
+                Radio_Valid = False
+
+            # Read live channel fields whenever the radio reports On (for the UI).
+            # Validate mode/channel only when the dashboard expects On.
+            if live_onoff == "On":
+                radio_band = configured_band
+                if radio_band == "combo":
+                    detected_band = detect_active_radio_band(root, radioconfig_root)
+                    if detected_band is None:
+                        Message += "Could not determine active radio band from radiosummary\n"
+                        Radio_Valid = False
+                    else:
+                        radio_band = detected_band
+                live_band = radio_band
+
+                if not radio_modes_match(DB.RadioMode, live_mode):
+                    Message += "radioMode is {}, Expected {}\n".format(live_mode, DB.RadioMode)
+                    Radio_Valid = False
+
+                if radio_band == "900":
+                    network_number = xml_find_text(
+                        root,
+                        "type900/networkId",
+                        "type900/networkID",
+                        "general/networkID",
+                        "general/networkId",
+                        "general/networkNumber",
+                        "networkID",
+                    )
+                    if network_number is not None:
+                        try:
+                            live_network = int(network_number)
+                        except (TypeError, ValueError):
+                            live_network = None
+                        if live_network is not None:
+                            radio_details.append("net{}".format(live_network))
+                    if DB.RadioNetworkNumber is not None:
+                        if network_number is None:
+                            Message += "Radio network number could not be determined\n"
+                            Radio_Valid = False
+                        elif live_network is None or int(live_network) != int(DB.RadioNetworkNumber):
+                            Message += "Radio network number is {}, Expected {}\n".format(
+                                network_number, DB.RadioNetworkNumber
+                            )
+                            Radio_Valid = False
+                elif radio_band == "450":
+                    frequency = xml_find_text(
+                        root,
+                        "type450/curChannel",
+                        "general/currentChannel",
+                        "general/currentChannelMHz",
+                        "general/frequency",
+                        "radio450MHz/currentChannel",
+                    )
+                    active_chan_spacing = xml_find_text(
+                        root,
+                        "type450/activeChanSpacing",
+                    )
+                    wireless_mode_long = xml_find_text(
+                        root,
+                        "type450/curWirelessModeLong",
+                    )
+                    if frequency is not None:
+                        try:
+                            live_frequency = float(frequency)
+                        except (TypeError, ValueError):
+                            live_frequency = None
+                        if live_frequency is not None:
+                            radio_details.append("{}MHz".format(frequency))
+                    if active_chan_spacing is not None:
+                        try:
+                            live_spacing = float(active_chan_spacing)
+                        except (TypeError, ValueError):
+                            live_spacing = None
+                        if live_spacing is not None:
+                            radio_details.append("{}kHz".format(active_chan_spacing))
+                    if wireless_mode_long is not None:
+                        live_wireless = wireless_mode_long
+                        radio_details.append(wireless_mode_long)
+
                     if DB.RadioFrequency is not None:
                         if frequency is None:
                             Message += "Radio frequency could not be determined\n"
@@ -2237,14 +2245,14 @@ def check_Radio(GNSS_ID, DB, HTTP):
                             )
                             Radio_Valid = False
 
-        Radio_Str = live_onoff + ":" + live_mode + ":" + configured_band
-        if configured_band == "combo" and live_band in ("450", "900"):
-            Radio_Str += "(" + live_band + ")"
-        if radio_details:
-            Radio_Str += ":" + ",".join(radio_details)
-    else:
-        Radio_Str = "Radio States not found"
-        Radio_Valid = False
+            Radio_Str = live_onoff + ":" + live_mode + ":" + configured_band
+            if configured_band == "combo" and live_band in ("450", "900"):
+                Radio_Str += "(" + live_band + ")"
+            if radio_details:
+                Radio_Str += ":" + ",".join(radio_details)
+        else:
+            Radio_Str = "Radio States not found"
+            Radio_Valid = False
 
     logger.debug(DB.Address + ":" + str(DB.Port) + " : " + Radio_Str + " Valid: " + str(Radio_Valid))
 
