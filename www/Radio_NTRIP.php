@@ -156,10 +156,12 @@ h2.section-title {
 
    // ---- NTRIP section: by producer Loc_Group; clients may be from other groups ----
    echo '<h2 class="section-title">NTRIP connections</h2>';
-   echo '<p>Grouped by the producer&rsquo;s group. Clients from other groups still appear under the mount. Mounts ending in <code>__wm_IBSS</code> are IBSS 3rd-party shares.</p>';
+   echo '<p>Grouped by the producer&rsquo;s group. Clients from other groups still appear under the mount. IBSS mounts include the org (group); other NTRIP mounts include the server name so identical mountpoints stay distinct.</p>';
 
-   $mounts = array(); // mount => array(producers => [], consumers => [], ibss => bool, ibss_base => ?)
+   // key => array(label, producers, consumers, ibss, ibss_base, mount)
+   $mounts = array();
 
+   // First pass: producers (and IBSS clients create their own org-scoped buckets).
    foreach ($rows as $row) {
        foreach (rn_ntrip_slot_defs() as $slot) {
            if (empty($row[$slot["en"]])) {
@@ -169,12 +171,19 @@ h2.section-title {
            if ($expected_mount === "") {
                continue;
            }
-           if (!isset($mounts[$expected_mount])) {
-               $ibss_base = rn_ibss_base_name($expected_mount);
-               $mounts[$expected_mount] = array(
+           $is_client = ($slot["kind"] === "client");
+           $is_ibss = (rn_ibss_base_name($expected_mount) !== null);
+           if ($is_client && !$is_ibss) {
+               continue; // clients attached in second pass
+           }
+           list($key, $label, $ibss, $ibss_base) = rn_ntrip_mount_identity($expected_mount, $row, $slot["kind"]);
+           if (!isset($mounts[$key])) {
+               $mounts[$key] = array(
+                   "label" => $label,
+                   "mount" => $expected_mount,
                    "producers" => array(),
                    "consumers" => array(),
-                   "ibss" => ($ibss_base !== null),
+                   "ibss" => $ibss,
                    "ibss_base" => $ibss_base,
                );
            }
@@ -184,21 +193,63 @@ h2.section-title {
                "expected_mount" => $expected_mount,
                "expected_format" => ($slot["format"] !== null && isset($row[$slot["format"]])) ? (string)$row[$slot["format"]] : "",
            );
-           if ($slot["kind"] === "client") {
-               $mounts[$expected_mount]["consumers"][] = $entry;
+           if ($is_client) {
+               $mounts[$key]["consumers"][] = $entry;
            } else {
-               $mounts[$expected_mount]["producers"][] = $entry;
+               $mounts[$key]["producers"][] = $entry;
+           }
+       }
+   }
+
+   // Second pass: attach non-IBSS clients onto matching server/mount buckets.
+   foreach ($rows as $row) {
+       foreach (rn_ntrip_slot_defs() as $slot) {
+           if ($slot["kind"] !== "client" || empty($row[$slot["en"]])) {
+               continue;
+           }
+           $expected_mount = isset($row[$slot["mount"]]) ? (string)$row[$slot["mount"]] : "";
+           if ($expected_mount === "" || rn_ibss_base_name($expected_mount) !== null) {
+               continue;
+           }
+           $entry = array(
+               "row" => $row,
+               "slot" => $slot,
+               "expected_mount" => $expected_mount,
+               "expected_format" => "",
+           );
+           $keys = rn_ntrip_matching_mount_keys($mounts, $expected_mount, $row);
+           if (count($keys) === 0) {
+               list($key, $label, $ibss, $ibss_base) = rn_ntrip_mount_identity($expected_mount, $row, "client");
+               $mounts[$key] = array(
+                   "label" => $label,
+                   "mount" => $expected_mount,
+                   "producers" => array(),
+                   "consumers" => array($entry),
+                   "ibss" => $ibss,
+                   "ibss_base" => $ibss_base,
+               );
+           } else {
+               foreach ($keys as $key) {
+                   $mounts[$key]["consumers"][] = $entry;
+               }
            }
        }
    }
 
    // Index mounts under each producer Loc_Group; client-only mounts under "(no producer)".
    $ntrip_by_group = array();
-   foreach ($mounts as $mount => $info) {
+   foreach ($mounts as $key => $info) {
        $producer_groups = array();
        foreach ($info["producers"] as $p) {
            $g = isset($p["row"]["Loc_Group"]) ? (string)$p["row"]["Loc_Group"] : "";
            $producer_groups[$g] = true;
+       }
+       if (count($producer_groups) === 0) {
+           // IBSS / client-only: group by the consumer org when present.
+           foreach ($info["consumers"] as $c) {
+               $g = isset($c["row"]["Loc_Group"]) ? (string)$c["row"]["Loc_Group"] : "";
+               $producer_groups[$g] = true;
+           }
        }
        if (count($producer_groups) === 0) {
            $producer_groups = array("(no producer)" => true);
@@ -207,7 +258,7 @@ h2.section-title {
            if (!isset($ntrip_by_group[$g])) {
                $ntrip_by_group[$g] = array();
            }
-           $ntrip_by_group[$g][$mount] = $info;
+           $ntrip_by_group[$g][$key] = $info;
        }
    }
 
@@ -249,22 +300,37 @@ h2.section-title {
            }
            echo "\n<tr><td colspan=\"3\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
 
-           ksort($group_mounts, SORT_NATURAL | SORT_FLAG_CASE);
-           foreach ($group_mounts as $mount => $info) {
+           uasort($group_mounts, function ($a, $b) {
+               return strnatcasecmp($a["label"], $b["label"]);
+           });
+           foreach ($group_mounts as $key => $info) {
                // Producers for this group header (or all when in "(no producer)").
                $prod_html = array();
+               $seen_prod = array();
                foreach ($info["producers"] as $p) {
                    $p_group = isset($p["row"]["Loc_Group"]) ? (string)$p["row"]["Loc_Group"] : "";
                    if ($group !== "(no producer)" && $p_group !== $group) {
                        continue;
                    }
+                   // One row per server name (collapse Server/Caster slots on the same receiver).
+                   $prod_dedupe = strtolower(rn_ntrip_server_name($p["row"])) . "|" . $p["expected_mount"];
+                   if (isset($seen_prod[$prod_dedupe])) {
+                       continue;
+                   }
+                   $seen_prod[$prod_dedupe] = true;
                    $prod_html[] = rn_ntrip_endpoint_cells($p, $user_id);
                }
 
                // All consumers; annotate group when it differs from this section's group.
                $cons_html = array();
+               $seen_cons = array();
                foreach ($info["consumers"] as $c) {
                    $c_group = isset($c["row"]["Loc_Group"]) ? (string)$c["row"]["Loc_Group"] : "";
+                   $cons_dedupe = strtolower(rn_ntrip_server_name($c["row"])) . "|" . $c["slot"]["label"] . "|" . $c["expected_mount"];
+                   if (isset($seen_cons[$cons_dedupe])) {
+                       continue;
+                   }
+                   $seen_cons[$cons_dedupe] = true;
                    $cell = rn_ntrip_endpoint_cells($c, $user_id);
                    if ($group !== "(no producer)" && $c_group !== $group) {
                        $c_label = ($c_group === "") ? "(ungrouped)" : $c_group;
@@ -274,7 +340,7 @@ h2.section-title {
                }
 
                echo "\n<tr>";
-               echo "\n<td>" . h($mount) . "</td>";
+               echo "\n<td>" . h($info["label"]) . "</td>";
                echo "\n<td>" . (count($prod_html) ? implode("<br/>", $prod_html) : "&nbsp;") . "</td>";
                echo "\n<td>" . (count($cons_html) ? implode("<br/>", $cons_html) : "&nbsp;") . "</td>";
                echo "\n</tr>";

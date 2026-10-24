@@ -413,6 +413,80 @@ function rn_ibss_base_name($mount)
 }
 
 
+function rn_ntrip_org($row)
+{
+    return isset($row["Loc_Group"]) ? trim((string)$row["Loc_Group"]) : "";
+}
+
+
+function rn_ntrip_server_name($row)
+{
+    return isset($row["name"]) ? trim((string)$row["name"]) : "";
+}
+
+
+/**
+ * Build a unique mount bucket key + display label.
+ * IBSS: include org (Loc_Group) so the same __wm_IBSS mount in different orgs stays separate.
+ * NTRIP: include server/receiver name so the same mountpoint on different servers stays separate.
+ */
+function rn_ntrip_mount_identity($mount, $row, $slot_kind)
+{
+    $mount = (string)$mount;
+    $ibss_base = rn_ibss_base_name($mount);
+    $org = rn_ntrip_org($row);
+    $server = rn_ntrip_server_name($row);
+
+    if ($ibss_base !== null) {
+        $key = "ibss|" . strtolower($org) . "|" . $mount;
+        if ($org !== "") {
+            $label = $org . " / " . $mount;
+        } else {
+            $label = $mount;
+        }
+        return array($key, $label, true, $ibss_base);
+    }
+
+    // Non-IBSS NTRIP: disambiguate by server (receiver) name.
+    $key = "ntrip|" . strtolower($server) . "|" . $mount;
+    if ($server !== "") {
+        $label = $server . " / " . $mount;
+    } else {
+        $label = $mount;
+    }
+    return array($key, $label, false, null);
+}
+
+
+/**
+ * Find existing NTRIP mount keys that share this mountpoint string.
+ * Used to attach clients onto the matching server/org buckets.
+ */
+function rn_ntrip_matching_mount_keys($mounts, $mount, $row)
+{
+    $mount = (string)$mount;
+    $ibss_base = rn_ibss_base_name($mount);
+    $matches = array();
+    if ($ibss_base !== null) {
+        list($want) = rn_ntrip_mount_identity($mount, $row, "client");
+        if (isset($mounts[$want])) {
+            $matches[] = $want;
+        }
+        return $matches;
+    }
+    $needle = "|" . $mount;
+    foreach ($mounts as $key => $info) {
+        if (!empty($info["ibss"])) {
+            continue;
+        }
+        if (strpos($key, "ntrip|") === 0 && substr($key, -strlen($needle)) === $needle) {
+            $matches[] = $key;
+        }
+    }
+    return $matches;
+}
+
+
 function rn_ntrip_slot_defs()
 {
     return array(
