@@ -475,7 +475,7 @@ function rn_emit_radio_row($row, $user_id, $modes, $xml_names)
 }
 
 
-function rn_ntrip_endpoint_cells($entry)
+function rn_ntrip_endpoint_cells($entry, $user_id)
 {
     $row = $entry["row"];
     $slot = $entry["slot"];
@@ -497,8 +497,20 @@ function rn_ntrip_endpoint_cells($entry)
         $live_format_txt = ($live_format === null || $live_format === "") ? "(no data)" : (string)$live_format;
     }
 
+    $edit_html = '<a href="Edit_GNSS.php?GNSS_ID=' . h($row["id"]) . '&User_ID=' . h($user_id) . '">Edit</a>';
+    $receiver_url = gnss_receiver_url(
+        isset($row["Address"]) ? $row["Address"] : "",
+        isset($row["Port"]) ? $row["Port"] : "",
+        isset($row["UseHTTPS"]) ? $row["UseHTTPS"] : false
+    );
+    $name_html = h($row["name"]);
+    if ($receiver_url !== "") {
+        $name_html = '<a href="' . h($receiver_url) . '" target="_blank" rel="noopener noreferrer">' . $name_html . '</a>';
+    }
+
     $parts = array();
-    $parts[] = h($row["name"]) . " (" . h($slot["label"]) . ")";
+    $parts[] = $edit_html;
+    $parts[] = $name_html . " (" . h($slot["label"]) . ")";
     $parts[] = '<span' . rn_issue_class($en_mismatch) . '>live ' . h($live_en_txt) . '</span>';
     $parts[] = '<span' . rn_issue_class($mount_mismatch) . '>mount ' . h($live_mount_txt) . '</span>';
     if ($slot["format"] !== null) {

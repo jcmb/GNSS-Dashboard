@@ -258,14 +258,14 @@ h2.section-title {
                    if ($group !== "(no producer)" && $p_group !== $group) {
                        continue;
                    }
-                   $prod_html[] = rn_ntrip_endpoint_cells($p);
+                   $prod_html[] = rn_ntrip_endpoint_cells($p, $user_id);
                }
 
                // All consumers; annotate group when it differs from this section's group.
                $cons_html = array();
                foreach ($info["consumers"] as $c) {
                    $c_group = isset($c["row"]["Loc_Group"]) ? (string)$c["row"]["Loc_Group"] : "";
-                   $cell = rn_ntrip_endpoint_cells($c);
+                   $cell = rn_ntrip_endpoint_cells($c, $user_id);
                    if ($group !== "(no producer)" && $c_group !== $group) {
                        $c_label = ($c_group === "") ? "(ungrouped)" : $c_group;
                        $cell .= " <em>[" . h($c_label) . "]</em>";
