@@ -69,7 +69,7 @@ h2.section-title {
            STATUS.NTRIP_Caster_2_Live_Enabled, STATUS.NTRIP_Caster_2_Live_Mount, STATUS.NTRIP_Caster_2_Live_Format,
            STATUS.NTRIP_Caster_3_Live_Enabled, STATUS.NTRIP_Caster_3_Live_Mount, STATUS.NTRIP_Caster_3_Live_Format
            FROM GNSS LEFT JOIN STATUS ON GNSS.id = STATUS.id
-           WHERE GNSS.User_ID=?
+           WHERE GNSS.User_ID=? AND GNSS.Enabled=1
            ORDER BY GNSS.Loc_Group COLLATE NOCASE, GNSS.name COLLATE NOCASE';
    $stmt = $db->prepare($sql);
    $stmt->bindValue(1, $user_id, SQLITE3_INTEGER);
