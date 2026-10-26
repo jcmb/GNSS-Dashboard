@@ -70,6 +70,7 @@ print()                              # blank line, end of headers
 
 try:
     conn = open_database()
+    ensure_gnss_radio_columns(conn)
 except sqlite3.Error as err:
     print("Error opening db. {}: {}\n".format(databaseFile(), err))
     sys.exit()
@@ -218,11 +219,16 @@ if "Ant_Height" not in form:
 else:
     Ant_Height = form["Ant_Height"].value
 
+# Base station (Ref_Name) may be blank; Status_Update fills it on first successful check.
 if "Ref_Name" not in form:
-    print("Reference Name must be entered")
-    sys.exit(100)
+    Ref_Name = ""
 else:
-    Ref_Name = form["Ref_Name"].value
+    Ref_Name = form["Ref_Name"].value.strip()
+
+if "Serial_Number" not in form:
+    Serial_Number = ""
+else:
+    Serial_Number = form["Serial_Number"].value.strip()
 
 if "Ref_Code" not in form:
     Ref_Code = ""
@@ -615,14 +621,18 @@ sql_query = f'''
 # 4. Execute the query using the generated string and your tuple of data
 cursor.execute(sql_query, data_values)
 
-conn.commit()
-
 # Provide user feedback and capture ID if it was newly created
 if Update:
     print("Record Updated.<br>")
 else:
     print("Record added<br>")
     GNSS_ID = str(cursor.lastrowid)
+
+cursor.execute(
+    "UPDATE GNSS SET Serial_Number=? WHERE id=? AND User_ID=?",
+    (Serial_Number if Serial_Number else None, GNSS_ID, User_ID),
+)
+conn.commit()
 
 Nagios_FileName = "User/GNSS_" + str(GNSS_ID)
 

@@ -125,7 +125,7 @@ $(document).ready(function()
    /** Must match the number of <th> cells in the status table header row. */
    function status_table_column_count()
    {
-       return 48;
+       return 49;
    }
 
 
@@ -440,6 +440,7 @@ $(document).ready(function()
           "\n<th>Clock</th>" .
           "\n<th>Everest</th>" .
           "\n<th>Ref Name</th>" .
+          "\n<th>RTK Ref</th>" .
           "\n<th>Latitude</th>" .
           "\n<th>Longitude</th>" .
           "\n<th>Height</th>" .
@@ -494,7 +495,7 @@ $(document).ready(function()
        echo "\n<td> ".$row["Temperature"]." </td>";
        echo "\n<td> ".$row["Uptime"] ." </td>";
        echo "\n<td " . ($row["Auth_Valid"]?"":"class=\"Issue\"") . " > ".$row["Auth"]." </td>";
-       echo "\n<td> ".$row["Serial_Number"]." </td>";
+       echo "\n<td" . ((array_key_exists("Serial_Valid", $row) && $row["Serial_Valid"] !== null && !(int)$row["Serial_Valid"]) ? " class=\"Issue\"" : "") . "> ".$row["Serial_Number"]." </td>";
        echo "\n<td " . ($row["Firmware_Valid"]?"":"class=\"Issue\"") . " > ".$row["Firmware_Version"]." </td>";
 
        echo "\n<td ". ($row["Reciever_Type_Valid"]?"":"class=\"Issue\"")." > ";
@@ -708,6 +709,7 @@ $(document).ready(function()
        echo "\n<td " . ($row["Clock_Valid"]?"":"class=\"Issue\"") . "> ".($row["Clock"] ? 'Steered' : 'Unsteered')." </td>";
        echo "\n<td " . ($row["MultipathReject_Valid"]?"":"class=\"Issue\"") . "> ".($row["MultipathReject"] ? 'Enabled' : 'Disabled')." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Name"] ." </td>";
+       echo "\n<td" . ((array_key_exists("RefStationName_Valid", $row) && $row["RefStationName_Valid"] !== null && !(int)$row["RefStationName_Valid"]) ? " class=\"Issue\"" : "") . "> " . (isset($row["RefStationName"]) ? $row["RefStationName"] : "") . " </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Lat"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Long"] ." </td>";
        echo "\n<td " . ($row["Ref_Valid"]?"":"class=\"Issue\"") . "> ". $row["Ref_Height"] ." </td>";

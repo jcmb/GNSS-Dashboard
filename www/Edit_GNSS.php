@@ -58,6 +58,7 @@ else {
          'RadioWirelessMode' => 'INTEGER',
          'RadioActiveChanSpacing' => 'NUMERIC',
          'UseHTTPS' => 'BOOLEAN',
+         'Serial_Number' => 'TEXT',
       );
       foreach ($columns as $name => $type) {
          if (!isset($existing[$name])) {
@@ -285,6 +286,12 @@ Admin password:
 </td></tr>
 
 <tr><td>
+Serial Number:
+</td><td>
+<input name="Serial_Number" type="text" value="<?php echo ($Editing && isset($row["Serial_Number"])) ? h($row["Serial_Number"]) : ''; ?>" placeholder="Blank = set on first successful check"/>
+</td></tr>
+
+<tr><td>
 Position Type:
 </td><td>
 <input name="Pos_Type" type="text" value="<?php echo $row["Pos_Type"]?$row["Pos_Type"]:"RTK" ?>"/>
@@ -429,7 +436,7 @@ BottomOfReceiverWnoAntennas
 <tr><td>
 Point Name:
 </td><td>
-<input name="Ref_Name" type="text" size="20" maxlength="16" value="<?php echo $row["Ref_Name"]?$row["Ref_Name"]:"Pt Name" ?>"/>
+<input name="Ref_Name" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["Ref_Name"])) ? h($row["Ref_Name"]) : ""; ?>" placeholder="Blank = set on first successful check"/>
 </td></tr>
 
 <tr><td>

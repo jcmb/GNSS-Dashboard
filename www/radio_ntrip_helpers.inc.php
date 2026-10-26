@@ -37,10 +37,61 @@ function rn_ensure_status_live_columns($db)
         "NTRIP_Caster_3_Live_Enabled" => "BOOLEAN",
         "NTRIP_Caster_3_Live_Mount" => "TEXT",
         "NTRIP_Caster_3_Live_Format" => "TEXT",
+        "Serial_Valid" => "BOOLEAN",
+        "RefStationName" => "TEXT",
+        "RefStationName_Valid" => "BOOLEAN",
     );
     foreach ($columns as $name => $type) {
         @$db->exec("ALTER TABLE STATUS ADD COLUMN {$name} {$type}");
     }
+}
+
+
+/**
+ * Describe the expected base-observables / correction streams for a receiver.
+ * Radio and NTRIP are supported; UDP/TCP source-sink and external serial are not.
+ */
+function rn_expected_observables_streams($row)
+{
+    $parts = array();
+
+    if (!empty($row["RadioEnabled"])) {
+        $band = !empty($row["RadioBand"]) ? $row["RadioBand"] : "900";
+        if ($band === "combo") {
+            $band = !empty($row["RadioFrequency"]) ? "450" : "900";
+        }
+        $on = !empty($row["RadioOnOffState"]) ? "On" : "Off";
+        $mode = rn_radio_mode_display(isset($row["RadioMode"]) ? $row["RadioMode"] : "");
+        if ($band === "900") {
+            $net = isset($row["RadioNetworkNumber"]) ? $row["RadioNetworkNumber"] : "?";
+            $parts[] = "Radio {$on}: {$mode}, 900 MHz net {$net}";
+        } else {
+            $freq = isset($row["RadioFrequency"]) ? $row["RadioFrequency"] : "?";
+            $parts[] = "Radio {$on}: {$mode}, 450 MHz {$freq}";
+        }
+    }
+
+    foreach (rn_ntrip_slot_defs() as $slot) {
+        if (empty($row[$slot["en"]])) {
+            continue;
+        }
+        $mount = isset($row[$slot["mount"]]) ? (string)$row[$slot["mount"]] : "";
+        if ($mount === "") {
+            continue;
+        }
+        if ($slot["kind"] === "client") {
+            $parts[] = "NTRIP {$slot["label"]} in: {$mount}";
+        } else {
+            $fmt = ($slot["format"] !== null && isset($row[$slot["format"]])) ? (string)$row[$slot["format"]] : "";
+            if ($fmt !== "") {
+                $parts[] = "NTRIP {$slot["label"]} out: {$mount} ({$fmt})";
+            } else {
+                $parts[] = "NTRIP {$slot["label"]} out: {$mount}";
+            }
+        }
+    }
+
+    return $parts;
 }
 
 

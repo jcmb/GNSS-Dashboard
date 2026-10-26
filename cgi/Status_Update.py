@@ -71,6 +71,8 @@ from radio_config import (
     receiver_expects_combo_radio,
     radio_instance_count,
     COMBO_RADIO_INSTANCE_COUNT,
+    expected_ref_station_name,
+    pos_type_expects_rtk,
 )
 
 class _StatusBufferCursor:
@@ -178,6 +180,9 @@ class DB_Class:
             "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Enabled BOOLEAN",
             "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Mount TEXT",
             "ALTER TABLE STATUS ADD COLUMN NTRIP_Caster_3_Live_Format TEXT",
+            "ALTER TABLE STATUS ADD COLUMN Serial_Valid BOOLEAN",
+            "ALTER TABLE STATUS ADD COLUMN RefStationName TEXT",
+            "ALTER TABLE STATUS ADD COLUMN RefStationName_Valid BOOLEAN",
         ):
             try:
                 self._real_conn.execute(ddl)
@@ -338,6 +343,10 @@ class DB_Class:
         self.name = row["name"]
         self.Firmware = row["Firmware"]
         self.Reciever_Type = row["Reciever_Type"]
+        try:
+            self.Serial_Number = row["Serial_Number"]
+        except (KeyError, IndexError):
+            self.Serial_Number = None
         self.Pos_Type = row["Pos_Type"]
         self.Static = row["Static"]
         self.LowLatency = row["LowLatency"]
@@ -691,10 +700,15 @@ def check_firmware(GNSS_ID, FirmwareVersions, DB, HTTP):
     return(firmwareValid, Message)
 
 
+def _blank(value):
+    return value is None or str(value).strip() == ""
+
+
 def check_serial_and_type(GNSS_ID, DB, HTTP):
     SerialNumber = "N/A"
     rxType = "N/A"
     rxValid = False
+    serialValid = False
     Message = ""
 
     (reply, result) = HTTP.get("/prog/show?SerialNumber")
@@ -703,7 +717,7 @@ def check_serial_and_type(GNSS_ID, DB, HTTP):
     if reply:
         m = re.search(r"SerialNumber sn=(.*) *rxType='(.*),.*,(.*)'", reply)
         if m:
-            SerialNumber = m.group(1)
+            SerialNumber = m.group(1).strip()
             rxType = m.group(2)
             rxTypeName = m.group(3)
             rxValid = (DB.Reciever_Type == rxType)
@@ -713,15 +727,45 @@ def check_serial_and_type(GNSS_ID, DB, HTTP):
         else:
             m = re.search(r"SerialNumber sn=(.*)", reply)
             if m:
-                SerialNumber = m.group(1)
+                SerialNumber = m.group(1).strip()
                 rxValid = True
             else:
                 logger.warning(DB.Address + ":" + str(DB.Port) + " Could not determine serial number")
 
-    logger.debug(DB.Address + ":" + str(DB.Port) + " Serial_Number: " + str(SerialNumber) + " Reciever_Type: " + str(rxType) + " Reciever_Type_Valid: " + str(rxValid))
-    DB.STATUS.execute("UPDATE STATUS SET Serial_Number=?, Reciever_Type=?, Reciever_Type_Valid=? where id=?", (SerialNumber, rxType, rxValid, GNSS_ID))
+    if SerialNumber and SerialNumber != "N/A":
+        if _blank(DB.Serial_Number):
+            # First successful observation: store expected serial on GNSS.
+            DB.GNSS.execute(
+                "UPDATE GNSS SET Serial_Number=? WHERE id=?",
+                (SerialNumber, GNSS_ID),
+            )
+            DB.Serial_Number = SerialNumber
+            serialValid = True
+        elif str(DB.Serial_Number).strip() == SerialNumber:
+            serialValid = True
+        else:
+            serialValid = False
+            Message += "Serial Number is {}, Expected {}\n".format(
+                SerialNumber, str(DB.Serial_Number).strip()
+            )
+    else:
+        serialValid = False
+        if not Message:
+            Message = "Serial Number could not be determined\n"
+
+    logger.debug(
+        DB.Address + ":" + str(DB.Port)
+        + " Serial_Number: " + str(SerialNumber)
+        + " Reciever_Type: " + str(rxType)
+        + " Reciever_Type_Valid: " + str(rxValid)
+        + " Serial_Valid: " + str(serialValid)
+    )
+    DB.STATUS.execute(
+        "UPDATE STATUS SET Serial_Number=?, Reciever_Type=?, Reciever_Type_Valid=?, Serial_Valid=? where id=?",
+        (SerialNumber, rxType, rxValid, serialValid, GNSS_ID),
+    )
     DB.conn.commit()
-    return(rxValid, Message)
+    return (rxValid and serialValid, Message)
 
 
 
@@ -2624,6 +2668,14 @@ def check_Ref(GNSS_ID, DB, HTTP):
             if Ref_Code:
                 Ref_Code = Ref_Code.upper()
 
+            # First successful observation: store blank base-station (Ref_Name) from live.
+            if _blank(DB.Ref_Name) and not _blank(Ref_Name):
+                DB.GNSS.execute(
+                    "UPDATE GNSS SET Ref_Name=? WHERE id=?",
+                    (Ref_Name, GNSS_ID),
+                )
+                DB.Ref_Name = Ref_Name
+
             if not (Ref_Lat == DB.Ref_Lat):
                 Ref_Valid = False
                 Message += "Latitude is " + str(Ref_Lat) + " (" + DMSstr(Ref_Lat) + ") Expected " + str(DB.Ref_Lat) + " (" + DMSstr(DB.Ref_Lat) + ")\n"
@@ -2636,7 +2688,7 @@ def check_Ref(GNSS_ID, DB, HTTP):
                 Ref_Valid = False
                 Message += "Height is " + str(Ref_Height) + " Expected " + str(DB.Ref_Height) + "\n"
 
-            if not (Ref_Name == DB.Ref_Name):
+            if not _blank(DB.Ref_Name) and not (Ref_Name == DB.Ref_Name):
                 Ref_Valid = False
                 Message += "Ref Name is '" + str(Ref_Name) + "' Expected " + str(DB.Ref_Name) + "\n"
 
@@ -2648,6 +2700,82 @@ def check_Ref(GNSS_ID, DB, HTTP):
             DB.STATUS.execute("UPDATE STATUS SET Ref_Lat=?, Ref_Long=?, Ref_Height=?, Ref_Name=?, Ref_Code=?,Ref_Valid=? where id=?", (Ref_Lat, Ref_Long, Ref_Height, Ref_Name, Ref_Code, Ref_Valid, GNSS_ID))
             DB.conn.commit()
     return(Ref_Valid, Message)
+
+
+def check_ref_station_name(GNSS_ID, DB, HTTP):
+    """Compare merge.xml?pos= refStationName to the first 8 chars of the base station name.
+
+    Only applies when the expected position type is an RTK type.
+    """
+    if not pos_type_expects_rtk(DB.Pos_Type):
+        DB.STATUS.execute(
+            "UPDATE STATUS SET RefStationName=?, RefStationName_Valid=? WHERE id=?",
+            (None, True, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (True, "")
+
+    Message = ""
+    live_name = None
+    (reply, result) = HTTP.get("/xml/dynamic/merge.xml?pos=")
+    if result == 200 and reply:
+        try:
+            root = ET.fromstring(reply)
+            live_name = xml_find_text(
+                root,
+                "pos/referenceStation/refStationName",
+                "referenceStation/refStationName",
+            )
+            if live_name is None:
+                for node in root.iter():
+                    tag = node.tag.split("}", 1)[-1] if "}" in str(node.tag) else node.tag
+                    if tag == "refStationName" and node.text is not None and str(node.text).strip() != "":
+                        live_name = str(node.text).strip()
+                        break
+        except ET.ParseError:
+            live_name = None
+
+    if live_name is None:
+        Message = "refStationName could not be determined from merge.xml?pos=\n"
+        DB.STATUS.execute(
+            "UPDATE STATUS SET RefStationName=?, RefStationName_Valid=? WHERE id=?",
+            (None, False, GNSS_ID),
+        )
+        DB.conn.commit()
+        return (False, Message)
+
+    live_name = str(live_name).strip()
+    base_name = DB.Ref_Name if not _blank(DB.Ref_Name) else DB.name
+    # First successful RTK observation: seed blank base-station name from live refStationName.
+    if _blank(DB.Ref_Name) and live_name:
+        seed = live_name.upper()
+        DB.GNSS.execute(
+            "UPDATE GNSS SET Ref_Name=? WHERE id=?",
+            (seed, GNSS_ID),
+        )
+        DB.Ref_Name = seed
+        base_name = seed
+
+    expected = expected_ref_station_name(base_name)
+    live_short = expected_ref_station_name(live_name)
+    valid = live_short.upper() == expected.upper()
+    if not valid:
+        Message = "refStationName is '{}', Expected '{}' (first 8 of base station '{}')\n".format(
+            live_name, expected, base_name
+        )
+
+    DB.STATUS.execute(
+        "UPDATE STATUS SET RefStationName=?, RefStationName_Valid=? WHERE id=?",
+        (live_name, valid, GNSS_ID),
+    )
+    DB.conn.commit()
+    logger.debug(
+        DB.Address + ":" + str(DB.Port)
+        + " refStationName: " + str(live_name)
+        + " Expected: " + str(expected)
+        + " Valid: " + str(valid)
+    )
+    return (valid, Message)
 
 
 def check_Tracking(GNSS_ID, DB, HTTP):
@@ -3251,6 +3379,12 @@ if not Success:
 OK = OK and Success
 
 logger.debug(DB.Address + ":" + str(DB.Port) + " After POSITION: " + str(Success) + ":::" + str(OK) + " :: " + Message)
+
+(Success, Message) = check_ref_station_name(args.GNSS_ID, DB, HTTP)
+if not Success:
+    Result_String += Message
+OK = OK and Success
+logger.debug(DB.Address + ":" + str(DB.Port) + " After refStationName: " + str(Success) + ":::" + str(OK) + " :: " + Message)
 
 
 

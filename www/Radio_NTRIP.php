@@ -403,6 +403,55 @@ h2.section-title {
        echo "</tbody></table>\n";
    }
 
+   // ---- Receiver details: expected base-observables streams ----
+   echo '<h2 class="section-title">Receiver details</h2>';
+   echo '<p>Expected base-observables / correction streams for each enabled receiver (Radio and NTRIP). ';
+   echo 'UDP/TCP source or sink roles and external serial connections are not supported by this dashboard yet.</p>';
+
+   echo "\n<table border='1' class='tablesorter radio-ntrip'>\n";
+   echo "<thead><tr><th>Edit</th><th>Name</th><th>Group</th><th>Serial</th><th>Base station</th><th>Expected observables stream</th></tr></thead>\n<tbody>\n";
+
+   $detail_i = 0;
+   $current_group = null;
+   foreach ($rows as $row) {
+       $group = isset($row["Loc_Group"]) ? (string)$row["Loc_Group"] : "";
+       if ($current_group !== $group) {
+           if ($detail_i > 0) {
+               echo "\n<tr class=\"group-spacer\"><td colspan=\"6\">&nbsp;</td></tr>\n";
+           }
+           $detail_i++;
+           $current_group = $group;
+           $group_label = ($group === "") ? "(ungrouped)" : $group;
+           echo "\n<tr><td colspan=\"6\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
+       }
+
+       $receiver_url = gnss_receiver_url(
+           isset($row["Address"]) ? $row["Address"] : "",
+           isset($row["Port"]) ? $row["Port"] : "",
+           isset($row["UseHTTPS"]) ? $row["UseHTTPS"] : false
+       );
+       $name_html = h($row["name"]);
+       if ($receiver_url !== "") {
+           $name_html = '<a href="' . h($receiver_url) . '" target="_blank" rel="noopener noreferrer">' . $name_html . '</a>';
+       }
+
+       $streams = rn_expected_observables_streams($row);
+       $stream_html = count($streams) ? h(implode("; ", $streams)) : "<em>None configured (Radio/NTRIP)</em>";
+
+       $serial = isset($row["Serial_Number"]) ? (string)$row["Serial_Number"] : "";
+       $base_station = isset($row["Ref_Name"]) ? (string)$row["Ref_Name"] : "";
+
+       echo "\n<tr>";
+       echo '<td><a href="Edit_GNSS.php?GNSS_ID=' . h($row["id"]) . '&User_ID=' . h($user_id) . '">Edit</a></td>';
+       echo "\n<td>" . $name_html . "</td>";
+       echo "\n<td>" . h($group_label) . "</td>";
+       echo "\n<td>" . ($serial !== "" ? h($serial) : "<em>(auto on first check)</em>") . "</td>";
+       echo "\n<td>" . ($base_station !== "" ? h($base_station) : "<em>(auto on first check)</em>") . "</td>";
+       echo "\n<td>" . $stream_html . "</td>";
+       echo "\n</tr>";
+   }
+   echo "</tbody></table>\n";
+
    if (!($db->close())) {
        showerror();
    }
