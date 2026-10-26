@@ -327,6 +327,16 @@ Position Type:
 </td></tr>
 
 <tr><td>
+RTK Ref:
+</td><td>
+<input name="RefStationName" id="RefStationName" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["RefStationName"])) ? h($row["RefStationName"]) : ""; ?>" placeholder="Blank = set on first successful RTK check"/>
+<?php if ($status_current["RefStationName"] !== "") { ?>
+<button type="button" onclick="document.getElementById('RefStationName').value=<?php echo htmlspecialchars(json_encode($status_current['RefStationName']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
+<span><?php echo h($status_current["RefStationName"]); ?></span>
+<?php } ?>
+</td></tr>
+
+<tr><td>
 Static:
 </td><td>
 <input name="Static" type="checkbox" <?php echo ($row["Static"]==1?"checked":""); ?>/>
@@ -469,16 +479,6 @@ Point Name:
 <?php if ($status_current["Ref_Name"] !== "") { ?>
 <button type="button" onclick="document.getElementById('Ref_Name').value=<?php echo htmlspecialchars(json_encode($status_current['Ref_Name']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
 <span><?php echo h($status_current["Ref_Name"]); ?></span>
-<?php } ?>
-</td></tr>
-
-<tr><td>
-RTK Ref:
-</td><td>
-<input name="RefStationName" id="RefStationName" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["RefStationName"])) ? h($row["RefStationName"]) : ""; ?>" placeholder="Blank = set on first successful RTK check"/>
-<?php if ($status_current["RefStationName"] !== "") { ?>
-<button type="button" onclick="document.getElementById('RefStationName').value=<?php echo htmlspecialchars(json_encode($status_current['RefStationName']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
-<span><?php echo h($status_current["RefStationName"]); ?></span>
 <?php } ?>
 </td></tr>
 

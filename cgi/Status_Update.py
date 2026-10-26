@@ -2768,11 +2768,37 @@ def check_Ref(GNSS_ID, DB, HTTP):
     return(Ref_Valid, Message)
 
 
-def check_ref_station_name(GNSS_ID, DB, HTTP):
-    """Compare merge.xml?pos= refStationName to the stored expected GNSS.RefStationName.
+def _parse_ref_station_name_from_merge(reply):
+    """Extract refStationName from merge.xml position payloads (pos= or posData=)."""
+    if not reply:
+        return None
+    try:
+        root = ET.fromstring(reply)
+    except ET.ParseError:
+        return None
 
-    Same pattern as serial number: blank expected is seeded from the live remote value.
-    Only applies when the expected position type is an RTK type.
+    live_name = xml_find_text(
+        root,
+        "pos/referenceStation/refStationName",
+        "posData/referenceStation/refStationName",
+        "referenceStation/refStationName",
+    )
+    if live_name is not None:
+        return str(live_name).strip() or None
+
+    for node in root.iter():
+        tag = node.tag.split("}", 1)[-1] if "}" in str(node.tag) else node.tag
+        if tag == "refStationName" and node.text is not None and str(node.text).strip() != "":
+            return str(node.text).strip()
+    return None
+
+
+def check_ref_station_name(GNSS_ID, DB, HTTP):
+    """Compare remote refStationName to the stored expected GNSS.RefStationName.
+
+    Newer firmware exposes this under merge.xml?pos=; older receivers use
+    merge.xml?posData=. Same pattern as serial number: blank expected is seeded
+    from the live remote value. Only applies for RTK position types.
     """
     if not pos_type_expects_rtk(DB.Pos_Type):
         DB.STATUS.execute(
@@ -2784,26 +2810,19 @@ def check_ref_station_name(GNSS_ID, DB, HTTP):
 
     Message = ""
     live_name = None
-    (reply, result) = HTTP.get("/xml/dynamic/merge.xml?pos=")
-    if result == 200 and reply:
-        try:
-            root = ET.fromstring(reply)
-            live_name = xml_find_text(
-                root,
-                "pos/referenceStation/refStationName",
-                "referenceStation/refStationName",
-            )
-            if live_name is None:
-                for node in root.iter():
-                    tag = node.tag.split("}", 1)[-1] if "}" in str(node.tag) else node.tag
-                    if tag == "refStationName" and node.text is not None and str(node.text).strip() != "":
-                        live_name = str(node.text).strip()
-                        break
-        except ET.ParseError:
-            live_name = None
+    # Newer receivers: ?pos= ; older: ?posData= (often empty on the other endpoint).
+    for path in (
+        "/xml/dynamic/merge.xml?pos=",
+        "/xml/dynamic/merge.xml?posData=",
+    ):
+        (reply, result) = HTTP.get(path)
+        if result == 200 and reply:
+            live_name = _parse_ref_station_name_from_merge(reply)
+            if live_name:
+                break
 
     if live_name is None or str(live_name).strip() == "":
-        Message = "refStationName could not be determined from merge.xml?pos=\n"
+        Message = "refStationName could not be determined from merge.xml?pos= or posData=\n"
         DB.STATUS.execute(
             "UPDATE STATUS SET RefStationName=?, RefStationName_Valid=? WHERE id=?",
             (None, False, GNSS_ID),
