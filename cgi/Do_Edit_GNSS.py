@@ -230,6 +230,12 @@ if "Serial_Number" not in form:
 else:
     Serial_Number = form["Serial_Number"].value.strip()
 
+# RTK ref station name may be blank; Status_Update fills it on first successful RTK check.
+if "RefStationName" not in form:
+    RefStationName = ""
+else:
+    RefStationName = form["RefStationName"].value.strip()
+
 if "Ref_Code" not in form:
     Ref_Code = ""
 else:
@@ -629,8 +635,13 @@ else:
     GNSS_ID = str(cursor.lastrowid)
 
 cursor.execute(
-    "UPDATE GNSS SET Serial_Number=? WHERE id=? AND User_ID=?",
-    (Serial_Number if Serial_Number else None, GNSS_ID, User_ID),
+    "UPDATE GNSS SET Serial_Number=?, RefStationName=? WHERE id=? AND User_ID=?",
+    (
+        Serial_Number if Serial_Number else None,
+        RefStationName if RefStationName else None,
+        GNSS_ID,
+        User_ID,
+    ),
 )
 conn.commit()
 

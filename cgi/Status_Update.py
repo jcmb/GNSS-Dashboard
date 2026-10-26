@@ -71,7 +71,6 @@ from radio_config import (
     receiver_expects_combo_radio,
     radio_instance_count,
     COMBO_RADIO_INSTANCE_COUNT,
-    expected_ref_station_name,
     pos_type_expects_rtk,
 )
 
@@ -410,6 +409,10 @@ class DB_Class:
             self.Serial_Number = row["Serial_Number"]
         except (KeyError, IndexError):
             self.Serial_Number = None
+        try:
+            self.Expected_RefStationName = row["RefStationName"]
+        except (KeyError, IndexError):
+            self.Expected_RefStationName = None
         self.Pos_Type = row["Pos_Type"]
         self.Static = row["Static"]
         self.LowLatency = row["LowLatency"]
@@ -2766,8 +2769,9 @@ def check_Ref(GNSS_ID, DB, HTTP):
 
 
 def check_ref_station_name(GNSS_ID, DB, HTTP):
-    """Compare merge.xml?pos= refStationName to the first 8 chars of the base station name.
+    """Compare merge.xml?pos= refStationName to the stored expected GNSS.RefStationName.
 
+    Same pattern as serial number: blank expected is seeded from the live remote value.
     Only applies when the expected position type is an RTK type.
     """
     if not pos_type_expects_rtk(DB.Pos_Type):
@@ -2798,7 +2802,7 @@ def check_ref_station_name(GNSS_ID, DB, HTTP):
         except ET.ParseError:
             live_name = None
 
-    if live_name is None:
+    if live_name is None or str(live_name).strip() == "":
         Message = "refStationName could not be determined from merge.xml?pos=\n"
         DB.STATUS.execute(
             "UPDATE STATUS SET RefStationName=?, RefStationName_Valid=? WHERE id=?",
@@ -2808,23 +2812,20 @@ def check_ref_station_name(GNSS_ID, DB, HTTP):
         return (False, Message)
 
     live_name = str(live_name).strip()
-    base_name = DB.Ref_Name if not _blank(DB.Ref_Name) else DB.name
-    # First successful RTK observation: seed blank base-station name from live refStationName.
-    if _blank(DB.Ref_Name) and live_name:
-        seed = live_name.upper()
+    valid = False
+    if _blank(DB.Expected_RefStationName):
+        # First successful observation: store expected RTK ref name from remote.
         DB.GNSS.execute(
-            "UPDATE GNSS SET Ref_Name=? WHERE id=?",
-            (seed, GNSS_ID),
+            "UPDATE GNSS SET RefStationName=? WHERE id=?",
+            (live_name, GNSS_ID),
         )
-        DB.Ref_Name = seed
-        base_name = seed
-
-    expected = expected_ref_station_name(base_name)
-    live_short = expected_ref_station_name(live_name)
-    valid = live_short.upper() == expected.upper()
-    if not valid:
-        Message = "refStationName is '{}', Expected '{}' (first 8 of base station '{}')\n".format(
-            live_name, expected, base_name
+        DB.Expected_RefStationName = live_name
+        valid = True
+    elif str(DB.Expected_RefStationName).strip() == live_name:
+        valid = True
+    else:
+        Message = "refStationName is '{}', Expected '{}'\n".format(
+            live_name, str(DB.Expected_RefStationName).strip()
         )
 
     DB.STATUS.execute(
@@ -2835,7 +2836,7 @@ def check_ref_station_name(GNSS_ID, DB, HTTP):
     logger.debug(
         DB.Address + ":" + str(DB.Port)
         + " refStationName: " + str(live_name)
-        + " Expected: " + str(expected)
+        + " Expected: " + str(DB.Expected_RefStationName)
         + " Valid: " + str(valid)
     )
     return (valid, Message)

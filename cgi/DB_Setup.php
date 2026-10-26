@@ -20,6 +20,7 @@
       UseHTTPS BOOLEAN,
       Reciever_Type TEXT,
       Serial_Number TEXT,
+      RefStationName TEXT,
       Password TEXT,
       Pos_Type TEXT,
       Static BOOLEAN,

@@ -59,6 +59,7 @@ else {
          'RadioActiveChanSpacing' => 'NUMERIC',
          'UseHTTPS' => 'BOOLEAN',
          'Serial_Number' => 'TEXT',
+         'RefStationName' => 'TEXT',
       );
       foreach ($columns as $name => $type) {
          if (!isset($existing[$name])) {
@@ -149,6 +150,30 @@ else {
       echo "Add GNSS Receiver";
       $Editing=FALSE;
       }
+
+   // Live STATUS values for "Use Current" on auto-seeded fields.
+   $status_current = array(
+      "Serial_Number" => "",
+      "Ref_Name" => "",
+      "RefStationName" => "",
+   );
+   if (!empty($Editing) && empty($DUP) && !empty($gnss_id) && !empty($db)) {
+      $status_stmt = $db->prepare('SELECT Serial_Number, Ref_Name, RefStationName FROM STATUS WHERE id=?');
+      if ($status_stmt) {
+         $status_stmt->bindValue(1, $gnss_id, SQLITE3_INTEGER);
+         $status_result = $status_stmt->execute();
+         if ($status_result) {
+            $status_row = $status_result->fetchArray(SQLITE3_ASSOC);
+            if ($status_row) {
+               foreach ($status_current as $key => $unused) {
+                  if (isset($status_row[$key]) && $status_row[$key] !== null && strval($status_row[$key]) !== "") {
+                     $status_current[$key] = strval($status_row[$key]);
+                  }
+               }
+            }
+         }
+      }
+   }
 
    $radio_wireless_modes = gnss_radio_wireless_modes();
    $radio_wireless_xml_names = gnss_radio_wireless_mode_xml_names();
@@ -288,7 +313,11 @@ Admin password:
 <tr><td>
 Serial Number:
 </td><td>
-<input name="Serial_Number" type="text" value="<?php echo ($Editing && isset($row["Serial_Number"])) ? h($row["Serial_Number"]) : ''; ?>" placeholder="Blank = set on first successful check"/>
+<input name="Serial_Number" id="Serial_Number" type="text" value="<?php echo ($Editing && isset($row["Serial_Number"])) ? h($row["Serial_Number"]) : ''; ?>" placeholder="Blank = set on first successful check"/>
+<?php if ($status_current["Serial_Number"] !== "") { ?>
+<button type="button" onclick="document.getElementById('Serial_Number').value=<?php echo htmlspecialchars(json_encode($status_current['Serial_Number']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
+<span><?php echo h($status_current["Serial_Number"]); ?></span>
+<?php } ?>
 </td></tr>
 
 <tr><td>
@@ -436,7 +465,21 @@ BottomOfReceiverWnoAntennas
 <tr><td>
 Point Name:
 </td><td>
-<input name="Ref_Name" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["Ref_Name"])) ? h($row["Ref_Name"]) : ""; ?>" placeholder="Blank = set on first successful check"/>
+<input name="Ref_Name" id="Ref_Name" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["Ref_Name"])) ? h($row["Ref_Name"]) : ""; ?>" placeholder="Blank = set on first successful check"/>
+<?php if ($status_current["Ref_Name"] !== "") { ?>
+<button type="button" onclick="document.getElementById('Ref_Name').value=<?php echo htmlspecialchars(json_encode($status_current['Ref_Name']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
+<span><?php echo h($status_current["Ref_Name"]); ?></span>
+<?php } ?>
+</td></tr>
+
+<tr><td>
+RTK Ref:
+</td><td>
+<input name="RefStationName" id="RefStationName" type="text" size="20" maxlength="16" value="<?php echo ($Editing && isset($row["RefStationName"])) ? h($row["RefStationName"]) : ""; ?>" placeholder="Blank = set on first successful RTK check"/>
+<?php if ($status_current["RefStationName"] !== "") { ?>
+<button type="button" onclick="document.getElementById('RefStationName').value=<?php echo htmlspecialchars(json_encode($status_current['RefStationName']), ENT_QUOTES, 'UTF-8'); ?>">Use Current</button>
+<span><?php echo h($status_current["RefStationName"]); ?></span>
+<?php } ?>
 </td></tr>
 
 <tr><td>

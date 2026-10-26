@@ -170,6 +170,7 @@ def ensure_gnss_radio_columns(conn):
         ("RadioWirelessMode", "INTEGER"),
         ("RadioActiveChanSpacing", "NUMERIC"),
         ("Serial_Number", "TEXT"),
+        ("RefStationName", "TEXT"),
     )
     for name, coltype in columns:
         try:
@@ -178,12 +179,6 @@ def ensure_gnss_radio_columns(conn):
         except sqlite3.OperationalError as err:
             if "duplicate column name" not in str(err).lower():
                 raise
-
-
-def expected_ref_station_name(base_station_name):
-    """First 8 characters of the base station name (Trimble refStationName width)."""
-    name = (base_station_name or "").strip()
-    return name[:8]
 
 
 def pos_type_expects_rtk(pos_type):
