@@ -91,6 +91,22 @@ class _StatusBufferCursor:
         self.owner._buffer_status_sql(sql, params)
 
 
+class _GnssBufferCursor:
+    """Intercepts GNSS SQL and stores column values in memory while DB is closed."""
+
+    def __init__(self, owner):
+        self.owner = owner
+
+    def execute(self, sql, params=None):
+        if params is None:
+            params = ()
+        elif not isinstance(params, (list, tuple)):
+            params = (params,)
+        else:
+            params = tuple(params)
+        self.owner._buffer_gnss_sql(sql, params)
+
+
 class _CommitNopConnection:
     """Proxy that no-ops commit() while STATUS updates are buffered."""
 
@@ -126,6 +142,7 @@ class DB_Class:
         self._real_conn = None
         self._status_buffering = False
         self.status_buf = {}
+        self.gnss_buf = {}
         self._status_schema = []
 
     def open(self):
@@ -208,11 +225,13 @@ class DB_Class:
         self.Prev_SysLog_Length_Changed = row["SysLog_Length_Changed"]
 
     def begin_status_batch(self):
-        """Buffer STATUS writes in memory; release the DB during HTTP checks."""
+        """Buffer STATUS/GNSS writes in memory; release the DB during HTTP checks."""
         self._status_buffering = True
         self.status_buf = {}
+        self.gnss_buf = {}
         self._status_schema = []
         self.STATUS = _StatusBufferCursor(self)
+        self.GNSS = _GnssBufferCursor(self)
         if self._real_conn is not None:
             self._real_conn.close()
             self._real_conn = None
@@ -264,9 +283,41 @@ class DB_Class:
 
         logger.warning(self.Address + " unbuffered STATUS SQL: " + sql_n)
 
+    def _buffer_gnss_sql(self, sql, params):
+        sql_n = " ".join(str(sql).split())
+        upper = sql_n.upper()
+
+        if "UPDATE GNSS SET" in upper:
+            set_part = re.split(r"\sWHERE\s", sql_n, maxsplit=1, flags=re.I)[0]
+            set_part = re.sub(r"^\s*UPDATE\s+GNSS\s+SET\s+", "", set_part, flags=re.I)
+            param_i = 0
+            for assign in set_part.split(","):
+                assign = assign.strip()
+                if "=" not in assign:
+                    continue
+                col, expr = assign.split("=", 1)
+                col = col.strip()
+                expr = expr.strip()
+                if expr == "?":
+                    self.gnss_buf[col] = params[param_i]
+                    param_i += 1
+                else:
+                    try:
+                        self.gnss_buf[col] = int(expr)
+                    except ValueError:
+                        self.gnss_buf[col] = expr.strip("'\"")
+            return
+
+        logger.warning(self.Address + " unbuffered GNSS SQL: " + sql_n)
+
     def flush_status_batch(self):
-        """Write buffered STATUS fields in one UPSERT, then close the connection."""
-        if not self._status_buffering and not self.status_buf and not self._status_schema:
+        """Write buffered STATUS/GNSS fields, then close the connection."""
+        if (
+            not self._status_buffering
+            and not self.status_buf
+            and not self.gnss_buf
+            and not self._status_schema
+        ):
             return
 
         try:
@@ -281,6 +332,16 @@ class DB_Class:
                 except sqlite3.OperationalError as err:
                     if "duplicate column name" not in str(err).lower():
                         raise
+
+            gnss_fields = dict(self.gnss_buf)
+            if gnss_fields:
+                sets = ",".join("{0}=?".format(c) for c in gnss_fields.keys())
+                vals = [gnss_fields[c] for c in gnss_fields.keys()] + [self.GNSS_ID]
+                conn.execute(
+                    "UPDATE GNSS SET {sets} WHERE id=?".format(sets=sets),
+                    vals,
+                )
+                conn.commit()
 
             fields = dict(self.status_buf)
             if fields:
@@ -300,6 +361,7 @@ class DB_Class:
                 conn.commit()
         finally:
             self.status_buf = {}
+            self.gnss_buf = {}
             self._status_schema = []
             self._status_buffering = False
             if self._real_conn is not None:
@@ -307,6 +369,7 @@ class DB_Class:
                 self._real_conn = None
             self.conn = None
             self.STATUS = None
+            self.GNSS = None
 
     def read_Firmware_configuration(self):
         query = 'SELECT * FROM Firmware'
