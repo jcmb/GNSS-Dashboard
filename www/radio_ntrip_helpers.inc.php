@@ -600,6 +600,38 @@ function rn_ntrip_slot_defs()
 }
 
 
+function rn_pos_type_live($row)
+{
+    if (!isset($row["Pos_Type_Live"]) || $row["Pos_Type_Live"] === null || $row["Pos_Type_Live"] === "") {
+        return "";
+    }
+    return (string)$row["Pos_Type_Live"];
+}
+
+
+function rn_pos_type_mismatch($row)
+{
+    if (!isset($row["Pos_Type_Valid"]) || $row["Pos_Type_Valid"] === null || $row["Pos_Type_Valid"] === "") {
+        return false;
+    }
+    return !(int)$row["Pos_Type_Valid"];
+}
+
+
+function rn_pos_type_display($row)
+{
+    $live = rn_pos_type_live($row);
+    $expected = isset($row["Pos_Type"]) ? trim((string)$row["Pos_Type"]) : "";
+    if ($live === "") {
+        return $expected !== "" ? $expected . " (no data)" : "(no data)";
+    }
+    if ($expected !== "" && rn_pos_type_mismatch($row)) {
+        return $live . " (expected " . $expected . ")";
+    }
+    return $live;
+}
+
+
 function rn_emit_radio_row($row, $user_id, $modes, $xml_names)
 {
     $role = rn_radio_role(isset($row["RadioMode"]) ? $row["RadioMode"] : "");
@@ -623,6 +655,7 @@ function rn_emit_radio_row($row, $user_id, $modes, $xml_names)
     echo '<td><a href="Edit_GNSS.php?GNSS_ID=' . h($row["id"]) . '&User_ID=' . h($user_id) . '">Edit</a></td>';
     echo "\n<td>" . $name_html . "</td>";
     echo rn_cell($role, false);
+    echo rn_cell(rn_pos_type_display($row), rn_pos_type_mismatch($row));
     echo rn_cell($live_on !== "" ? $live_on : "(no data)", rn_onoff_mismatch($row));
     echo rn_cell($live_mode !== "" ? $live_mode : "(no data)", rn_mode_mismatch($row));
     echo rn_cell($live_band !== "" ? $live_band : "(no data)", rn_band_mismatch($row));

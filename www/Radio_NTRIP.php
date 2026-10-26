@@ -58,6 +58,7 @@ h2.section-title {
            STATUS.Radio_Live_OnOff, STATUS.Radio_Live_Mode, STATUS.Radio_Live_Band,
            STATUS.Radio_Live_NetworkNumber, STATUS.Radio_Live_Frequency,
            STATUS.Radio_Live_WirelessMode, STATUS.Radio_Live_ChanSpacing,
+           STATUS.Pos_Type AS Pos_Type_Live, STATUS.Pos_Type_Valid,
            STATUS.NTRIP_Valid,
            STATUS.NTRIP_Client_1_Live_Enabled, STATUS.NTRIP_Client_1_Live_Mount,
            STATUS.NTRIP_Client_2_Live_Enabled, STATUS.NTRIP_Client_2_Live_Mount,
@@ -114,17 +115,17 @@ h2.section-title {
    } else {
        echo "\n<table border='1' class='tablesorter radio-ntrip'>\n";
        echo "<thead><tr>";
-       echo "<th>Edit</th><th>Name</th><th>Role</th><th>On/Off</th><th>Mode</th><th>Band</th><th>Channel / Network</th><th>Wireless</th>";
+       echo "<th>Edit</th><th>Name</th><th>Role</th><th>Pos Type</th><th>On/Off</th><th>Mode</th><th>Band</th><th>Channel / Network</th><th>Wireless</th>";
        echo "</tr></thead>\n<tbody>\n";
 
        $radio_group_i = 0;
        foreach ($radio_by_group as $group => $clusters) {
            if ($radio_group_i > 0) {
-               echo "\n<tr class=\"group-spacer\"><td colspan=\"8\">&nbsp;</td></tr>\n";
+               echo "\n<tr class=\"group-spacer\"><td colspan=\"9\">&nbsp;</td></tr>\n";
            }
            $radio_group_i++;
            $group_label = ($group === "") ? "(ungrouped)" : $group;
-           echo "\n<tr><td colspan=\"8\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
+           echo "\n<tr><td colspan=\"9\" class=\"td_header\">Group: " . h($group_label) . "</td></tr>\n";
 
            foreach ($clusters as $key => $cluster) {
                $sample = $cluster["sample"];
@@ -141,7 +142,7 @@ h2.section-title {
                } else {
                    $header = "No base on channel — " . $chan_label;
                }
-               echo "\n<tr><td colspan=\"8\" class=\"td_subheader\">" . h($header) . "</td></tr>\n";
+               echo "\n<tr><td colspan=\"9\" class=\"td_subheader\">" . h($header) . "</td></tr>\n";
 
                foreach ($bases as $b) {
                    rn_emit_radio_row($b, $user_id, $wireless_modes, $wireless_xml_names);
