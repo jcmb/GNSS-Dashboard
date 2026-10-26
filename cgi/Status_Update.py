@@ -2793,6 +2793,15 @@ def _parse_ref_station_name_from_merge(reply):
     return None
 
 
+def _ref_station_names_match(expected, live_name):
+    """Exact match, or both names start with VRS (case-insensitive)."""
+    expected = str(expected).strip()
+    live_name = str(live_name).strip()
+    if expected == live_name:
+        return True
+    return expected.upper().startswith("VRS") and live_name.upper().startswith("VRS")
+
+
 def check_ref_station_name(GNSS_ID, DB, HTTP):
     """Compare remote refStationName to the stored expected GNSS.RefStationName.
 
@@ -2840,7 +2849,7 @@ def check_ref_station_name(GNSS_ID, DB, HTTP):
         )
         DB.Expected_RefStationName = live_name
         valid = True
-    elif str(DB.Expected_RefStationName).strip() == live_name:
+    elif _ref_station_names_match(DB.Expected_RefStationName, live_name):
         valid = True
     else:
         Message = "refStationName is '{}', Expected '{}'\n".format(
