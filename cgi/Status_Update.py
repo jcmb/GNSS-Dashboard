@@ -2768,8 +2768,15 @@ def check_Ref(GNSS_ID, DB, HTTP):
     return(Ref_Valid, Message)
 
 
+def _xml_local_tag(tag):
+    return tag.split("}", 1)[-1] if "}" in str(tag) else tag
+
+
 def _parse_ref_station_name_from_merge(reply):
-    """Extract refStationName from merge.xml position payloads (pos= or posData=)."""
+    """Extract refStationName from merge.xml position payloads (pos= or posData=).
+
+    When refStationName is empty (e.g. <refStationName/>), use refStationId.
+    """
     if not reply:
         return None
     try:
@@ -2783,14 +2790,30 @@ def _parse_ref_station_name_from_merge(reply):
         "posData/referenceStation/refStationName",
         "referenceStation/refStationName",
     )
-    if live_name is not None:
-        return str(live_name).strip() or None
+    if live_name:
+        return str(live_name).strip()
 
+    live_id = xml_find_text(
+        root,
+        "pos/referenceStation/refStationId",
+        "posData/referenceStation/refStationId",
+        "referenceStation/refStationId",
+    )
+    if live_id:
+        return str(live_id).strip()
+
+    # Fall back to a walk when paths differ across firmware.
+    found_name = None
+    found_id = None
     for node in root.iter():
-        tag = node.tag.split("}", 1)[-1] if "}" in str(node.tag) else node.tag
-        if tag == "refStationName" and node.text is not None and str(node.text).strip() != "":
-            return str(node.text).strip()
-    return None
+        tag = _xml_local_tag(node.tag)
+        text = str(node.text).strip() if node.text is not None else ""
+        if tag == "refStationName" and text:
+            found_name = text
+            break
+        if tag == "refStationId" and text and found_id is None:
+            found_id = text
+    return found_name or found_id
 
 
 def _ref_station_names_match(expected, live_name):
